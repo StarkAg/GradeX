@@ -2,7 +2,10 @@
 
 A modern, tech-inspired grade planning tool for tracking semester courses, calculating SGPA, and determining required semester exam scores to achieve target grades. Built with a sleek dark theme and Iron Man-inspired aesthetics.
 
+🌐 **Live Demo**: [https://gradex.vercel.app](https://gradex.vercel.app) | [Production URL](https://gradex-4ijnz0rsg-starkags-projects.vercel.app)
+
 ![GradeX Screenshot](screenshot.png)
+*Note: Add a screenshot of the application to showcase the UI*
 
 ## ✨ Features
 
