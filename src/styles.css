@@ -1,0 +1,783 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.9;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes reactorPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+@keyframes reactorGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 30px rgba(245, 245, 245, 0.4)) drop-shadow(0 0 60px rgba(245, 245, 245, 0.2));
+  }
+  50% {
+    filter: drop-shadow(0 0 40px rgba(245, 245, 245, 0.6)) drop-shadow(0 0 80px rgba(245, 245, 245, 0.4));
+  }
+}
+
+@keyframes ringPulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 0;
+  }
+}
+
+@keyframes scan {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+@keyframes progressGlow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(245, 245, 245, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(245, 245, 245, 0.8);
+  }
+}
+
+@keyframes cornerFade {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: #020202;
+  color: #f5f5f5;
+  height: 100vh;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+#root {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 12px clamp(12px, 2vw, 24px);
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+}
+
+.app-header.single {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  border-bottom: 1px solid rgba(245, 245, 245, 0.08);
+  padding-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.app-header.single h1 {
+  margin: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(24px, 3.5vw, 40px);
+  letter-spacing: 0.12em;
+  color: #f8f8f8;
+  line-height: 1;
+}
+
+.app-subtitle {
+  font-size: 16px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(245, 245, 245, 0.6);
+}
+
+.app-main.single {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.gradex-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.gradex-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.gradex-chip {
+  font-size: 12px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: rgba(245, 245, 245, 0.45);
+}
+
+.gradex-toolbar h1 {
+  margin: 2px 0 0;
+  font-size: clamp(18px, 2.2vw, 24px);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+}
+
+.gradex-sub {
+  font-size: 11px;
+  color: rgba(245, 245, 245, 0.6);
+  margin-top: 2px;
+}
+
+.gradex-toolbar-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.gradex-sgpa-display {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  border: 1px solid rgba(245, 245, 245, 0.12);
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.gradex-sgpa-display .value {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.gradex-sgpa-display .label {
+  font-size: 12px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(245, 245, 245, 0.5);
+  margin-top: 6px;
+}
+
+.gradex-toolbar-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.gradex-toolbar-buttons button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 245, 245, 0.2);
+  background: transparent;
+  color: #f5f5f5;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 11px;
+}
+
+.gradex-toolbar-buttons button:hover {
+  border-color: rgba(245, 245, 245, 0.5);
+  background: rgba(245, 245, 245, 0.06);
+}
+
+.gradex-toolbar-buttons .reset-btn {
+  border-color: rgba(217, 70, 239, 0.4);
+  color: #f472b6;
+}
+
+.gradex-toolbar-buttons .reset-btn:hover {
+  background: rgba(217, 70, 239, 0.12);
+}
+
+.gradex-form {
+  border: 1px solid rgba(245, 245, 245, 0.12);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: rgba(10, 10, 10, 0.6);
+  backdrop-filter: blur(6px);
+}
+
+.gradex-form-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.gradex-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 12px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(245, 245, 245, 0.55);
+}
+
+.gradex-form input,
+.gradex-form select {
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(245, 245, 245, 0.16);
+  background: rgba(0, 0, 0, 0.6);
+  color: #f5f5f5;
+  font-size: 15px;
+}
+
+.gradex-form input:focus,
+.gradex-form select:focus {
+  outline: none;
+  border-color: rgba(245, 245, 245, 0.45);
+}
+
+.gradex-grade-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.gradex-grade-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.gradex-grade-options button {
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 245, 245, 0.18);
+  background: transparent;
+  color: #f5f5f5;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gradex-grade-options button.active {
+  border-color: #f5f5f5;
+  background: #f5f5f5;
+  color: #020202;
+}
+
+.gradex-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.gradex-form-actions button {
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 245, 245, 0.2);
+  background: transparent;
+  color: #f5f5f5;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.gradex-form-actions .primary {
+  background: #f5f5f5;
+  color: #020202;
+  border-color: #f5f5f5;
+}
+
+.gradex-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, 1fr);
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 4px;
+}
+
+@media (max-width: 1200px) {
+  .gradex-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .gradex-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gradex-card {
+  border: 1px solid rgba(245, 245, 245, 0.12);
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(10, 10, 10, 0.7);
+}
+
+.gradex-card.disabled {
+  opacity: 0.45;
+}
+
+.gradex-card header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.gradex-card header h2 {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.gradex-card header p {
+  margin: 2px 0 0;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(245, 245, 245, 0.5);
+}
+
+.gradex-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(245, 245, 245, 0.55);
+}
+
+.gradex-toggle input {
+  accent-color: #f5f5f5;
+}
+
+.gradex-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(245, 245, 245, 0.1);
+  border-radius: 5px;
+  padding: 5px 8px;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.gradex-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gradex-inline {
+  width: 55px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(245, 245, 245, 0.2);
+  color: #f5f5f5;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  padding: 2px 2px;
+}
+
+.gradex-inline:focus {
+  outline: none;
+  border-color: #f5f5f5;
+}
+
+.gradex-stat-divider {
+  font-size: 16px;
+  color: rgba(245, 245, 245, 0.3);
+}
+
+.gradex-grade-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 245, 245, 0.16);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
+.gradex-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gradex-slider input[type="range"] {
+  width: 100%;
+  accent-color: #f5f5f5;
+}
+
+.gradex-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(245, 245, 245, 0.4);
+}
+
+.gradex-goal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.gradex-goal div:first-child {
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(245, 245, 245, 0.5);
+}
+
+.gradex-goal-display {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.gradex-goal-value {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.gradex-goal-max {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(245, 245, 245, 0.5);
+}
+
+.gradex-card footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.gradex-card footer button {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 245, 245, 0.16);
+  background: transparent;
+  color: rgba(245, 245, 245, 0.7);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.gradex-card footer button:hover {
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #f87171;
+}
+
+/* Tablet and below */
+@media (max-width: 960px) {
+  .app-header.single {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .app-header.single h1 {
+    font-size: clamp(20px, 4vw, 32px);
+  }
+
+  .gradex-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .gradex-toolbar-actions {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .gradex-toolbar-buttons {
+    width: 100%;
+  }
+
+  .gradex-toolbar-buttons button {
+    flex: 1;
+    text-align: center;
+  }
+
+  .gradex-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gradex-card header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Mobile landscape and below */
+@media (max-width: 768px) {
+  #root {
+    padding: 8px 12px;
+    overflow-y: auto;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  body {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .app-container {
+    min-height: 100vh;
+  }
+
+  .app-header.single {
+    padding-bottom: 12px;
+  }
+
+  .gradex-toolbar-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .gradex-sgpa-display {
+    width: 100%;
+    align-items: center;
+    padding: 12px;
+  }
+
+  .gradex-toolbar-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .gradex-toolbar-buttons button {
+    width: 100%;
+  }
+
+  .gradex-form {
+    padding: 16px;
+  }
+
+  .gradex-card {
+    padding: 12px;
+  }
+
+  .gradex-stat-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .gradex-goal {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 600px) {
+  #root {
+    padding: 8px;
+  }
+
+  .app-header.single h1 {
+    font-size: clamp(18px, 5vw, 28px);
+    line-height: 1.1;
+  }
+
+  .app-header.single p {
+    font-size: 10px;
+    margin-top: 4px;
+  }
+
+  .gradex-toolbar h1 {
+    font-size: clamp(16px, 4vw, 20px);
+  }
+
+  .gradex-sub {
+    font-size: 10px;
+  }
+
+  .gradex-sgpa-display .value {
+    font-size: 20px;
+  }
+
+  .gradex-sgpa-display .label {
+    font-size: 10px;
+  }
+
+  .gradex-toolbar-buttons button {
+    padding: 10px 14px;
+    font-size: 11px;
+  }
+
+  .gradex-card header h2 {
+    font-size: 12px;
+  }
+
+  .gradex-card header p {
+    font-size: 8px;
+  }
+
+  .gradex-stat {
+    font-size: 11px;
+  }
+
+  .gradex-goal-value {
+    font-size: 14px;
+  }
+
+  .gradex-form label {
+    font-size: 10px;
+  }
+
+  .gradex-form input,
+  .gradex-form select {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  .gradex-grade-options {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .gradex-grade-options button {
+    font-size: 10px;
+    padding: 6px 10px;
+  }
+
+  .gradex-card footer button {
+    font-size: 9px;
+    padding: 5px 10px;
+  }
+}
+
+/* Extra small mobile */
+@media (max-width: 400px) {
+  .app-header.single h1 {
+    font-size: clamp(16px, 6vw, 24px);
+  }
+
+  .gradex-sgpa-display {
+    padding: 10px;
+  }
+
+  .gradex-sgpa-display .value {
+    font-size: 18px;
+  }
+
+  .gradex-card {
+    padding: 10px;
+  }
+
+  .gradex-form {
+    padding: 12px;
+  }
+}
+
+/* Large screens */
+@media (min-width: 1400px) {
+  #root {
+    max-width: 1600px;
+  }
+
+  .gradex-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .gradex-toolbar-buttons button,
+  .gradex-form-actions button,
+  .gradex-card footer button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .gradex-toggle input {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+
