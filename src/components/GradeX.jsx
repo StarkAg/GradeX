@@ -208,7 +208,13 @@ function GradeX() {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length) {
-          setCourses(parsed);
+          // Filter out "Indian Art Form" if it exists in saved data
+          const filtered = parsed.filter(course => 
+            course.title !== 'Indian Art Form' && 
+            course.title !== 'Indian Art Form (Theory)' &&
+            course.title !== 'Indian Art Form (Practical)'
+          );
+          setCourses(filtered.length > 0 ? filtered : defaultCourses);
         }
       } catch (error) {
         console.warn('Unable to restore GradeX data', error);
