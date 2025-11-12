@@ -306,7 +306,7 @@ export default function App() {
             </span>
           </h1>
           <p style={{ marginTop: '8px', fontSize: '12px', color: 'rgba(245, 245, 245, 0.5)', fontStyle: 'italic', letterSpacing: '0.05em' }}>
-            PS — came into existence on 12th Nov :) since ClassPro and Etc. stopped working :(
+            PS — came into existence on 12th Nov :) since ClassPro and Etc. were unreliable manytimes :(
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

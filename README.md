@@ -128,4 +128,4 @@ Private project - All rights reserved
 
 ---
 
-*PS — came into existence on 12th Nov :) since ClassPro and Etc. stopped working :(*
+*PS — came into existence on 12th Nov :) since ClassPro and Etc. were unreliable manytimes :(*
