@@ -167,6 +167,156 @@ const defaultCourses = [
   },
 ];
 
+const UL_PRESET = [
+  {
+    id: 1,
+    title: 'Computer Networks (Theory)',
+    credit: 4,
+    score: 56,
+    maxScore: 60,
+    gradeIndex: getGradeIndex('A'),
+    included: true,
+  },
+  {
+    id: 2,
+    title: 'Database Security and Privacy',
+    credit: 3,
+    score: 56,
+    maxScore: 60,
+    gradeIndex: getGradeIndex('A'),
+    included: true,
+  },
+  {
+    id: 3,
+    title: 'Discrete Mathematics',
+    credit: 4,
+    score: 46.9,
+    maxScore: 60,
+    gradeIndex: getGradeIndex('A'),
+    included: true,
+  },
+  {
+    id: 4,
+    title: 'Formal Language and Automata',
+    credit: 3,
+    score: 48.4,
+    maxScore: 60,
+    gradeIndex: getGradeIndex('A'),
+    included: true,
+  },
+  {
+    id: 5,
+    title: 'Machine Learning',
+    credit: 3,
+    score: 81.05,
+    maxScore: 100,
+    gradeIndex: getGradeIndex('A+'),
+    included: true,
+  },
+  {
+    id: 6,
+    title: 'Environmental Impact Assessment',
+    credit: 3,
+    score: 55.6,
+    maxScore: 60,
+    gradeIndex: getGradeIndex('A'),
+    included: true,
+  },
+  {
+    id: 7,
+    title: 'Community Connect',
+    credit: 1,
+    score: 96,
+    maxScore: 100,
+    gradeIndex: getGradeIndex('A+'),
+    included: true,
+  },
+  {
+    id: 8,
+    title: 'Indian Art Form',
+    credit: 0,
+    score: 90,
+    maxScore: 100,
+    gradeIndex: getGradeIndex('A+'),
+    included: true,
+  },
+];
+
+const HA_PRESET = [
+  {
+    id: 1,
+    title: 'Discrete Mathematics (21MAB302T)',
+    credit: 4,
+    score: 33.5,
+    maxScore: 60,
+    gradeIndex: getGradeIndex('A'),
+    included: true,
+  },
+  {
+    id: 2,
+    title: 'Formal Language and Automata (21CSC301T)',
+    credit: 3,
+    score: 32.6,
+    maxScore: 60,
+    gradeIndex: getGradeIndex('A'),
+    included: true,
+  },
+  {
+    id: 3,
+    title: 'Computer Networks – Theory (21CSC302J)',
+    credit: 4,
+    score: 51.2,
+    maxScore: 60,
+    gradeIndex: getGradeIndex('A'),
+    included: true,
+  },
+  {
+    id: 4,
+    title: 'Machine Learning (21CSC305P)',
+    credit: 3,
+    score: 81.1,
+    maxScore: 100,
+    gradeIndex: getGradeIndex('A+'),
+    included: true,
+  },
+  {
+    id: 5,
+    title: 'Community Connect (21GNP301L)',
+    credit: 1,
+    score: 88,
+    maxScore: 100,
+    gradeIndex: getGradeIndex('A+'),
+    included: true,
+  },
+  {
+    id: 6,
+    title: 'Indian Art Form (21LEM301T)',
+    credit: 0,
+    score: 90,
+    maxScore: 100,
+    gradeIndex: getGradeIndex('A+'),
+    included: true,
+  },
+  {
+    id: 7,
+    title: 'SerBot – PBL Robotics (21CSE305P)',
+    credit: 3,
+    score: 83.2,
+    maxScore: 100,
+    gradeIndex: getGradeIndex('A+'),
+    included: true,
+  },
+  {
+    id: 8,
+    title: 'Reverse Engineering & 3D Printing (21MEO102T)',
+    credit: 3,
+    score: 45.8,
+    maxScore: 60,
+    gradeIndex: getGradeIndex('A'),
+    included: true,
+  },
+];
+
 const STORAGE_KEY = 'gradex-courses';
 
 // Easter egg marks pattern (score / maxScore) - with tolerance
@@ -187,6 +337,21 @@ function GradeX() {
   const [showEWWMessage, setShowEWWMessage] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   
+  const applyPresetCourses = (preset) => {
+    setCourses(preset.map((course, index) => ({ ...course, id: index + 1 })));
+    setShowForm(false);
+    setEditingCourseId(null);
+    setEditFormData({ title: '', credit: 0, score: 0 });
+  };
+
+  const applyULPreset = () => {
+    applyPresetCourses(UL_PRESET);
+  };
+
+  const applyHAPreset = () => {
+    applyPresetCourses(HA_PRESET);
+  };
+
   const resetToDefaults = () => {
     if (confirm('Reset all courses to default? This will replace your current courses.')) {
       setCourses(defaultCourses);
@@ -416,6 +581,76 @@ function GradeX() {
           <h1>Semester Overview</h1>
           <p className="gradex-sub">Track grades manually, forecast SGPA instantly.</p>
         </div>
+        <button
+          type="button"
+          onClick={applyHAPreset}
+          style={{
+            position: 'absolute',
+            top: '8px',
+            right: '64px',
+            width: '20px',
+            height: '20px',
+            borderRadius: '50%',
+            border: '1px solid transparent',
+            background: 'transparent',
+            color: 'var(--text-primary)',
+            opacity: 0.05,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '9px',
+            letterSpacing: '0.1em',
+            padding: 0,
+            transition: 'opacity 0.3s ease, border-color 0.3s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.opacity = '0.5';
+            e.currentTarget.style.borderColor = 'var(--border-hover)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.opacity = '0.05';
+            e.currentTarget.style.borderColor = 'transparent';
+          }}
+          title="HA Mode"
+        >
+          HA
+        </button>
+        <button
+          type="button"
+          onClick={applyULPreset}
+          style={{
+            position: 'absolute',
+            top: '8px',
+            right: '36px',
+            width: '20px',
+            height: '20px',
+            borderRadius: '50%',
+            border: '1px solid transparent',
+            background: 'transparent',
+            color: 'var(--text-primary)',
+            opacity: 0.08,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '9px',
+            letterSpacing: '0.1em',
+            padding: 0,
+            transition: 'opacity 0.3s ease, border-color 0.3s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.opacity = '0.5';
+            e.currentTarget.style.borderColor = 'var(--border-hover)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.opacity = '0.08';
+            e.currentTarget.style.borderColor = 'transparent';
+          }}
+          title="UL Mode"
+        >
+          UL
+        </button>
         <button
           type="button"
           onClick={() => setShowHelp(!showHelp)}
