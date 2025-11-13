@@ -143,7 +143,7 @@ const defaultCourses = [
     title: 'Professional Elective',
     credit: 3,
     score: 0,
-    maxScore: 100,
+    maxScore: 60,
     gradeIndex: getGradeIndex('A+'),
     included: true,
   },
@@ -208,13 +208,7 @@ function GradeX() {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length) {
-          // Filter out "Indian Art Form" if it exists in saved data
-          const filtered = parsed.filter(course => 
-            course.title !== 'Indian Art Form' && 
-            course.title !== 'Indian Art Form (Theory)' &&
-            course.title !== 'Indian Art Form (Practical)'
-          );
-          setCourses(filtered.length > 0 ? filtered : defaultCourses);
+          setCourses(parsed);
         }
       } catch (error) {
         console.warn('Unable to restore GradeX data', error);

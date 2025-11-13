@@ -33,4 +33,5 @@ dist-ssr
 build
 .cache
 
-.vercel
+.vercel/
+

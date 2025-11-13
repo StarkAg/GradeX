@@ -6,7 +6,20 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [loadingText, setLoadingText] = useState('');
   const [progress, setProgress] = useState(0);
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('gradex-theme');
+    return savedTheme || 'dark';
+  });
   const audioRef = useRef(null);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('gradex-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
 
   useEffect(() => {
     const texts = ['INITIALIZING...', 'LOADING SYSTEMS...', 'GRADEX ONLINE'];
@@ -72,14 +85,14 @@ export default function App() {
             left: 0,
             width: '100%',
             height: '100%',
-            background: '#020202',
+            background: 'var(--splash-bg)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 9999,
             opacity: showSplash ? 1 : 0,
-            transition: 'opacity 0.8s ease-out',
+            transition: 'opacity 0.8s ease-out, background 0.3s ease',
             overflow: 'hidden'
           }}
         >
@@ -91,7 +104,7 @@ export default function App() {
               left: 0,
               width: '100%',
               height: '100%',
-              background: 'linear-gradient(transparent 50%, rgba(245, 245, 245, 0.03) 50%)',
+              background: `linear-gradient(transparent 50%, var(--splash-overlay) 50%)`,
               backgroundSize: '100% 4px',
               animation: 'scan 2s linear infinite',
               pointerEvents: 'none'
@@ -107,8 +120,8 @@ export default function App() {
               width: '100%',
               height: '100%',
               backgroundImage: `
-                linear-gradient(rgba(245, 245, 245, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(245, 245, 245, 0.03) 1px, transparent 1px)
+                linear-gradient(var(--splash-overlay) 1px, transparent 1px),
+                linear-gradient(90deg, var(--splash-overlay) 1px, transparent 1px)
               `,
               backgroundSize: '50px 50px',
               opacity: 0.3,
@@ -164,7 +177,7 @@ export default function App() {
               fontFamily: 'Space Grotesk, monospace',
               fontSize: '14px',
               letterSpacing: '0.2em',
-              color: '#f5f5f5',
+              color: 'var(--splash-text)',
               marginBottom: '30px',
               minHeight: '20px',
               textTransform: 'uppercase',
@@ -180,7 +193,7 @@ export default function App() {
             style={{
               width: '300px',
               height: '2px',
-              background: 'rgba(245, 245, 245, 0.1)',
+              background: 'var(--splash-overlay)',
               borderRadius: '2px',
               overflow: 'hidden',
               position: 'relative'
@@ -190,10 +203,10 @@ export default function App() {
               style={{
                 width: `${progress}%`,
                 height: '100%',
-                background: 'linear-gradient(90deg, transparent, #f5f5f5, transparent)',
+                background: `linear-gradient(90deg, transparent, var(--splash-text), transparent)`,
                 animation: 'progressGlow 1.5s ease-in-out infinite',
                 transition: 'width 0.1s linear',
-                boxShadow: '0 0 10px rgba(245, 245, 245, 0.5)'
+                boxShadow: `0 0 10px var(--splash-overlay)`
               }}
             />
           </div>
@@ -206,8 +219,8 @@ export default function App() {
               left: '20px',
               width: '40px',
               height: '40px',
-              borderTop: '2px solid rgba(245, 245, 245, 0.3)',
-              borderLeft: '2px solid rgba(245, 245, 245, 0.3)',
+              borderTop: `2px solid var(--splash-overlay)`,
+              borderLeft: `2px solid var(--splash-overlay)`,
               animation: 'cornerFade 2s ease-in-out infinite'
             }}
           />
@@ -218,8 +231,8 @@ export default function App() {
               right: '20px',
               width: '40px',
               height: '40px',
-              borderTop: '2px solid rgba(245, 245, 245, 0.3)',
-              borderRight: '2px solid rgba(245, 245, 245, 0.3)',
+              borderTop: `2px solid var(--splash-overlay)`,
+              borderRight: `2px solid var(--splash-overlay)`,
               animation: 'cornerFade 2s ease-in-out infinite'
             }}
           />
@@ -230,8 +243,8 @@ export default function App() {
               left: '20px',
               width: '40px',
               height: '40px',
-              borderBottom: '2px solid rgba(245, 245, 245, 0.3)',
-              borderLeft: '2px solid rgba(245, 245, 245, 0.3)',
+              borderBottom: `2px solid var(--splash-overlay)`,
+              borderLeft: `2px solid var(--splash-overlay)`,
               animation: 'cornerFade 2s ease-in-out infinite'
             }}
           />
@@ -242,8 +255,8 @@ export default function App() {
               right: '20px',
               width: '40px',
               height: '40px',
-              borderBottom: '2px solid rgba(245, 245, 245, 0.3)',
-              borderRight: '2px solid rgba(245, 245, 245, 0.3)',
+              borderBottom: `2px solid var(--splash-overlay)`,
+              borderRight: `2px solid var(--splash-overlay)`,
               animation: 'cornerFade 2s ease-in-out infinite'
             }}
           />
@@ -293,24 +306,68 @@ export default function App() {
                 title="Easter Egg"
               >
                 {isPlaying ? (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#f5f5f5">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                     <rect x="6" y="4" width="4" height="16" />
                     <rect x="14" y="4" width="4" height="16" />
                   </svg>
                 ) : (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#f5f5f5">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M8 5v14l11-7z" />
                   </svg>
                 )}
               </button>
             </span>
           </h1>
-          <p style={{ marginTop: '8px', fontSize: '12px', color: 'rgba(245, 245, 245, 0.5)', fontStyle: 'italic', letterSpacing: '0.05em' }}>
+          <p style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic', letterSpacing: '0.05em' }}>
             PS — came into existence on 12th Nov :) since ClassPro and Etc. were unreliable manytimes :(
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '9px', color: 'rgba(245, 245, 245, 0.35)', fontWeight: 400, textTransform: 'uppercase', letterSpacing: '0.08em' }}>BY HARSH</span>
+          <button
+            onClick={toggleTheme}
+            style={{
+              width: '32px',
+              height: '32px',
+              padding: 0,
+              border: '1px solid var(--border-color)',
+              background: 'var(--card-bg)',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+              color: 'var(--text-primary)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border-hover)';
+              e.currentTarget.style.background = 'var(--hover-bg)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border-color)';
+              e.currentTarget.style.background = 'var(--card-bg)';
+            }}
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {theme === 'dark' ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+            )}
+          </button>
+          <span style={{ fontSize: '9px', color: 'var(--text-secondary)', fontWeight: 400, textTransform: 'uppercase', letterSpacing: '0.08em' }}>BY HARSH</span>
             <a 
               href="https://github.com/StarkAg" 
               target="_blank" 
@@ -318,9 +375,9 @@ export default function App() {
               style={{ 
                 padding: '4px 8px', 
                 borderRadius: '4px', 
-                border: '1px solid rgba(245, 245, 245, 0.15)', 
+                border: '1px solid var(--border-color)', 
                 background: 'transparent', 
-                color: 'rgba(245, 245, 245, 0.4)', 
+                color: 'var(--text-tertiary)', 
                 textDecoration: 'none',
                 fontSize: '9px',
                 letterSpacing: '0.08em',
@@ -328,14 +385,14 @@ export default function App() {
                 transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
-                e.target.style.borderColor = 'rgba(245, 245, 245, 0.3)';
-                e.target.style.background = 'rgba(245, 245, 245, 0.04)';
-                e.target.style.color = 'rgba(245, 245, 245, 0.6)';
+                e.target.style.borderColor = 'var(--border-hover)';
+                e.target.style.background = 'var(--hover-bg)';
+                e.target.style.color = 'var(--text-secondary)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.borderColor = 'rgba(245, 245, 245, 0.15)';
+                e.target.style.borderColor = 'var(--border-color)';
                 e.target.style.background = 'transparent';
-                e.target.style.color = 'rgba(245, 245, 245, 0.4)';
+                e.target.style.color = 'var(--text-tertiary)';
               }}
             >
               GitHub
@@ -347,9 +404,9 @@ export default function App() {
               style={{ 
                 padding: '4px 8px', 
                 borderRadius: '4px', 
-                border: '1px solid rgba(245, 245, 245, 0.15)', 
+                border: '1px solid var(--border-color)', 
                 background: 'transparent', 
-                color: 'rgba(245, 245, 245, 0.4)', 
+                color: 'var(--text-tertiary)', 
                 textDecoration: 'none',
                 fontSize: '9px',
                 letterSpacing: '0.08em',
@@ -357,14 +414,14 @@ export default function App() {
                 transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
-                e.target.style.borderColor = 'rgba(245, 245, 245, 0.3)';
-                e.target.style.background = 'rgba(245, 245, 245, 0.04)';
-                e.target.style.color = 'rgba(245, 245, 245, 0.6)';
+                e.target.style.borderColor = 'var(--border-hover)';
+                e.target.style.background = 'var(--hover-bg)';
+                e.target.style.color = 'var(--text-secondary)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.borderColor = 'rgba(245, 245, 245, 0.15)';
+                e.target.style.borderColor = 'var(--border-color)';
                 e.target.style.background = 'transparent';
-                e.target.style.color = 'rgba(245, 245, 245, 0.4)';
+                e.target.style.color = 'var(--text-tertiary)';
               }}
             >
               LinkedIn
