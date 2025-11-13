@@ -554,34 +554,9 @@ function GradeX() {
         <button
           type="button"
           onClick={applyHAPreset}
-          style={{
-            position: 'absolute',
-            top: '8px',
-            right: '64px',
-            width: '20px',
-            height: '20px',
-            borderRadius: '50%',
-            border: '1px solid transparent',
-            background: 'transparent',
-            color: 'var(--text-primary)',
-            opacity: 0.05,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '9px',
-            letterSpacing: '0.1em',
-            padding: 0,
-            transition: 'opacity 0.3s ease, border-color 0.3s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.opacity = '0.5';
-            e.currentTarget.style.borderColor = 'var(--border-hover)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.opacity = '0.05';
-            e.currentTarget.style.borderColor = 'transparent';
-          }}
+          className="hidden-preset-btn"
+          style={{ right: '64px' }}
+          aria-label="Load HA preset"
           title="HA Mode"
         >
           HA
@@ -589,34 +564,9 @@ function GradeX() {
         <button
           type="button"
           onClick={applyULPreset}
-          style={{
-            position: 'absolute',
-            top: '8px',
-            right: '36px',
-            width: '20px',
-            height: '20px',
-            borderRadius: '50%',
-            border: '1px solid transparent',
-            background: 'transparent',
-            color: 'var(--text-primary)',
-            opacity: 0.08,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '9px',
-            letterSpacing: '0.1em',
-            padding: 0,
-            transition: 'opacity 0.3s ease, border-color 0.3s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.opacity = '0.5';
-            e.currentTarget.style.borderColor = 'var(--border-hover)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.opacity = '0.08';
-            e.currentTarget.style.borderColor = 'transparent';
-          }}
+          className="hidden-preset-btn"
+          style={{ right: '36px' }}
+          aria-label="Load UL preset"
           title="UL Mode"
         >
           UL
