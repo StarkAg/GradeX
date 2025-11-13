@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 // Grade thresholds and points according to specification
 const gradeScale = [
@@ -319,23 +319,13 @@ const HA_PRESET = [
 
 const STORAGE_KEY = 'gradex-courses';
 
-// Easter egg marks pattern (score / maxScore) - with tolerance
-const EWW_PATTERN = [
-  { score: 46.90, maxScore: 60, tolerance: 1.0 },
-  { score: 48.40, maxScore: 60, tolerance: 1.0 },
-  { score: 56.00, maxScore: 60, tolerance: 1.0 },
-  { score: 81.05, maxScore: 100, tolerance: 1.0 },
-  { score: 96.00, maxScore: 100, tolerance: 1.0 },
-  { score: 56.00, maxScore: 60, tolerance: 1.0 },
-  { score: 55.60, maxScore: 60, tolerance: 1.0 },
-];
-
 function GradeX() {
   const [courses, setCourses] = useState(defaultCourses);
   const [editingCourseId, setEditingCourseId] = useState(null);
   const [editFormData, setEditFormData] = useState({ title: '', credit: 0, score: 0 });
   const [showEWWMessage, setShowEWWMessage] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const ewwTimerRef = useRef(null);
   
   const applyPresetCourses = (preset) => {
     setCourses(preset.map((course, index) => ({ ...course, id: index + 1 })));
@@ -344,8 +334,20 @@ function GradeX() {
     setEditFormData({ title: '', credit: 0, score: 0 });
   };
 
+  const triggerEWWMessage = () => {
+    if (ewwTimerRef.current) {
+      clearTimeout(ewwTimerRef.current);
+    }
+    setShowEWWMessage(true);
+    ewwTimerRef.current = setTimeout(() => {
+      setShowEWWMessage(false);
+      ewwTimerRef.current = null;
+    }, 3000);
+  };
+
   const applyULPreset = () => {
     applyPresetCourses(UL_PRESET);
+    triggerEWWMessage();
   };
 
   const applyHAPreset = () => {
@@ -385,43 +387,11 @@ function GradeX() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(courses));
   }, [courses]);
 
-  // Easter egg detection
-  useEffect(() => {
-    const included = courses.filter((course) => course.included);
-    
-    // Check if we have exactly 8 courses
-    if (included.length !== EWW_PATTERN.length) {
-      return;
+  useEffect(() => () => {
+    if (ewwTimerRef.current) {
+      clearTimeout(ewwTimerRef.current);
     }
-
-    // Create a copy of the pattern to match against
-    const patternCopy = [...EWW_PATTERN];
-    let matches = 0;
-
-    // Try to match each course with a pattern entry
-    for (const course of included) {
-      const matchIndex = patternCopy.findIndex((pattern) => {
-        const scoreMatch = Math.abs(course.score - pattern.score) <= pattern.tolerance;
-        const maxScoreMatch = course.maxScore === pattern.maxScore;
-        return scoreMatch && maxScoreMatch;
-      });
-
-      if (matchIndex !== -1) {
-        matches++;
-        patternCopy.splice(matchIndex, 1); // Remove matched pattern to avoid duplicates
-      }
-    }
-
-    // If all courses match the pattern, show the easter egg
-    if (matches === EWW_PATTERN.length) {
-      setShowEWWMessage(true);
-      const timer = setTimeout(() => {
-        setShowEWWMessage(false);
-      }, 3000); // Show for 3 seconds
-
-      return () => clearTimeout(timer);
-    }
-  }, [courses]);
+  }, []);
 
   const sgpa = useMemo(() => {
     const included = courses.filter((course) => course.included);
