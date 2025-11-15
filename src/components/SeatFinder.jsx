@@ -8,6 +8,19 @@ export default function SeatFinder() {
   const [error, setError] = useState(null);
   const [seatInfo, setSeatInfo] = useState(null);
   const [seatData, setSeatData] = useState([]);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if desktop/mobile on mount and resize
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+      setIsMobile(window.innerWidth < 480);
+    };
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   // Load seat data on component mount
   useEffect(() => {
@@ -58,7 +71,9 @@ export default function SeatFinder() {
   };
 
   const handleRegisterNumberChange = (e) => {
-    setRegisterNumber(e.target.value);
+    // Convert to uppercase for consistency, but allow any case input
+    const value = e.target.value.toUpperCase();
+    setRegisterNumber(value);
     setError(null);
     setSeatInfo(null);
   };
@@ -119,6 +134,8 @@ export default function SeatFinder() {
     }
   };
 
+  const hasSeatInfo = seatInfo && seatInfo.length > 0;
+
   return (
     <div style={{
       width: '100%',
@@ -129,48 +146,61 @@ export default function SeatFinder() {
       fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
     }}>
       <div style={{
-        maxWidth: '600px',
+        display: isDesktop && hasSeatInfo ? 'flex' : 'block',
+        gap: '32px',
+        alignItems: 'flex-start',
+        padding: 'clamp(20px, 5vw, 40px) clamp(16px, 4vw, 20px)',
+        maxWidth: isDesktop && hasSeatInfo ? '1200px' : '600px',
         margin: '0 auto',
-        padding: 'clamp(20px, 5vw, 40px) clamp(16px, 4vw, 20px)'
+        transition: 'all 0.5s ease-in-out'
       }}>
-        {/* Header */}
+        {/* Form Card */}
         <div style={{
-          textAlign: 'center',
-          marginBottom: 'clamp(24px, 6vw, 32px)'
+          width: isDesktop && hasSeatInfo ? '48%' : '100%',
+          flexShrink: 0,
+          transition: 'all 0.5s ease-in-out',
+          transform: isDesktop && hasSeatInfo ? 'translateX(-10%)' : 'translateX(0)'
         }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 'clamp(8px, 2vw, 12px)',
-            marginBottom: '8px',
-            flexWrap: 'wrap'
-          }}>
-            <h1 style={{
-              fontSize: 'clamp(24px, 6vw, 32px)',
-              fontWeight: 700,
-              letterSpacing: '-0.02em',
-              margin: 0,
-              padding: 0,
-              color: 'var(--text-primary)',
-              fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+          {/* Header */}
+          {(!isDesktop || !hasSeatInfo) && (
+            <div style={{
+              textAlign: 'center',
+              marginBottom: 'clamp(24px, 6vw, 32px)'
             }}>
-              SRMIST Seat Finder
-            </h1>
-            <span style={{
-              fontSize: 'clamp(10px, 2.5vw, 12px)',
-              fontWeight: 600,
-              padding: 'clamp(3px, 1vw, 4px) clamp(6px, 2vw, 8px)',
-              background: 'var(--text-primary)',
-              color: 'var(--bg-primary)',
-              borderRadius: '4px',
-              letterSpacing: '0.05em'
-            }}>
-              v3.0
-            </span>
-          </div>
-        </div>
-
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 'clamp(8px, 2vw, 12px)',
+                marginBottom: '8px',
+                flexWrap: 'wrap'
+              }}>
+                <h1 style={{
+                  fontSize: 'clamp(24px, 6vw, 32px)',
+                  fontWeight: 700,
+                  letterSpacing: '-0.02em',
+                  margin: 0,
+                  padding: 0,
+                  color: 'var(--text-primary)',
+                  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+                }}>
+                  SRMIST Seat Finder
+                </h1>
+                <span style={{
+                  fontSize: 'clamp(10px, 2.5vw, 12px)',
+                  fontWeight: 600,
+                  padding: 'clamp(3px, 1vw, 4px) clamp(6px, 2vw, 8px)',
+                  background: 'var(--text-primary)',
+                  color: 'var(--bg-primary)',
+                  borderRadius: '4px',
+                  letterSpacing: '0.05em'
+                }}>
+                  v3.0
+                </span>
+              </div>
+            </div>
+          )}
+          
         {/* Main Card */}
         <div style={{
           background: 'var(--card-bg)',
@@ -199,31 +229,33 @@ export default function SeatFinder() {
             </p>
           </div>
 
-          {/* Warning Note */}
-          <div style={{
-            background: 'rgba(251, 191, 36, 0.1)',
-            border: '1px solid rgba(251, 191, 36, 0.3)',
-            borderRadius: '8px',
-            padding: 'clamp(10px, 3vw, 12px) clamp(12px, 4vw, 16px)',
-            marginBottom: 'clamp(20px, 5vw, 24px)',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: 'clamp(8px, 2vw, 12px)'
-          }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#fbbf24', flexShrink: 0, marginTop: '2px', minWidth: '18px', width: 'clamp(18px, 4vw, 20px)', height: 'clamp(18px, 4vw, 20px)' }}>
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-            <p style={{
-              fontSize: 'clamp(12px, 3vw, 13px)',
-              color: '#fbbf24',
-              margin: 0,
-              lineHeight: '1.5'
+          {/* Warning Note - Only show if no seat info found */}
+          {(!seatInfo || seatInfo.length === 0 || seatInfo.every(seat => !seat.room || seat.room === '-')) && (
+            <div style={{
+              background: 'rgba(251, 191, 36, 0.1)',
+              border: '1px solid rgba(251, 191, 36, 0.3)',
+              borderRadius: '8px',
+              padding: 'clamp(10px, 3vw, 12px) clamp(12px, 4vw, 16px)',
+              marginBottom: 'clamp(20px, 5vw, 24px)',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 'clamp(8px, 2vw, 12px)'
             }}>
-              Note: Seat info appears 24h before exams. Not available? Check back later.
-            </p>
-          </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#fbbf24', flexShrink: 0, marginTop: '2px', minWidth: '18px', width: 'clamp(18px, 4vw, 20px)', height: 'clamp(18px, 4vw, 20px)' }}>
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              <p style={{
+                fontSize: 'clamp(12px, 3vw, 13px)',
+                color: '#fbbf24',
+                margin: 0,
+                lineHeight: '1.5'
+              }}>
+                Note: Seat info appears 24h before exams. Not available? Check back later.
+              </p>
+            </div>
+          )}
 
           {/* Exam Date */}
           <div style={{
@@ -430,73 +462,548 @@ export default function SeatFinder() {
             </div>
           )}
 
-          {/* Seat Info (when found) */}
-          {seatInfo && seatInfo.length > 0 && (
+          {/* Seat Info - Mobile only (inside form) */}
+          {!isDesktop && seatInfo && seatInfo.length > 0 && (
             <div style={{
               marginTop: 'clamp(16px, 4vw, 20px)',
-              padding: 'clamp(16px, 4vw, 20px)',
-              background: 'rgba(34, 197, 94, 0.1)',
-              border: '1px solid rgba(34, 197, 94, 0.3)',
-              borderRadius: '8px'
+              padding: 'clamp(20px, 5vw, 24px)',
+              background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(34, 197, 94, 0.08) 100%)',
+              border: '1.5px solid rgba(34, 197, 94, 0.4)',
+              borderRadius: '16px',
+              boxShadow: '0 8px 24px rgba(34, 197, 94, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
             }}>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                marginBottom: '16px'
+                marginBottom: '20px',
+                paddingBottom: '16px',
+                borderBottom: '1px solid rgba(34, 197, 94, 0.2)'
               }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#22c55e', flexShrink: 0 }}>
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: 'rgba(34, 197, 94, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#22c55e' }}>
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                </div>
                 <h3 style={{
-                  fontSize: 'clamp(16px, 4vw, 18px)',
-                  fontWeight: 600,
+                  fontSize: 'clamp(18px, 4.5vw, 20px)',
+                  fontWeight: 700,
                   color: '#22c55e',
-                  margin: 0
+                  margin: 0,
+                  letterSpacing: '-0.01em'
                 }}>
                   Seat Information Found!
                 </h3>
               </div>
               
-              {seatInfo.map((seat, index) => (
+              {seatInfo.map((seat, index) => {
+                const roomUpper = seat.room && seat.room !== '-' ? seat.room.toUpperCase() : '';
+                const hasImage = roomUpper && roomUpper.length > 0 && (roomUpper.startsWith('TP2') || roomUpper.startsWith('TP') || roomUpper.includes('UB'));
+                
+                return (
                 <div key={index} style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  borderRadius: '8px',
-                  padding: 'clamp(12px, 3vw, 16px)',
-                  marginBottom: index < seatInfo.length - 1 ? '12px' : '0',
-                  border: '1px solid rgba(34, 197, 94, 0.2)'
+                  background: 'rgba(34, 197, 94, 0.08)',
+                  borderRadius: '12px',
+                  padding: 'clamp(12px, 3vw, 20px)',
+                  marginBottom: index < seatInfo.length - 1 ? 'clamp(12px, 3vw, 16px)' : '0',
+                  border: '1px solid rgba(34, 197, 94, 0.25)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                  display: 'flex',
+                  gap: 'clamp(10px, 2.5vw, 16px)',
+                  flexDirection: hasImage ? (isMobile ? 'column' : 'row') : 'column'
                 }}>
+                  {hasImage ? (() => {
+                    if (roomUpper.startsWith('TP2')) {
+                      return (
+                        <div style={{
+                          flexShrink: 0,
+                          width: isMobile ? '100%' : 'clamp(100px, 20vw, 150px)',
+                          maxWidth: isMobile ? '200px' : 'none',
+                          margin: isMobile ? '0 auto' : '0',
+                          textAlign: 'center',
+                          position: 'relative'
+                        }}>
+                          <img 
+                            src="/TP2.JPG" 
+                            alt="TP2 Venue Map" 
+                            style={{
+                              width: '100%',
+                              height: 'auto',
+                              borderRadius: '14px',
+                              maxHeight: isMobile ? '250px' : '300px',
+                              objectFit: 'contain',
+                              filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
+                              boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(34, 197, 94, 0.15)',
+                              transition: 'all 0.3s ease',
+                              border: '2px solid rgba(34, 197, 94, 0.25)'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!isMobile) {
+                                e.currentTarget.style.filter = 'brightness(1.1) contrast(1.15) saturate(1.2)';
+                                e.currentTarget.style.transform = 'scale(1.02)';
+                                e.currentTarget.style.boxShadow = '0 12px 28px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.35)';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isMobile) {
+                                e.currentTarget.style.filter = 'brightness(1.05) contrast(1.1) saturate(1.15)';
+                                e.currentTarget.style.transform = 'scale(1)';
+                                e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(34, 197, 94, 0.15)';
+                              }
+                            }}
+                          />
+                        </div>
+                      );
+                    } else if (roomUpper.startsWith('TP')) {
+                      return (
+                        <div style={{
+                          flexShrink: 0,
+                          width: isMobile ? '100%' : 'clamp(100px, 20vw, 150px)',
+                          maxWidth: isMobile ? '200px' : 'none',
+                          margin: isMobile ? '0 auto' : '0',
+                          textAlign: 'center',
+                          position: 'relative'
+                        }}>
+                          <img 
+                            src="/TP.jpg" 
+                            alt="TP Venue Map" 
+                            style={{
+                              width: '100%',
+                              height: 'auto',
+                              borderRadius: '14px',
+                              maxHeight: isMobile ? '250px' : '300px',
+                              objectFit: 'contain',
+                              filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
+                              boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(34, 197, 94, 0.15)',
+                              transition: 'all 0.3s ease',
+                              border: '2px solid rgba(34, 197, 94, 0.25)'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!isMobile) {
+                                e.currentTarget.style.filter = 'brightness(1.1) contrast(1.15) saturate(1.2)';
+                                e.currentTarget.style.transform = 'scale(1.02)';
+                                e.currentTarget.style.boxShadow = '0 12px 28px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.35)';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isMobile) {
+                                e.currentTarget.style.filter = 'brightness(1.05) contrast(1.1) saturate(1.15)';
+                                e.currentTarget.style.transform = 'scale(1)';
+                                e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(34, 197, 94, 0.15)';
+                              }
+                            }}
+                          />
+                        </div>
+                      );
+                    } else if (roomUpper.includes('UB')) {
+                      return (
+                        <div style={{
+                          flexShrink: 0,
+                          width: isMobile ? '100%' : 'clamp(100px, 20vw, 150px)',
+                          maxWidth: isMobile ? '200px' : 'none',
+                          margin: isMobile ? '0 auto' : '0',
+                          textAlign: 'center',
+                          position: 'relative'
+                        }}>
+                          <img 
+                            src="/UB.png" 
+                            alt="UB Venue Map" 
+                            style={{
+                              width: '100%',
+                              height: 'auto',
+                              borderRadius: '14px',
+                              maxHeight: isMobile ? '250px' : '300px',
+                              objectFit: 'contain',
+                              filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
+                              boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(34, 197, 94, 0.15)',
+                              transition: 'all 0.3s ease',
+                              border: '2px solid rgba(34, 197, 94, 0.25)'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!isMobile) {
+                                e.currentTarget.style.filter = 'brightness(1.1) contrast(1.15) saturate(1.2)';
+                                e.currentTarget.style.transform = 'scale(1.02)';
+                                e.currentTarget.style.boxShadow = '0 12px 28px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.35)';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isMobile) {
+                                e.currentTarget.style.filter = 'brightness(1.05) contrast(1.1) saturate(1.15)';
+                                e.currentTarget.style.transform = 'scale(1)';
+                                e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(34, 197, 94, 0.15)';
+                              }
+                            }}
+                          />
+                        </div>
+                      );
+                    }
+                    return null;
+                  })() : null}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                  {(seat.name && seat.name !== '-') && (
+                    <div style={{
+                      background: 'rgba(59, 130, 246, 0.1)',
+                      borderRadius: '10px',
+                      padding: 'clamp(10px, 2.5vw, 12px)',
+                      marginBottom: 'clamp(10px, 2.5vw, 12px)',
+                      border: '1px solid rgba(59, 130, 246, 0.2)'
+                    }}>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: '6px', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</div>
+                      <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: 'clamp(14px, 3.5vw, 16px)' }}>{seat.name}</div>
+                    </div>
+                  )}
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                    gap: 'clamp(8px, 2vw, 12px)',
-                    fontSize: 'clamp(13px, 3.5vw, 14px)'
+                    gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                    gap: 'clamp(10px, 2.5vw, 16px)',
+                    fontSize: 'clamp(12px, 3vw, 14px)'
                   }}>
-                    <div>
-                      <div style={{ color: 'var(--text-secondary)', marginBottom: '4px', fontSize: 'clamp(11px, 3vw, 12px)' }}>Room/Venue</div>
-                      <div style={{ color: '#22c55e', fontWeight: 600 }}>{seat.room || 'N/A'}</div>
+                    <div style={{
+                      background: seat.room && seat.room !== '-' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(251, 191, 36, 0.1)',
+                      borderRadius: '10px',
+                      padding: 'clamp(10px, 2.5vw, 12px)',
+                      border: seat.room && seat.room !== '-' ? '1px solid rgba(34, 197, 94, 0.2)' : '1px solid rgba(251, 191, 36, 0.3)'
+                    }}>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Room/Venue</div>
+                      <div style={{ 
+                        color: seat.room && seat.room !== '-' ? '#22c55e' : '#fbbf24', 
+                        fontWeight: 700, 
+                        fontSize: 'clamp(14px, 3.5vw, 18px)',
+                        fontStyle: seat.room === '-' ? 'italic' : 'normal'
+                      }}>{seat.room || '-'}</div>
+                      {seat.building && seat.building !== '-' && (
+                        <div style={{ 
+                          color: 'var(--text-secondary)', 
+                          fontSize: 'clamp(10px, 2.5vw, 12px)', 
+                          marginTop: 'clamp(3px, 1vw, 4px)',
+                          fontWeight: 500
+                        }}>{seat.building}</div>
+                      )}
+                      {seat.floor && seat.floor !== '-' && (
+                        <div style={{ 
+                          color: 'var(--text-primary)', 
+                          fontSize: 'clamp(12px, 3vw, 15px)', 
+                          marginTop: 'clamp(4px, 1.5vw, 6px)',
+                          fontWeight: 600
+                        }}>Floor: {seat.floor}</div>
+                      )}
                     </div>
-                    <div>
-                      <div style={{ color: 'var(--text-secondary)', marginBottom: '4px', fontSize: 'clamp(11px, 3vw, 12px)' }}>Subject Code</div>
-                      <div style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{seat.subcode || 'N/A'}</div>
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      borderRadius: '10px',
+                      padding: 'clamp(10px, 2.5vw, 12px)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Subject Code</div>
+                      <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: 'clamp(13px, 3vw, 15px)' }}>{seat.subcode || '-'}</div>
                     </div>
-                    <div>
-                      <div style={{ color: 'var(--text-secondary)', marginBottom: '4px', fontSize: 'clamp(11px, 3vw, 12px)' }}>Department</div>
-                      <div style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{seat.department || 'N/A'}</div>
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      borderRadius: '10px',
+                      padding: 'clamp(10px, 2.5vw, 12px)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Department</div>
+                      <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: 'clamp(13px, 3vw, 15px)' }}>{seat.department || '-'}</div>
                     </div>
-                    <div>
-                      <div style={{ color: 'var(--text-secondary)', marginBottom: '4px', fontSize: 'clamp(11px, 3vw, 12px)' }}>Session</div>
-                      <div style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{seat.session || 'N/A'}</div>
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      borderRadius: '10px',
+                      padding: 'clamp(10px, 2.5vw, 12px)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Session</div>
+                      <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: 'clamp(13px, 3vw, 15px)' }}>{seat.session || '-'}</div>
                     </div>
                   </div>
+                  </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
           )}
         </div>
+        </div>
+
+        {/* Seat Info - Desktop only (right side) */}
+        {isDesktop && seatInfo && seatInfo.length > 0 && (
+          <div style={{
+            width: '48%',
+            flexShrink: 0,
+            opacity: hasSeatInfo ? 1 : 0,
+            transform: hasSeatInfo ? 'translateX(0)' : 'translateX(20px)',
+            transition: 'all 0.5s ease-in-out',
+            animation: hasSeatInfo ? 'fadeIn 0.5s ease-in-out' : 'none'
+          }}>
+            <div style={{
+              position: 'sticky',
+              top: '20px',
+              background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(34, 197, 94, 0.08) 100%)',
+              border: '1.5px solid rgba(34, 197, 94, 0.4)',
+              borderRadius: '16px',
+              padding: '28px',
+              boxShadow: '0 12px 32px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                marginBottom: '24px',
+                paddingBottom: '20px',
+                borderBottom: '1.5px solid rgba(34, 197, 94, 0.25)'
+              }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  background: 'rgba(34, 197, 94, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+                }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#22c55e' }}>
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                </div>
+                <h3 style={{
+                  fontSize: '22px',
+                  fontWeight: 700,
+                  color: '#22c55e',
+                  margin: 0,
+                  letterSpacing: '-0.01em'
+                }}>
+                  Seat Information Found!
+                </h3>
+              </div>
+              
+              {seatInfo.map((seat, index) => {
+                const roomUpper = seat.room && seat.room !== '-' ? seat.room.toUpperCase() : '';
+                const hasImage = roomUpper && roomUpper.length > 0 && (roomUpper.startsWith('TP2') || roomUpper.startsWith('TP') || roomUpper.includes('UB'));
+                
+                return (
+                <div key={index} style={{
+                  background: 'rgba(34, 197, 94, 0.1)',
+                  borderRadius: '14px',
+                  padding: '20px',
+                  marginBottom: index < seatInfo.length - 1 ? '20px' : '0',
+                  border: '1.5px solid rgba(34, 197, 94, 0.3)',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+                  display: 'flex',
+                  gap: '20px',
+                  flexDirection: hasImage ? 'row' : 'column'
+                }}>
+                  {hasImage ? (() => {
+                    if (roomUpper.startsWith('TP2')) {
+                      return (
+                        <div style={{
+                          flexShrink: 0,
+                          width: '180px',
+                          textAlign: 'center',
+                          position: 'relative'
+                        }}>
+                          <img 
+                            src="/TP2.JPG" 
+                            alt="TP2 Venue Map" 
+                            style={{
+                              width: '100%',
+                              height: 'auto',
+                              borderRadius: '14px',
+                              maxHeight: '400px',
+                              objectFit: 'contain',
+                              filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
+                              boxShadow: '0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.2)',
+                              transition: 'all 0.3s ease',
+                              border: '2px solid rgba(34, 197, 94, 0.3)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.filter = 'brightness(1.1) contrast(1.15) saturate(1.2)';
+                              e.currentTarget.style.transform = 'scale(1.02)';
+                              e.currentTarget.style.boxShadow = '0 14px 32px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(34, 197, 94, 0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.filter = 'brightness(1.05) contrast(1.1) saturate(1.15)';
+                              e.currentTarget.style.transform = 'scale(1)';
+                              e.currentTarget.style.boxShadow = '0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.2)';
+                            }}
+                          />
+                        </div>
+                      );
+                    } else if (roomUpper.startsWith('TP')) {
+                      return (
+                        <div style={{
+                          flexShrink: 0,
+                          width: '180px',
+                          textAlign: 'center',
+                          position: 'relative'
+                        }}>
+                          <img 
+                            src="/TP.jpg" 
+                            alt="TP Venue Map" 
+                            style={{
+                              width: '100%',
+                              height: 'auto',
+                              borderRadius: '14px',
+                              maxHeight: '400px',
+                              objectFit: 'contain',
+                              filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
+                              boxShadow: '0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.2)',
+                              transition: 'all 0.3s ease',
+                              border: '2px solid rgba(34, 197, 94, 0.3)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.filter = 'brightness(1.1) contrast(1.15) saturate(1.2)';
+                              e.currentTarget.style.transform = 'scale(1.02)';
+                              e.currentTarget.style.boxShadow = '0 14px 32px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(34, 197, 94, 0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.filter = 'brightness(1.05) contrast(1.1) saturate(1.15)';
+                              e.currentTarget.style.transform = 'scale(1)';
+                              e.currentTarget.style.boxShadow = '0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.2)';
+                            }}
+                          />
+                        </div>
+                      );
+                    } else if (roomUpper.includes('UB')) {
+                      return (
+                        <div style={{
+                          flexShrink: 0,
+                          width: '180px',
+                          textAlign: 'center',
+                          position: 'relative'
+                        }}>
+                          <img 
+                            src="/UB.png" 
+                            alt="UB Venue Map" 
+                            style={{
+                              width: '100%',
+                              height: 'auto',
+                              borderRadius: '14px',
+                              maxHeight: '400px',
+                              objectFit: 'contain',
+                              filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
+                              boxShadow: '0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.2)',
+                              transition: 'all 0.3s ease',
+                              border: '2px solid rgba(34, 197, 94, 0.3)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.filter = 'brightness(1.1) contrast(1.15) saturate(1.2)';
+                              e.currentTarget.style.transform = 'scale(1.02)';
+                              e.currentTarget.style.boxShadow = '0 14px 32px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(34, 197, 94, 0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.filter = 'brightness(1.05) contrast(1.1) saturate(1.15)';
+                              e.currentTarget.style.transform = 'scale(1)';
+                              e.currentTarget.style.boxShadow = '0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.2)';
+                            }}
+                          />
+                        </div>
+                      );
+                    }
+                    return null;
+                  })() : null}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                  {(seat.name && seat.name !== '-') && (
+                    <div style={{
+                      background: 'rgba(59, 130, 246, 0.15)',
+                      borderRadius: '12px',
+                      padding: '14px',
+                      marginBottom: '16px',
+                      border: '1.5px solid rgba(59, 130, 246, 0.3)',
+                      boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)'
+                    }}>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Name</div>
+                      <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: '18px' }}>{seat.name}</div>
+                    </div>
+                  )}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '14px',
+                    fontSize: '14px'
+                  }}>
+                    <div style={{
+                      background: seat.room && seat.room !== '-' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(251, 191, 36, 0.15)',
+                      borderRadius: '12px',
+                      padding: '14px',
+                      border: seat.room && seat.room !== '-' ? '1.5px solid rgba(34, 197, 94, 0.3)' : '1.5px solid rgba(251, 191, 36, 0.3)',
+                      boxShadow: seat.room && seat.room !== '-' ? '0 2px 8px rgba(34, 197, 94, 0.15)' : '0 2px 8px rgba(251, 191, 36, 0.15)'
+                    }}>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Room/Venue</div>
+                      <div style={{ 
+                        color: seat.room && seat.room !== '-' ? '#22c55e' : '#fbbf24', 
+                        fontWeight: 700, 
+                        fontSize: '20px', 
+                        letterSpacing: '-0.02em',
+                        fontStyle: seat.room === '-' ? 'italic' : 'normal'
+                      }}>{seat.room || '-'}</div>
+                      {seat.building && seat.building !== '-' && (
+                        <div style={{ 
+                          color: 'var(--text-secondary)', 
+                          fontSize: '12px', 
+                          marginTop: '6px',
+                          fontWeight: 500
+                        }}>{seat.building}</div>
+                      )}
+                      {seat.floor && seat.floor !== '-' && (
+                        <div style={{ 
+                          color: 'var(--text-primary)', 
+                          fontSize: '16px', 
+                          marginTop: '8px',
+                          fontWeight: 600
+                        }}>Floor: {seat.floor}</div>
+                      )}
+                    </div>
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      borderRadius: '12px',
+                      padding: '14px',
+                      border: '1px solid rgba(255, 255, 255, 0.15)'
+                    }}>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Subject Code</div>
+                      <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '16px' }}>{seat.subcode || '-'}</div>
+                    </div>
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      borderRadius: '12px',
+                      padding: '14px',
+                      border: '1px solid rgba(255, 255, 255, 0.15)'
+                    }}>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Department</div>
+                      <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '16px' }}>{seat.department || '-'}</div>
+                    </div>
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      borderRadius: '12px',
+                      padding: '14px',
+                      border: '1px solid rgba(255, 255, 255, 0.15)'
+                    }}>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Session</div>
+                      <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '16px' }}>{seat.session || '-'}</div>
+                    </div>
+                  </div>
+                  </div>
+                </div>
+              );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
 
