@@ -92,22 +92,23 @@ export default function SeatFinder() {
       <div style={{
         maxWidth: '600px',
         margin: '0 auto',
-        padding: '40px 20px'
+        padding: 'clamp(20px, 5vw, 40px) clamp(16px, 4vw, 20px)'
       }}>
         {/* Header */}
         <div style={{
           textAlign: 'center',
-          marginBottom: '32px'
+          marginBottom: 'clamp(24px, 6vw, 32px)'
         }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '12px',
-            marginBottom: '8px'
+            gap: 'clamp(8px, 2vw, 12px)',
+            marginBottom: '8px',
+            flexWrap: 'wrap'
           }}>
             <h1 style={{
-              fontSize: '32px',
+              fontSize: 'clamp(24px, 6vw, 32px)',
               fontWeight: 700,
               letterSpacing: '-0.02em',
               margin: 0,
@@ -118,9 +119,9 @@ export default function SeatFinder() {
               SRMIST Seat Finder
             </h1>
             <span style={{
-              fontSize: '12px',
+              fontSize: 'clamp(10px, 2.5vw, 12px)',
               fontWeight: 600,
-              padding: '4px 8px',
+              padding: 'clamp(3px, 1vw, 4px) clamp(6px, 2vw, 8px)',
               background: 'var(--text-primary)',
               color: 'var(--bg-primary)',
               borderRadius: '4px',
@@ -136,14 +137,14 @@ export default function SeatFinder() {
           background: 'var(--card-bg)',
           border: '1px solid var(--border-color)',
           borderRadius: '12px',
-          padding: '32px',
+          padding: 'clamp(20px, 5vw, 32px)',
           marginBottom: '24px'
         }}>
           <div style={{
-            marginBottom: '24px'
+            marginBottom: 'clamp(20px, 5vw, 24px)'
           }}>
             <h2 style={{
-              fontSize: '24px',
+              fontSize: 'clamp(20px, 5vw, 24px)',
               fontWeight: 600,
               margin: '0 0 8px 0',
               color: 'var(--text-primary)'
@@ -151,7 +152,7 @@ export default function SeatFinder() {
               Find Your Exam Seat
             </h2>
             <p style={{
-              fontSize: '14px',
+              fontSize: 'clamp(13px, 3.5vw, 14px)',
               color: 'var(--text-secondary)',
               margin: 0
             }}>
@@ -164,19 +165,19 @@ export default function SeatFinder() {
             background: 'rgba(251, 191, 36, 0.1)',
             border: '1px solid rgba(251, 191, 36, 0.3)',
             borderRadius: '8px',
-            padding: '12px 16px',
-            marginBottom: '24px',
+            padding: 'clamp(10px, 3vw, 12px) clamp(12px, 4vw, 16px)',
+            marginBottom: 'clamp(20px, 5vw, 24px)',
             display: 'flex',
             alignItems: 'flex-start',
-            gap: '12px'
+            gap: 'clamp(8px, 2vw, 12px)'
           }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#fbbf24', flexShrink: 0, marginTop: '2px' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#fbbf24', flexShrink: 0, marginTop: '2px', minWidth: '18px', width: 'clamp(18px, 4vw, 20px)', height: 'clamp(18px, 4vw, 20px)' }}>
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
               <line x1="12" y1="9" x2="12" y2="13"></line>
               <line x1="12" y1="17" x2="12.01" y2="17"></line>
             </svg>
             <p style={{
-              fontSize: '13px',
+              fontSize: 'clamp(12px, 3vw, 13px)',
               color: '#fbbf24',
               margin: 0,
               lineHeight: '1.5'
@@ -187,34 +188,38 @@ export default function SeatFinder() {
 
           {/* Exam Date */}
           <div style={{
-            marginBottom: '24px'
+            marginBottom: 'clamp(20px, 5vw, 24px)'
           }}>
             <label style={{
               display: 'block',
-              fontSize: '14px',
+              fontSize: 'clamp(13px, 3.5vw, 14px)',
               fontWeight: 500,
               color: 'var(--text-primary)',
-              marginBottom: '12px'
+              marginBottom: 'clamp(10px, 2.5vw, 12px)'
             }}>
               Exam Date
             </label>
             <div style={{
               display: 'flex',
-              gap: '8px',
-              marginBottom: '12px'
+              gap: 'clamp(6px, 2vw, 8px)',
+              marginBottom: 'clamp(10px, 2.5vw, 12px)',
+              flexWrap: 'wrap'
             }}>
               <button
                 onClick={() => handleDateChange('today')}
                 style={{
-                  padding: '10px 20px',
-                  fontSize: '14px',
+                  padding: 'clamp(10px, 2.5vw, 12px) clamp(16px, 4vw, 20px)',
+                  fontSize: 'clamp(13px, 3.5vw, 14px)',
                   fontWeight: 500,
                   border: '1px solid var(--border-color)',
                   background: examDate === 'today' ? 'var(--text-primary)' : 'var(--card-bg)',
                   color: examDate === 'today' ? 'var(--bg-primary)' : 'var(--text-primary)',
                   borderRadius: '8px',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  minHeight: '44px',
+                  flex: '1 1 auto',
+                  minWidth: '100px'
                 }}
               >
                 Today
@@ -222,15 +227,18 @@ export default function SeatFinder() {
               <button
                 onClick={() => handleDateChange('tomorrow')}
                 style={{
-                  padding: '10px 20px',
-                  fontSize: '14px',
+                  padding: 'clamp(10px, 2.5vw, 12px) clamp(16px, 4vw, 20px)',
+                  fontSize: 'clamp(13px, 3.5vw, 14px)',
                   fontWeight: 500,
                   border: '1px solid var(--border-color)',
                   background: examDate === 'tomorrow' ? 'var(--text-primary)' : 'var(--card-bg)',
                   color: examDate === 'tomorrow' ? 'var(--bg-primary)' : 'var(--text-primary)',
                   borderRadius: '8px',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  minHeight: '44px',
+                  flex: '1 1 auto',
+                  minWidth: '100px'
                 }}
               >
                 Tomorrow
@@ -243,15 +251,16 @@ export default function SeatFinder() {
               placeholder="DD/MM/YYYY"
               style={{
                 width: '100%',
-                padding: '12px 16px',
-                fontSize: '14px',
+                padding: 'clamp(12px, 3vw, 14px) clamp(14px, 4vw, 16px)',
+                fontSize: 'clamp(14px, 3.5vw, 16px)',
                 border: '1px solid var(--border-color)',
                 borderRadius: '8px',
                 background: 'var(--bg-primary)',
                 color: 'var(--text-primary)',
                 outline: 'none',
                 transition: 'all 0.2s ease',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                minHeight: '44px'
               }}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = 'var(--text-primary)';
@@ -264,14 +273,14 @@ export default function SeatFinder() {
 
           {/* Register Number */}
           <div style={{
-            marginBottom: '24px'
+            marginBottom: 'clamp(20px, 5vw, 24px)'
           }}>
             <label style={{
               display: 'block',
-              fontSize: '14px',
+              fontSize: 'clamp(13px, 3.5vw, 14px)',
               fontWeight: 500,
               color: 'var(--text-primary)',
-              marginBottom: '12px'
+              marginBottom: 'clamp(10px, 2.5vw, 12px)'
             }}>
               Register Number
             </label>
@@ -282,8 +291,8 @@ export default function SeatFinder() {
               placeholder="RA23XXXX"
               style={{
                 width: '100%',
-                padding: '12px 16px',
-                fontSize: '14px',
+                padding: 'clamp(12px, 3vw, 14px) clamp(14px, 4vw, 16px)',
+                fontSize: 'clamp(14px, 3.5vw, 16px)',
                 border: '1px solid var(--border-color)',
                 borderRadius: '8px',
                 background: 'var(--bg-primary)',
@@ -291,7 +300,8 @@ export default function SeatFinder() {
                 outline: 'none',
                 transition: 'all 0.2s ease',
                 boxSizing: 'border-box',
-                textTransform: 'uppercase'
+                textTransform: 'uppercase',
+                minHeight: '44px'
               }}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = 'var(--text-primary)';
@@ -308,8 +318,8 @@ export default function SeatFinder() {
             disabled={loading}
             style={{
               width: '100%',
-              padding: '14px',
-              fontSize: '16px',
+              padding: 'clamp(14px, 3.5vw, 16px)',
+              fontSize: 'clamp(15px, 4vw, 16px)',
               fontWeight: 600,
               border: 'none',
               background: loading ? 'var(--border-color)' : 'var(--text-primary)',
@@ -320,7 +330,8 @@ export default function SeatFinder() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px'
+              gap: 'clamp(6px, 2vw, 8px)',
+              minHeight: '48px'
             }}
             onMouseEnter={(e) => {
               if (!loading) {
@@ -335,7 +346,7 @@ export default function SeatFinder() {
           >
             {loading ? (
               <>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite', width: 'clamp(16px, 4vw, 18px)', height: 'clamp(16px, 4vw, 18px)' }}>
                   <line x1="12" y1="2" x2="12" y2="6"></line>
                   <line x1="12" y1="18" x2="12" y2="22"></line>
                   <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
@@ -355,22 +366,22 @@ export default function SeatFinder() {
           {/* Error Message */}
           {error && (
             <div style={{
-              marginTop: '20px',
-              padding: '12px 16px',
+              marginTop: 'clamp(16px, 4vw, 20px)',
+              padding: 'clamp(10px, 3vw, 12px) clamp(12px, 4vw, 16px)',
               background: 'rgba(239, 68, 68, 0.1)',
               border: '1px solid rgba(239, 68, 68, 0.3)',
               borderRadius: '8px',
               display: 'flex',
               alignItems: 'flex-start',
-              gap: '12px'
+              gap: 'clamp(8px, 2vw, 12px)'
             }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#ef4444', flexShrink: 0, marginTop: '2px' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#ef4444', flexShrink: 0, marginTop: '2px', minWidth: '18px', width: 'clamp(18px, 4vw, 20px)', height: 'clamp(18px, 4vw, 20px)' }}>
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="12" y1="8" x2="12" y2="12"></line>
                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
               </svg>
               <p style={{
-                fontSize: '13px',
+                fontSize: 'clamp(12px, 3vw, 13px)',
                 color: '#ef4444',
                 margin: 0,
                 lineHeight: '1.5'
