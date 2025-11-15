@@ -165,6 +165,43 @@ export default function SeatFinder() {
 
   const hasSeatInfo = seatInfo && seatInfo.length > 0;
 
+  // Map venue to official seating arrangement URL
+  const getSeatingArrangementUrl = (building, room) => {
+    const buildingUpper = building ? building.toUpperCase() : '';
+    const roomUpper = room ? room.toUpperCase() : '';
+    
+    // Check building name first
+    if (buildingUpper.includes('MAIN CAMPUS') || buildingUpper.includes('MAIN')) {
+      return 'https://examcell.srmist.edu.in/main/seating/bench/report.php';
+    }
+    if (buildingUpper.includes('BIOTECH') || buildingUpper.includes('ARCHITECTURE') || buildingUpper.includes('BIO')) {
+      return 'https://examcell.srmist.edu.in/bio/seating/bench/report.php';
+    }
+    if (buildingUpper.includes('UNIVERSITY BUILDING') || buildingUpper.includes('UB')) {
+      return 'https://examcell.srmist.edu.in/ub/seating/bench/report.php';
+    }
+    if (buildingUpper.includes('TECH PARK 2') || buildingUpper.includes('TP2')) {
+      return 'https://examcell.srmist.edu.in/tp/seating/bench/report.php';
+    }
+    if (buildingUpper.includes('TECH PARK') || buildingUpper.includes('TP')) {
+      return 'https://examcell.srmist.edu.in/tp/seating/bench/report.php';
+    }
+    
+    // Fallback to room code detection
+    if (roomUpper.startsWith('TP2')) {
+      return 'https://examcell.srmist.edu.in/tp/seating/bench/report.php';
+    }
+    if (roomUpper.startsWith('TP')) {
+      return 'https://examcell.srmist.edu.in/tp/seating/bench/report.php';
+    }
+    if (roomUpper.includes('UB')) {
+      return 'https://examcell.srmist.edu.in/ub/seating/bench/report.php';
+    }
+    
+    // Default to main campus if no match
+    return 'https://examcell.srmist.edu.in/main/seating/bench/report.php';
+  };
+
   return (
     <div style={{
       width: '100%',
@@ -726,6 +763,47 @@ export default function SeatFinder() {
                           fontWeight: 600
                         }}>Floor: {seat.floor}</div>
                       )}
+                      {seat.room && seat.room !== '-' && (
+                        <a
+                          href={getSeatingArrangementUrl(seat.building, seat.room)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 'clamp(6px, 1.5vw, 8px)',
+                            marginTop: 'clamp(10px, 2.5vw, 12px)',
+                            padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px)',
+                            background: 'rgba(59, 130, 246, 0.15)',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            borderRadius: '8px',
+                            color: '#3b82f6',
+                            fontSize: 'clamp(12px, 3vw, 14px)',
+                            fontWeight: 600,
+                            textDecoration: 'none',
+                            transition: 'all 0.2s ease',
+                            cursor: 'pointer',
+                            width: 'fit-content'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.25)';
+                            e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.15)';
+                            e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                          </svg>
+                          View Seating Arrangement
+                        </a>
+                      )}
                     </div>
                     <div style={{
                       background: 'rgba(255, 255, 255, 0.03)',
@@ -993,6 +1071,50 @@ export default function SeatFinder() {
                           marginTop: '8px',
                           fontWeight: 600
                         }}>Floor: {seat.floor}</div>
+                      )}
+                      {seat.room && seat.room !== '-' && (
+                        <a
+                          href={getSeatingArrangementUrl(seat.building, seat.room)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            marginTop: '14px',
+                            padding: '10px 18px',
+                            background: 'rgba(59, 130, 246, 0.15)',
+                            border: '1.5px solid rgba(59, 130, 246, 0.3)',
+                            borderRadius: '10px',
+                            color: '#3b82f6',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            textDecoration: 'none',
+                            transition: 'all 0.2s ease',
+                            cursor: 'pointer',
+                            width: 'fit-content',
+                            boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.25)';
+                            e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.25)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.15)';
+                            e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.15)';
+                          }}
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                          </svg>
+                          View Seating Arrangement
+                        </a>
                       )}
                     </div>
                     <div style={{
