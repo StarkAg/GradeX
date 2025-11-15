@@ -1,0 +1,407 @@
+import React, { useState } from 'react';
+
+export default function SeatFinder() {
+  const [examDate, setExamDate] = useState('today');
+  const [dateInput, setDateInput] = useState('');
+  const [registerNumber, setRegisterNumber] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [seatInfo, setSeatInfo] = useState(null);
+
+  // Get today's and tomorrow's dates
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const formatDate = (date) => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const getSelectedDate = () => {
+    if (examDate === 'today') {
+      return formatDate(today);
+    } else if (examDate === 'tomorrow') {
+      return formatDate(tomorrow);
+    } else {
+      return dateInput;
+    }
+  };
+
+  const handleDateChange = (type) => {
+    setExamDate(type);
+    setDateInput('');
+    setError(null);
+    setSeatInfo(null);
+  };
+
+  const handleDateInputChange = (e) => {
+    setDateInput(e.target.value);
+    setExamDate('custom');
+    setError(null);
+    setSeatInfo(null);
+  };
+
+  const handleRegisterNumberChange = (e) => {
+    setRegisterNumber(e.target.value);
+    setError(null);
+    setSeatInfo(null);
+  };
+
+  const handleFindSeat = async () => {
+    if (!registerNumber.trim()) {
+      setError('Please enter your register number');
+      return;
+    }
+
+    const selectedDate = getSelectedDate();
+    if (!selectedDate) {
+      setError('Please select or enter an exam date');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setSeatInfo(null);
+
+    try {
+      // TODO: Replace with actual API endpoint
+      // For now, simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Simulate error (register number not found)
+      setError('Register number not found in any venue/session for this date');
+    } catch (err) {
+      setError('Failed to fetch seat information. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{
+      width: '100%',
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: '0',
+      minHeight: 'calc(100vh - 60px)',
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    }}>
+      <div style={{
+        maxWidth: '600px',
+        margin: '0 auto',
+        padding: '40px 20px'
+      }}>
+        {/* Header */}
+        <div style={{
+          textAlign: 'center',
+          marginBottom: '32px'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '12px',
+            marginBottom: '8px'
+          }}>
+            <h1 style={{
+              fontSize: '32px',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+              margin: 0,
+              padding: 0,
+              color: 'var(--text-primary)',
+              fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+            }}>
+              SRMIST Seat Finder
+            </h1>
+            <span style={{
+              fontSize: '12px',
+              fontWeight: 600,
+              padding: '4px 8px',
+              background: 'var(--text-primary)',
+              color: 'var(--bg-primary)',
+              borderRadius: '4px',
+              letterSpacing: '0.05em'
+            }}>
+              v3.0
+            </span>
+          </div>
+        </div>
+
+        {/* Main Card */}
+        <div style={{
+          background: 'var(--card-bg)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '12px',
+          padding: '32px',
+          marginBottom: '24px'
+        }}>
+          <div style={{
+            marginBottom: '24px'
+          }}>
+            <h2 style={{
+              fontSize: '24px',
+              fontWeight: 600,
+              margin: '0 0 8px 0',
+              color: 'var(--text-primary)'
+            }}>
+              Find Your Exam Seat
+            </h2>
+            <p style={{
+              fontSize: '14px',
+              color: 'var(--text-secondary)',
+              margin: 0
+            }}>
+              Quick & easy seat lookup for your exams
+            </p>
+          </div>
+
+          {/* Warning Note */}
+          <div style={{
+            background: 'rgba(251, 191, 36, 0.1)',
+            border: '1px solid rgba(251, 191, 36, 0.3)',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '12px'
+          }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#fbbf24', flexShrink: 0, marginTop: '2px' }}>
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <p style={{
+              fontSize: '13px',
+              color: '#fbbf24',
+              margin: 0,
+              lineHeight: '1.5'
+            }}>
+              Note: Seat info appears 24h before exams. Not available? Check back later.
+            </p>
+          </div>
+
+          {/* Exam Date */}
+          <div style={{
+            marginBottom: '24px'
+          }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: 500,
+              color: 'var(--text-primary)',
+              marginBottom: '12px'
+            }}>
+              Exam Date
+            </label>
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              marginBottom: '12px'
+            }}>
+              <button
+                onClick={() => handleDateChange('today')}
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  border: '1px solid var(--border-color)',
+                  background: examDate === 'today' ? 'var(--text-primary)' : 'var(--card-bg)',
+                  color: examDate === 'today' ? 'var(--bg-primary)' : 'var(--text-primary)',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Today
+              </button>
+              <button
+                onClick={() => handleDateChange('tomorrow')}
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  border: '1px solid var(--border-color)',
+                  background: examDate === 'tomorrow' ? 'var(--text-primary)' : 'var(--card-bg)',
+                  color: examDate === 'tomorrow' ? 'var(--bg-primary)' : 'var(--text-primary)',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Tomorrow
+              </button>
+            </div>
+            <input
+              type="text"
+              value={examDate === 'today' ? formatDate(today) : examDate === 'tomorrow' ? formatDate(tomorrow) : dateInput}
+              onChange={handleDateInputChange}
+              placeholder="DD/MM/YYYY"
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                fontSize: '14px',
+                border: '1px solid var(--border-color)',
+                borderRadius: '8px',
+                background: 'var(--bg-primary)',
+                color: 'var(--text-primary)',
+                outline: 'none',
+                transition: 'all 0.2s ease',
+                boxSizing: 'border-box'
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'var(--text-primary)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-color)';
+              }}
+            />
+          </div>
+
+          {/* Register Number */}
+          <div style={{
+            marginBottom: '24px'
+          }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: 500,
+              color: 'var(--text-primary)',
+              marginBottom: '12px'
+            }}>
+              Register Number
+            </label>
+            <input
+              type="text"
+              value={registerNumber}
+              onChange={handleRegisterNumberChange}
+              placeholder="RA23XXXX"
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                fontSize: '14px',
+                border: '1px solid var(--border-color)',
+                borderRadius: '8px',
+                background: 'var(--bg-primary)',
+                color: 'var(--text-primary)',
+                outline: 'none',
+                transition: 'all 0.2s ease',
+                boxSizing: 'border-box',
+                textTransform: 'uppercase'
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'var(--text-primary)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-color)';
+              }}
+            />
+          </div>
+
+          {/* Submit Button */}
+          <button
+            onClick={handleFindSeat}
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '14px',
+              fontSize: '16px',
+              fontWeight: 600,
+              border: 'none',
+              background: loading ? 'var(--border-color)' : 'var(--text-primary)',
+              color: loading ? 'var(--text-tertiary)' : 'var(--bg-primary)',
+              borderRadius: '8px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.currentTarget.style.opacity = '0.9';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) {
+                e.currentTarget.style.opacity = '1';
+              }
+            }}
+          >
+            {loading ? (
+              <>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
+                  <line x1="12" y1="2" x2="12" y2="6"></line>
+                  <line x1="12" y1="18" x2="12" y2="22"></line>
+                  <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                  <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                  <line x1="2" y1="12" x2="6" y2="12"></line>
+                  <line x1="18" y1="12" x2="22" y2="12"></line>
+                  <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                  <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+                </svg>
+                Finding...
+              </>
+            ) : (
+              'Find My Seat'
+            )}
+          </button>
+
+          {/* Error Message */}
+          {error && (
+            <div style={{
+              marginTop: '20px',
+              padding: '12px 16px',
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px'
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#ef4444', flexShrink: 0, marginTop: '2px' }}>
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <p style={{
+                fontSize: '13px',
+                color: '#ef4444',
+                margin: 0,
+                lineHeight: '1.5'
+              }}>
+                {error}
+              </p>
+            </div>
+          )}
+
+          {/* Seat Info (when found) */}
+          {seatInfo && (
+            <div style={{
+              marginTop: '20px',
+              padding: '20px',
+              background: 'rgba(34, 197, 94, 0.1)',
+              border: '1px solid rgba(34, 197, 94, 0.3)',
+              borderRadius: '8px'
+            }}>
+              {/* Seat information will be displayed here */}
+              <p style={{
+                fontSize: '14px',
+                color: '#22c55e',
+                margin: 0
+              }}>
+                Seat information found!
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+

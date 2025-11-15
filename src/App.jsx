@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import GradeX from './components/GradeX';
+import SeatFinder from './components/SeatFinder';
 
 export default function App() {
+  const [currentPage, setCurrentPage] = useState('seatfinder');
   const [isPlaying, setIsPlaying] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [loadingText, setLoadingText] = useState('');
@@ -264,110 +266,142 @@ export default function App() {
       )}
       <div className="app-container" style={{ opacity: showSplash ? 0 : 1, transition: 'opacity 0.5s ease-in' }}>
       <header className="app-header single">
-        <div>
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            GradeX By 
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              Stark
+          <div>
+            <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              GradeX
               <img 
                 src="/arc-reactor.png" 
                 alt="Arc Reactor" 
+                onClick={togglePlay}
                 style={{ 
                   width: '1em', 
                   height: '1em', 
                   display: 'inline-block', 
                   verticalAlign: 'baseline',
-                  marginTop: '-0.1em',
-                  objectFit: 'contain'
-                }} 
-              />
-              <button
-                onClick={togglePlay}
-                style={{
-                  width: '16px',
-                  height: '16px',
-                  padding: 0,
-                  border: 'none',
-                  background: 'transparent',
+                  objectFit: 'contain',
                   cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  opacity: 0.2,
-                  transition: 'opacity 0.2s ease',
-                  marginLeft: '4px'
+                  transition: 'opacity 0.2s ease, filter 0.2s ease',
+                  filter: theme === 'light' ? 'invert(1)' : 'none'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = '0.5';
+                  e.currentTarget.style.opacity = '0.7';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = '0.2';
+                  e.currentTarget.style.opacity = '1';
                 }}
-                title="Easter Egg"
-              >
-                {isPlaying ? (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                    <rect x="6" y="4" width="4" height="16" />
-                    <rect x="14" y="4" width="4" height="16" />
-                  </svg>
-                ) : (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                )}
-              </button>
-            </span>
-          </h1>
-          <p style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic', letterSpacing: '0.05em' }}>
-            PS — came into existence on 12th Nov :) since ClassPro and Etc. were unreliable manytimes :(
-          </p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <button
-            onClick={toggleTheme}
-            style={{
-              width: '32px',
-              height: '32px',
-              padding: 0,
-              border: '1px solid var(--border-color)',
-              background: 'var(--card-bg)',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s ease',
-              color: 'var(--text-primary)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border-hover)';
-              e.currentTarget.style.background = 'var(--hover-bg)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border-color)';
-              e.currentTarget.style.background = 'var(--card-bg)';
-            }}
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          >
-            {theme === 'dark' ? (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="5"></circle>
-                <line x1="12" y1="1" x2="12" y2="3"></line>
-                <line x1="12" y1="21" x2="12" y2="23"></line>
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                <line x1="1" y1="12" x2="3" y2="12"></line>
-                <line x1="21" y1="12" x2="23" y2="12"></line>
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-              </svg>
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-              </svg>
+                title="Easter Egg - Click to play"
+              />
+              <span style={{ fontSize: '14px', fontWeight: 400, color: 'var(--text-secondary)' }}>
+                By Stark
+              </span>
+            </h1>
+            {currentPage === 'gradex' && (
+              <p style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic', letterSpacing: '0.05em' }}>
+                PS — came into existence on 12th Nov :) since ClassPro and Etc. were unreliable manytimes :(
+              </p>
             )}
-          </button>
-          <span style={{ fontSize: '9px', color: 'var(--text-secondary)', fontWeight: 400, textTransform: 'uppercase', letterSpacing: '0.08em' }}>BY HARSH</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {currentPage === 'gradex' ? (
+              <button
+                onClick={() => setCurrentPage('seatfinder')}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  border: '1px solid var(--border-color)',
+                  background: 'var(--card-bg)',
+                  color: 'var(--text-primary)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-hover)';
+                  e.currentTarget.style.background = 'var(--hover-bg)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-color)';
+                  e.currentTarget.style.background = 'var(--card-bg)';
+                }}
+              >
+                Seat Finder
+              </button>
+            ) : (
+              <button
+                onClick={() => setCurrentPage('gradex')}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  border: '1px solid var(--border-color)',
+                  background: 'var(--card-bg)',
+                  color: 'var(--text-primary)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-hover)';
+                  e.currentTarget.style.background = 'var(--hover-bg)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-color)';
+                  e.currentTarget.style.background = 'var(--card-bg)';
+                }}
+              >
+                GradeX
+              </button>
+            )}
+            <button
+              onClick={toggleTheme}
+              style={{
+                width: '32px',
+                height: '32px',
+                padding: 0,
+                border: '1px solid var(--border-color)',
+                background: 'var(--card-bg)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+                color: 'var(--text-primary)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-hover)';
+                e.currentTarget.style.background = 'var(--hover-bg)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-color)';
+                e.currentTarget.style.background = 'var(--card-bg)';
+              }}
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {theme === 'dark' ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                  <line x1="1" y1="12" x2="3" y2="12"></line>
+                  <line x1="21" y1="12" x2="23" y2="12"></line>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+              )}
+            </button>
+            <span style={{ fontSize: '9px', color: 'var(--text-secondary)', fontWeight: 400, textTransform: 'uppercase', letterSpacing: '0.08em' }}>BY HARSH</span>
             <a 
               href="https://github.com/StarkAg" 
               target="_blank" 
@@ -426,14 +460,14 @@ export default function App() {
             >
               LinkedIn
             </a>
-        </div>
-      </header>
+          </div>
+        </header>
       <main className="app-main single">
-        <GradeX />
+        {currentPage === 'seatfinder' ? <SeatFinder /> : <GradeX />}
       </main>
       <audio
         ref={audioRef}
-        src="/Back_In_Black.mp3"
+        src="/back-in-black.mp3"
         onEnded={() => setIsPlaying(false)}
       />
     </div>
