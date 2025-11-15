@@ -84,6 +84,9 @@ export default function SeatFinder() {
       return;
     }
 
+    // Date is optional now - only used for venue filtering
+    const selectedDate = getSelectedDate();
+
     setLoading(true);
     setError(null);
     setSeatInfo(null);
@@ -92,19 +95,66 @@ export default function SeatFinder() {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Search for register number in seat data (no date filtering)
+      // Search for register number in seat data
       const regNoUpper = registerNumber.trim().toUpperCase();
+      // Normalize date format for comparison (handle DD/MM/YYYY format)
+      const normalizeDate = (dateStr) => {
+        if (!dateStr) return '';
+        // Convert DD/MM/YYYY to consistent format
+        return dateStr.replace(/\//g, '/');
+      };
       
-      // Find all seats matching the register number (always show name and department)
-      const foundSeats = seatData.filter(seat => {
+      const normalizedSelectedDate = normalizeDate(selectedDate);
+      // First, find all seats matching the register number (for name/department - always show)
+      const allMatchingSeats = seatData.filter(seat => {
         const seatRegNo = seat.registerNumber ? seat.registerNumber.toUpperCase() : '';
         return seatRegNo === regNoUpper;
       });
-
-      if (foundSeats.length === 0) {
+      
+      if (allMatchingSeats.length === 0) {
         setError('Register number not found');
+        return;
+      }
+      
+      // Get permanent data (name, department) from first match (they're all the same for same register number)
+      const permanentData = {
+        name: allMatchingSeats[0].name || '-',
+        department: allMatchingSeats[0].department || '-'
+      };
+      
+      // Filter by date for venue/room assignment only
+      const foundSeats = normalizedSelectedDate 
+        ? allMatchingSeats.filter(seat => {
+            const seatDate = normalizeDate(seat.date);
+            const matchesDate = seatDate === normalizedSelectedDate || !seatDate || seatDate === '';
+            // If venue exists and matches date, include it; otherwise show with venue as "-"
+            return matchesDate;
+          })
+        : allMatchingSeats;
+      
+      // Merge permanent data with venue-filtered results
+      // If no venue matches the date, show student info with venue as "-"
+      if (foundSeats.length === 0) {
+        // No venue for this date, but show student info
+        setSeatInfo([{
+          registerNumber: regNoUpper,
+          name: permanentData.name,
+          department: permanentData.department,
+          room: '-',
+          floor: '-',
+          building: '-',
+          subcode: '-',
+          session: '-',
+          date: selectedDate
+        }]);
       } else {
-        setSeatInfo(foundSeats);
+        // Venue found for this date, merge with permanent data
+        const mergedSeats = foundSeats.map(seat => ({
+          ...seat,
+          name: seat.name || permanentData.name || '-',
+          department: seat.department || permanentData.department || '-'
+        }));
+        setSeatInfo(mergedSeats);
       }
     } catch (err) {
       setError('Failed to fetch seat information. Please try again.');
@@ -236,6 +286,90 @@ export default function SeatFinder() {
             </div>
           )}
 
+          {/* Exam Date */}
+          <div style={{
+            marginBottom: 'clamp(20px, 5vw, 24px)'
+          }}>
+            <label style={{
+              display: 'block',
+              fontSize: 'clamp(13px, 3.5vw, 14px)',
+              fontWeight: 500,
+              color: 'var(--text-primary)',
+              marginBottom: 'clamp(10px, 2.5vw, 12px)'
+            }}>
+              Exam Date
+            </label>
+            <div style={{
+              display: 'flex',
+              gap: 'clamp(6px, 2vw, 8px)',
+              marginBottom: 'clamp(10px, 2.5vw, 12px)',
+              flexWrap: 'wrap'
+            }}>
+              <button
+                onClick={() => handleDateChange('today')}
+                style={{
+                  padding: 'clamp(10px, 2.5vw, 12px) clamp(16px, 4vw, 20px)',
+                  fontSize: 'clamp(13px, 3.5vw, 14px)',
+                  fontWeight: 500,
+                  border: '1px solid var(--border-color)',
+                  background: examDate === 'today' ? 'var(--text-primary)' : 'var(--card-bg)',
+                  color: examDate === 'today' ? 'var(--bg-primary)' : 'var(--text-primary)',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  minHeight: '44px',
+                  flex: '1 1 auto',
+                  minWidth: '100px'
+                }}
+              >
+                Today
+              </button>
+              <button
+                onClick={() => handleDateChange('tomorrow')}
+                style={{
+                  padding: 'clamp(10px, 2.5vw, 12px) clamp(16px, 4vw, 20px)',
+                  fontSize: 'clamp(13px, 3.5vw, 14px)',
+                  fontWeight: 500,
+                  border: '1px solid var(--border-color)',
+                  background: examDate === 'tomorrow' ? 'var(--text-primary)' : 'var(--card-bg)',
+                  color: examDate === 'tomorrow' ? 'var(--bg-primary)' : 'var(--text-primary)',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  minHeight: '44px',
+                  flex: '1 1 auto',
+                  minWidth: '100px'
+                }}
+              >
+                Tomorrow
+              </button>
+            </div>
+            <input
+              type="text"
+              value={examDate === 'today' ? formatDate(today) : examDate === 'tomorrow' ? formatDate(tomorrow) : dateInput}
+              onChange={handleDateInputChange}
+              placeholder="DD/MM/YYYY"
+              style={{
+                width: '100%',
+                padding: 'clamp(12px, 3vw, 14px) clamp(14px, 4vw, 16px)',
+                fontSize: 'clamp(14px, 3.5vw, 16px)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '8px',
+                background: 'var(--bg-primary)',
+                color: 'var(--text-primary)',
+                outline: 'none',
+                transition: 'all 0.2s ease',
+                boxSizing: 'border-box',
+                minHeight: '44px'
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'var(--text-primary)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-color)';
+              }}
+            />
+          </div>
 
           {/* Register Number */}
           <div style={{
@@ -545,8 +679,7 @@ export default function SeatFinder() {
                     return null;
                   })() : null}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                  {/* Always show name and department if available */}
-                  {seat.name && seat.name !== '-' && (
+                  {(seat.name && seat.name !== '-') && (
                     <div style={{
                       background: 'rgba(59, 130, 246, 0.1)',
                       borderRadius: '10px',
@@ -556,18 +689,6 @@ export default function SeatFinder() {
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: '6px', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</div>
                       <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: 'clamp(14px, 3.5vw, 16px)' }}>{seat.name}</div>
-                    </div>
-                  )}
-                  {seat.department && seat.department !== '-' && (
-                    <div style={{
-                      background: 'rgba(139, 92, 246, 0.1)',
-                      borderRadius: '10px',
-                      padding: 'clamp(10px, 2.5vw, 12px)',
-                      marginBottom: 'clamp(10px, 2.5vw, 12px)',
-                      border: '1px solid rgba(139, 92, 246, 0.2)'
-                    }}>
-                      <div style={{ color: 'var(--text-secondary)', marginBottom: '6px', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Department</div>
-                      <div style={{ color: '#8b5cf6', fontWeight: 600, fontSize: 'clamp(14px, 3.5vw, 16px)' }}>{seat.department}</div>
                     </div>
                   )}
                   <div style={{
@@ -823,8 +944,7 @@ export default function SeatFinder() {
                     return null;
                   })() : null}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                  {/* Always show name and department if available */}
-                  {seat.name && seat.name !== '-' && (
+                  {(seat.name && seat.name !== '-') && (
                     <div style={{
                       background: 'rgba(59, 130, 246, 0.15)',
                       borderRadius: '12px',
@@ -835,19 +955,6 @@ export default function SeatFinder() {
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Name</div>
                       <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: '18px' }}>{seat.name}</div>
-                    </div>
-                  )}
-                  {seat.department && seat.department !== '-' && (
-                    <div style={{
-                      background: 'rgba(139, 92, 246, 0.15)',
-                      borderRadius: '12px',
-                      padding: '14px',
-                      marginBottom: '16px',
-                      border: '1.5px solid rgba(139, 92, 246, 0.3)',
-                      boxShadow: '0 2px 8px rgba(139, 92, 246, 0.15)'
-                    }}>
-                      <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Department</div>
-                      <div style={{ color: '#8b5cf6', fontWeight: 600, fontSize: '18px' }}>{seat.department}</div>
                     </div>
                   )}
                   <div style={{
@@ -896,6 +1003,15 @@ export default function SeatFinder() {
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Subject Code</div>
                       <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '16px' }}>{seat.subcode || '-'}</div>
+                    </div>
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      borderRadius: '12px',
+                      padding: '14px',
+                      border: '1px solid rgba(255, 255, 255, 0.15)'
+                    }}>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Department</div>
+                      <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '16px' }}>{seat.department || '-'}</div>
                     </div>
                     <div style={{
                       background: 'rgba(255, 255, 255, 0.05)',
