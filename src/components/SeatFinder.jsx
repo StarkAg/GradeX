@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 export default function SeatFinder() {
   const [examDate, setExamDate] = useState('today');
@@ -10,6 +10,10 @@ export default function SeatFinder() {
   const [seatData, setSeatData] = useState([]);
   const [isDesktop, setIsDesktop] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [apiResults, setApiResults] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [useLiveAPI, setUseLiveAPI] = useState(true); // Toggle between live API and static data
+  const autoRefreshIntervalRef = useRef(null);
 
   // Check if desktop/mobile on mount and resize
   useEffect(() => {
@@ -46,6 +50,29 @@ export default function SeatFinder() {
     return `${day}/${month}/${year}`;
   };
 
+  // Convert date to API format (YYYY-MM-DD or DD-MM-YYYY)
+  const formatDateForAPI = (dateStr) => {
+    if (!dateStr) return null;
+    
+    // If already in DD/MM/YYYY or DD-MM-YYYY format
+    if (/^\d{2}[-\/]\d{2}[-\/]\d{4}$/.test(dateStr)) {
+      const parts = dateStr.split(/[-\/]/);
+      const [day, month, year] = parts;
+      // Return both formats for API to try
+      return `${day}-${month}-${year}`; // DD-MM-YYYY
+    }
+    
+    // If it's a Date object
+    if (dateStr instanceof Date) {
+      const day = String(dateStr.getDate()).padStart(2, '0');
+      const month = String(dateStr.getMonth() + 1).padStart(2, '0');
+      const year = dateStr.getFullYear();
+      return `${day}-${month}-${year}`;
+    }
+    
+    return dateStr;
+  };
+
   const getSelectedDate = () => {
     if (examDate === 'today') {
       return formatDate(today);
@@ -78,129 +105,253 @@ export default function SeatFinder() {
     setSeatInfo(null);
   };
 
+  // Fetch from live API
+  const fetchFromLiveAPI = async (ra, date) => {
+    try {
+      const apiDate = formatDateForAPI(date);
+      const params = new URLSearchParams({ ra });
+      if (apiDate) params.append('date', apiDate);
+      
+      const response = await fetch(`/api/seating?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setApiResults(data);
+      setLastUpdated(data.lastUpdated);
+      
+      // Transform API results to match existing UI format
+      const transformedSeats = [];
+      
+      // Process results from all campuses
+      Object.keys(data.results || {}).forEach(campusName => {
+        const campusResults = data.results[campusName] || [];
+        campusResults.forEach(result => {
+          if (result.matched) {
+            // Format room name: TPTP-401 -> TP-401
+            let formattedRoom = result.hall || '-';
+            if (formattedRoom.startsWith('TPTP-')) {
+              formattedRoom = formattedRoom.replace('TPTP-', 'TP-');
+            }
+            
+            // Extract floor number from room name (e.g., TP-401 -> 4th floor)
+            let floorNumber = '-';
+            if (formattedRoom !== '-') {
+              // Extract number from room name (e.g., TP-401, UB604, 1504)
+              const floorMatch = formattedRoom.match(/(\d+)/);
+              if (floorMatch) {
+                const numStr = floorMatch[1];
+                // For TP-401, the first digit is the floor (4)
+                if (formattedRoom.startsWith('TP-')) {
+                  const firstDigit = parseInt(numStr.charAt(0));
+                  floorNumber = `${firstDigit}th`;
+                } else if (formattedRoom.startsWith('UB')) {
+                  // For UB604, first digit is floor (6)
+                  const firstDigit = parseInt(numStr.charAt(0));
+                  floorNumber = `${firstDigit}th`;
+                } else {
+                  // For 1504, first two digits might be floor (15)
+                  if (numStr.length >= 2) {
+                    const firstTwo = parseInt(numStr.substring(0, 2));
+                    floorNumber = `${firstTwo}th`;
+                  } else {
+                    const firstDigit = parseInt(numStr.charAt(0));
+                    floorNumber = `${firstDigit}th`;
+                  }
+                }
+              }
+            }
+            
+            transformedSeats.push({
+              registerNumber: ra.toUpperCase(),
+              name: result.name || '-',
+              department: result.department || result.studentDepartment || '-',
+              room: formattedRoom,
+              floor: floorNumber,
+              building: campusName,
+              subcode: result.subjectCode || '-',
+              session: result.session || '-',
+              bench: result.bench || '-', // Seat number
+              date: date,
+              context: result.context,
+              url: result.url,
+              campus: campusName
+            });
+          }
+        });
+      });
+      
+      if (transformedSeats.length > 0) {
+        setSeatInfo(transformedSeats);
+        setError(null);
+      } else {
+        setSeatInfo(null);
+        setError('No seating information found for this register number and date.');
+      }
+    } catch (err) {
+      console.error('API fetch error:', err);
+      // Fallback to static data if API fails
+      setUseLiveAPI(false);
+      fetchFromStaticData(ra, date);
+    }
+  };
+
+  // Fetch from static JSON data (fallback)
+  const fetchFromStaticData = async (ra, date) => {
+    const regNoUpper = ra.trim().toUpperCase();
+    const normalizeDate = (dateStr) => {
+      if (!dateStr) return '';
+      return dateStr.replace(/\//g, '/');
+    };
+    
+    const normalizedSelectedDate = normalizeDate(date);
+    const allMatchingSeats = seatData.filter(seat => {
+      const seatRegNo = seat.registerNumber ? seat.registerNumber.toUpperCase() : '';
+      return seatRegNo === regNoUpper;
+    });
+    
+    if (allMatchingSeats.length === 0) {
+      setError('Register number not found');
+      setSeatInfo(null);
+      return;
+    }
+    
+    const permanentData = {
+      name: allMatchingSeats[0].name || '-',
+      department: allMatchingSeats[0].department || '-'
+    };
+    
+    const foundSeats = normalizedSelectedDate 
+      ? allMatchingSeats.filter(seat => {
+          const seatDate = normalizeDate(seat.date);
+          return seatDate === normalizedSelectedDate || !seatDate || seatDate === '';
+        })
+      : allMatchingSeats;
+    
+    // Helper function to format room and extract floor
+    const formatRoomAndFloor = (room) => {
+      if (!room || room === '-') {
+        return { formattedRoom: '-', floorNumber: '-' };
+      }
+      
+      // Format room name: TPTP-401 -> TP-401
+      let formattedRoom = room;
+      if (formattedRoom.startsWith('TPTP-')) {
+        formattedRoom = formattedRoom.replace('TPTP-', 'TP-');
+      }
+      
+      // Extract floor number from room name
+      let floorNumber = '-';
+      const floorMatch = formattedRoom.match(/(\d+)/);
+      if (floorMatch) {
+        const numStr = floorMatch[1];
+        if (formattedRoom.startsWith('TP-')) {
+          const firstDigit = parseInt(numStr.charAt(0));
+          floorNumber = `${firstDigit}th`;
+        } else if (formattedRoom.startsWith('UB')) {
+          const firstDigit = parseInt(numStr.charAt(0));
+          floorNumber = `${firstDigit}th`;
+        } else {
+          if (numStr.length >= 2) {
+            const firstTwo = parseInt(numStr.substring(0, 2));
+            floorNumber = `${firstTwo}th`;
+          } else {
+            const firstDigit = parseInt(numStr.charAt(0));
+            floorNumber = `${firstDigit}th`;
+          }
+        }
+      }
+      
+      return { formattedRoom, floorNumber };
+    };
+    
+    if (foundSeats.length === 0) {
+      setSeatInfo([{
+        registerNumber: regNoUpper,
+        name: permanentData.name,
+        department: permanentData.department,
+        room: '-',
+        floor: '-',
+        building: '-',
+        subcode: '-',
+        session: '-',
+        date: date
+      }]);
+    } else {
+      const mergedSeats = foundSeats.map(seat => {
+        const { formattedRoom, floorNumber } = formatRoomAndFloor(seat.room);
+        return {
+          ...seat,
+          name: seat.name || permanentData.name || '-',
+          department: seat.department || permanentData.department || '-',
+          room: formattedRoom,
+          floor: floorNumber
+        };
+      });
+      setSeatInfo(mergedSeats);
+    }
+  };
+
   const handleFindSeat = async () => {
     if (!registerNumber.trim()) {
       setError('Please enter your register number');
       return;
     }
 
-    // Date is optional now - only used for venue filtering
     const selectedDate = getSelectedDate();
-
     setLoading(true);
     setError(null);
     setSeatInfo(null);
+    setApiResults(null);
 
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Search for register number in seat data
-      const regNoUpper = registerNumber.trim().toUpperCase();
-      // Normalize date format for comparison (handle DD/MM/YYYY format)
-      const normalizeDate = (dateStr) => {
-        if (!dateStr) return '';
-        // Convert DD/MM/YYYY to consistent format
-        return dateStr.replace(/\//g, '/');
-      };
-      
-      const normalizedSelectedDate = normalizeDate(selectedDate);
-      // First, find all seats matching the register number (for name/department - always show)
-      const allMatchingSeats = seatData.filter(seat => {
-        const seatRegNo = seat.registerNumber ? seat.registerNumber.toUpperCase() : '';
-        return seatRegNo === regNoUpper;
-      });
-      
-      if (allMatchingSeats.length === 0) {
-        setError('Register number not found');
-        return;
-      }
-      
-      // Get permanent data (name, department) from first match (they're all the same for same register number)
-      const permanentData = {
-        name: allMatchingSeats[0].name || '-',
-        department: allMatchingSeats[0].department || '-'
-      };
-      
-      // Filter by date for venue/room assignment only
-      const foundSeats = normalizedSelectedDate 
-        ? allMatchingSeats.filter(seat => {
-            const seatDate = normalizeDate(seat.date);
-            const matchesDate = seatDate === normalizedSelectedDate || !seatDate || seatDate === '';
-            // If venue exists and matches date, include it; otherwise show with venue as "-"
-            return matchesDate;
-          })
-        : allMatchingSeats;
-      
-      // Merge permanent data with venue-filtered results
-      // If no venue matches the date, show student info with venue as "-"
-      if (foundSeats.length === 0) {
-        // No venue for this date, but show student info
-        setSeatInfo([{
-          registerNumber: regNoUpper,
-          name: permanentData.name,
-          department: permanentData.department,
-          room: '-',
-          floor: '-',
-          building: '-',
-          subcode: '-',
-          session: '-',
-          date: selectedDate
-        }]);
+      if (useLiveAPI) {
+        await fetchFromLiveAPI(registerNumber.trim(), selectedDate);
       } else {
-        // Venue found for this date, merge with permanent data
-        const mergedSeats = foundSeats.map(seat => ({
-          ...seat,
-          name: seat.name || permanentData.name || '-',
-          department: seat.department || permanentData.department || '-'
-        }));
-        setSeatInfo(mergedSeats);
+        await fetchFromStaticData(registerNumber.trim(), selectedDate);
       }
     } catch (err) {
       setError('Failed to fetch seat information. Please try again.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const hasSeatInfo = seatInfo && seatInfo.length > 0;
+  // Auto-refresh every 1 minute if seat info exists
+  useEffect(() => {
+    if (seatInfo && seatInfo.length > 0 && useLiveAPI && registerNumber.trim()) {
+      // Clear existing interval
+      if (autoRefreshIntervalRef.current) {
+        clearInterval(autoRefreshIntervalRef.current);
+      }
+      
+      // Set up new interval
+      const refresh = () => {
+        const selectedDate = getSelectedDate();
+        fetchFromLiveAPI(registerNumber.trim(), selectedDate).catch(err => {
+          console.error('Auto-refresh error:', err);
+        });
+      };
+      
+      autoRefreshIntervalRef.current = setInterval(refresh, 60000); // 1 minute
+      
+      return () => {
+        if (autoRefreshIntervalRef.current) {
+          clearInterval(autoRefreshIntervalRef.current);
+        }
+      };
+    } else {
+      // Clear interval if conditions not met
+      if (autoRefreshIntervalRef.current) {
+        clearInterval(autoRefreshIntervalRef.current);
+        autoRefreshIntervalRef.current = null;
+      }
+    }
+  }, [seatInfo, useLiveAPI, registerNumber, examDate, dateInput]);
 
-  // Map venue to official seating arrangement URL
-  const getSeatingArrangementUrl = (building, room) => {
-    const buildingUpper = building ? building.toUpperCase() : '';
-    const roomUpper = room ? room.toUpperCase() : '';
-    
-    // Check building name first
-    if (buildingUpper.includes('MAIN CAMPUS') || buildingUpper.includes('MAIN')) {
-      return 'https://examcell.srmist.edu.in/main/seating/bench/report.php';
-    }
-    if (buildingUpper.includes('BIOTECH') || buildingUpper.includes('ARCHITECTURE') || buildingUpper.includes('BIO')) {
-      return 'https://examcell.srmist.edu.in/bio/seating/bench/report.php';
-    }
-    if (buildingUpper.includes('UNIVERSITY BUILDING') || buildingUpper.includes('UB')) {
-      return 'https://examcell.srmist.edu.in/ub/seating/bench/report.php';
-    }
-    if (buildingUpper.includes('TECH PARK 2') || buildingUpper.includes('TP2')) {
-      return 'https://examcell.srmist.edu.in/tp/seating/bench/report.php';
-    }
-    if (buildingUpper.includes('TECH PARK') || buildingUpper.includes('TP')) {
-      return 'https://examcell.srmist.edu.in/tp/seating/bench/report.php';
-    }
-    
-    // Fallback to room code detection
-    if (roomUpper.startsWith('TP2')) {
-      return 'https://examcell.srmist.edu.in/tp/seating/bench/report.php';
-    }
-    if (roomUpper.startsWith('TP')) {
-      return 'https://examcell.srmist.edu.in/tp/seating/bench/report.php';
-    }
-    if (roomUpper.includes('UB')) {
-      return 'https://examcell.srmist.edu.in/ub/seating/bench/report.php';
-    }
-    
-    // Default to main campus if no match
-    return 'https://examcell.srmist.edu.in/main/seating/bench/report.php';
-  };
+  const hasSeatInfo = seatInfo && seatInfo.length > 0;
 
   return (
     <div style={{
@@ -500,6 +651,33 @@ export default function SeatFinder() {
             )}
           </button>
 
+          {/* Last Updated Indicator */}
+          {lastUpdated && seatInfo && seatInfo.length > 0 && (
+            <div style={{
+              marginTop: 'clamp(12px, 3vw, 16px)',
+              padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 14px)',
+              background: 'rgba(59, 130, 246, 0.1)',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'clamp(6px, 2vw, 8px)',
+              fontSize: 'clamp(11px, 2.5vw, 12px)',
+              color: 'var(--text-secondary)'
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span>Last updated: {new Date(lastUpdated).toLocaleTimeString()}</span>
+              {useLiveAPI && (
+                <span style={{ marginLeft: 'auto', fontSize: 'clamp(10px, 2vw, 11px)', opacity: 0.7 }}>
+                  Auto-refreshing every minute
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Error Message */}
           {error && (
             <div style={{
@@ -716,23 +894,24 @@ export default function SeatFinder() {
                     return null;
                   })() : null}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                  {(seat.name && seat.name !== '-') && (
-                    <div style={{
-                      background: 'rgba(59, 130, 246, 0.1)',
-                      borderRadius: '10px',
-                      padding: 'clamp(10px, 2.5vw, 12px)',
-                      marginBottom: 'clamp(10px, 2.5vw, 12px)',
-                      border: '1px solid rgba(59, 130, 246, 0.2)'
-                    }}>
-                      <div style={{ color: 'var(--text-secondary)', marginBottom: '6px', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</div>
-                      <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: 'clamp(14px, 3.5vw, 16px)' }}>{seat.name}</div>
-                    </div>
-                  )}
+                  {/* Name Box */}
+                  <div style={{
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    borderRadius: '10px',
+                    padding: 'clamp(10px, 2.5vw, 12px)',
+                    marginBottom: 'clamp(10px, 2.5vw, 12px)',
+                    border: '1px solid rgba(59, 130, 246, 0.2)'
+                  }}>
+                    <div style={{ color: 'var(--text-secondary)', marginBottom: '6px', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</div>
+                    <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: 'clamp(14px, 3.5vw, 16px)' }}>{seat.name && seat.name !== '-' ? seat.name : 'N/A'}</div>
+                  </div>
                   <div style={{
                     display: 'grid',
                     gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
                     gap: 'clamp(10px, 2.5vw, 16px)',
-                    fontSize: 'clamp(12px, 3vw, 14px)'
+                    fontSize: 'clamp(12px, 3vw, 14px)',
+                    width: '100%',
+                    overflow: 'hidden'
                   }}>
                     <div style={{
                       background: seat.room && seat.room !== '-' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(251, 191, 36, 0.1)',
@@ -755,55 +934,28 @@ export default function SeatFinder() {
                           fontWeight: 500
                         }}>{seat.building}</div>
                       )}
-                      {seat.floor && seat.floor !== '-' && (
-                        <div style={{ 
-                          color: 'var(--text-primary)', 
-                          fontSize: 'clamp(12px, 3vw, 15px)', 
-                          marginTop: 'clamp(4px, 1.5vw, 6px)',
-                          fontWeight: 600
-                        }}>Floor: {seat.floor}</div>
-                      )}
-                      {seat.room && seat.room !== '-' && (
-                        <a
-                          href={getSeatingArrangementUrl(seat.building, seat.room)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 'clamp(6px, 1.5vw, 8px)',
-                            marginTop: 'clamp(10px, 2.5vw, 12px)',
-                            padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px)',
-                            background: 'rgba(59, 130, 246, 0.15)',
-                            border: '1px solid rgba(59, 130, 246, 0.3)',
-                            borderRadius: '8px',
-                            color: '#3b82f6',
-                            fontSize: 'clamp(12px, 3vw, 14px)',
-                            fontWeight: 600,
-                            textDecoration: 'none',
-                            transition: 'all 0.2s ease',
-                            cursor: 'pointer',
-                            width: 'fit-content'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.25)';
-                            e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.5)';
-                            e.currentTarget.style.transform = 'translateY(-1px)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.15)';
-                            e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.3)';
-                            e.currentTarget.style.transform = 'translateY(0)';
-                          }}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                            <polyline points="15 3 21 3 21 9"></polyline>
-                            <line x1="10" y1="14" x2="21" y2="3"></line>
-                          </svg>
-                          View Seating Arrangement
-                        </a>
-                      )}
+                    </div>
+                    <div style={{
+                      background: 'rgba(251, 191, 36, 0.1)',
+                      borderRadius: '10px',
+                      padding: 'clamp(10px, 2.5vw, 12px)',
+                      border: '1px solid rgba(251, 191, 36, 0.3)'
+                    }}>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Floor</div>
+                      <div style={{ 
+                        color: '#fbbf24', 
+                        fontWeight: 700, 
+                        fontSize: 'clamp(14px, 3.5vw, 18px)'
+                      }}>{seat.floor && seat.floor !== '-' ? seat.floor : 'N/A'}</div>
+                    </div>
+                    <div style={{
+                      background: 'rgba(139, 92, 246, 0.1)',
+                      borderRadius: '10px',
+                      padding: 'clamp(10px, 2.5vw, 12px)',
+                      border: '1px solid rgba(139, 92, 246, 0.2)'
+                    }}>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Seat No.</div>
+                      <div style={{ color: '#8b5cf6', fontWeight: 700, fontSize: 'clamp(14px, 3.5vw, 18px)' }}>{seat.bench && seat.bench !== '-' ? seat.bench : 'N/A'}</div>
                     </div>
                     <div style={{
                       background: 'rgba(255, 255, 255, 0.03)',
@@ -815,13 +967,13 @@ export default function SeatFinder() {
                       <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: 'clamp(13px, 3vw, 15px)' }}>{seat.subcode || '-'}</div>
                     </div>
                     <div style={{
-                      background: 'rgba(255, 255, 255, 0.03)',
+                      background: 'rgba(59, 130, 246, 0.1)',
                       borderRadius: '10px',
                       padding: 'clamp(10px, 2.5vw, 12px)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                      border: '1px solid rgba(59, 130, 246, 0.2)'
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Department</div>
-                      <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: 'clamp(13px, 3vw, 15px)' }}>{seat.department || '-'}</div>
+                      <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: 'clamp(13px, 3vw, 15px)' }}>{seat.department && seat.department !== '-' ? seat.department : 'N/A'}</div>
                     </div>
                     <div style={{
                       background: 'rgba(255, 255, 255, 0.03)',
@@ -1022,24 +1174,25 @@ export default function SeatFinder() {
                     return null;
                   })() : null}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                  {(seat.name && seat.name !== '-') && (
-                    <div style={{
-                      background: 'rgba(59, 130, 246, 0.15)',
-                      borderRadius: '12px',
-                      padding: '14px',
-                      marginBottom: '16px',
-                      border: '1.5px solid rgba(59, 130, 246, 0.3)',
-                      boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)'
-                    }}>
-                      <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Name</div>
-                      <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: '18px' }}>{seat.name}</div>
-                    </div>
-                  )}
+                  {/* Name Box */}
+                  <div style={{
+                    background: 'rgba(59, 130, 246, 0.15)',
+                    borderRadius: '12px',
+                    padding: '14px',
+                    marginBottom: '16px',
+                    border: '1.5px solid rgba(59, 130, 246, 0.3)',
+                    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)'
+                  }}>
+                    <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Name</div>
+                    <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: '18px' }}>{seat.name && seat.name !== '-' ? seat.name : 'N/A'}</div>
+                  </div>
                   <div style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(2, 1fr)',
                     gap: '14px',
-                    fontSize: '14px'
+                    fontSize: '14px',
+                    width: '100%',
+                    overflow: 'hidden'
                   }}>
                     <div style={{
                       background: seat.room && seat.room !== '-' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(251, 191, 36, 0.15)',
@@ -1064,58 +1217,31 @@ export default function SeatFinder() {
                           fontWeight: 500
                         }}>{seat.building}</div>
                       )}
-                      {seat.floor && seat.floor !== '-' && (
-                        <div style={{ 
-                          color: 'var(--text-primary)', 
-                          fontSize: '16px', 
-                          marginTop: '8px',
-                          fontWeight: 600
-                        }}>Floor: {seat.floor}</div>
-                      )}
-                      {seat.room && seat.room !== '-' && (
-                        <a
-                          href={getSeatingArrangementUrl(seat.building, seat.room)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            marginTop: '14px',
-                            padding: '10px 18px',
-                            background: 'rgba(59, 130, 246, 0.15)',
-                            border: '1.5px solid rgba(59, 130, 246, 0.3)',
-                            borderRadius: '10px',
-                            color: '#3b82f6',
-                            fontSize: '14px',
-                            fontWeight: 600,
-                            textDecoration: 'none',
-                            transition: 'all 0.2s ease',
-                            cursor: 'pointer',
-                            width: 'fit-content',
-                            boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.25)';
-                            e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.5)';
-                            e.currentTarget.style.transform = 'translateY(-2px)';
-                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.25)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.15)';
-                            e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.3)';
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.15)';
-                          }}
-                        >
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                            <polyline points="15 3 21 3 21 9"></polyline>
-                            <line x1="10" y1="14" x2="21" y2="3"></line>
-                          </svg>
-                          View Seating Arrangement
-                        </a>
-                      )}
+                    </div>
+                    <div style={{
+                      background: 'rgba(251, 191, 36, 0.15)',
+                      borderRadius: '12px',
+                      padding: '14px',
+                      border: '1.5px solid rgba(251, 191, 36, 0.3)',
+                      boxShadow: '0 2px 8px rgba(251, 191, 36, 0.15)'
+                    }}>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Floor</div>
+                      <div style={{ 
+                        color: '#fbbf24', 
+                        fontWeight: 700, 
+                        fontSize: '20px', 
+                        letterSpacing: '-0.02em'
+                      }}>{seat.floor && seat.floor !== '-' ? seat.floor : 'N/A'}</div>
+                    </div>
+                    <div style={{
+                      background: 'rgba(139, 92, 246, 0.15)',
+                      borderRadius: '12px',
+                      padding: '14px',
+                      border: '1.5px solid rgba(139, 92, 246, 0.3)',
+                      boxShadow: '0 2px 8px rgba(139, 92, 246, 0.15)'
+                    }}>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Seat No.</div>
+                      <div style={{ color: '#8b5cf6', fontWeight: 700, fontSize: '20px', letterSpacing: '-0.02em' }}>{seat.bench && seat.bench !== '-' ? seat.bench : 'N/A'}</div>
                     </div>
                     <div style={{
                       background: 'rgba(255, 255, 255, 0.05)',
@@ -1127,13 +1253,14 @@ export default function SeatFinder() {
                       <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '16px' }}>{seat.subcode || '-'}</div>
                     </div>
                     <div style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
+                      background: 'rgba(59, 130, 246, 0.15)',
                       borderRadius: '12px',
                       padding: '14px',
-                      border: '1px solid rgba(255, 255, 255, 0.15)'
+                      border: '1.5px solid rgba(59, 130, 246, 0.3)',
+                      boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)'
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Department</div>
-                      <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '16px' }}>{seat.department || '-'}</div>
+                      <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: '16px' }}>{seat.department && seat.department !== '-' ? seat.department : 'N/A'}</div>
                     </div>
                     <div style={{
                       background: 'rgba(255, 255, 255, 0.05)',
