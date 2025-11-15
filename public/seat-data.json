@@ -1,0 +1,754 @@
+[
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18ASC101T",
+    "department": "AE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012247",
+    "room": "UB604",
+    "subcode": "18ASC101T",
+    "department": "AE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012248",
+    "room": "UB604",
+    "subcode": "18ASC101T",
+    "department": "AE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012249",
+    "room": "UB604",
+    "subcode": "18ASC101T",
+    "department": "AE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012250",
+    "room": "UB604",
+    "subcode": "18ASC101T",
+    "department": "AE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012251",
+    "room": "UB601",
+    "subcode": "18MEC106T",
+    "department": "AE-AE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012252",
+    "room": "UB601",
+    "subcode": "18MEC106T",
+    "department": "AE-AE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012253",
+    "room": "UB601",
+    "subcode": "18MEC106T",
+    "department": "AE-AE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012254",
+    "room": "UB601",
+    "subcode": "18MEC106T",
+    "department": "AE-AE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012255",
+    "room": "UB601",
+    "subcode": "18MEC106T",
+    "department": "AE-AE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18AIE332T",
+    "department": "AI",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18AIS201T",
+    "department": "AI",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18ECO107T",
+    "department": "AI",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18MAB102T",
+    "department": "AI",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18MAB201T",
+    "department": "AI",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18MAB302T",
+    "department": "AI",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18MAB304T",
+    "department": "AI",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18PDH201T",
+    "department": "AI",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18MEC106T",
+    "department": "AUTO",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18PDH201T",
+    "department": "AUTO",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18MEC106T",
+    "department": "AUTOMOTIVE ENGG.",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18BME465T",
+    "department": "BIOMEDICAL ENGG",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18MAB102T",
+    "department": "BIOMEDICAL ENGG",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18MAB201T",
+    "department": "BIOMEDICAL ENGG",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18BTE305T",
+    "department": "BIOTECHNOLOGY",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18BTE401T",
+    "department": "BIOTECHNOLOGY",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18BTE404T",
+    "department": "BIOTECHNOLOGY",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18MAB101T",
+    "department": "BIOTECHNOLOGY",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18MAB102T",
+    "department": "BIOTECHNOLOGY",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18MAB303T",
+    "department": "BIOTECHNOLOGY",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18PDH201T",
+    "department": "BIOTECHNOLOGY",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18BTE422T",
+    "department": "BT-GE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18MAB102T",
+    "department": "BT-GE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18MAB303T",
+    "department": "BT-GE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18MAB102T",
+    "department": "BT-RM",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB601",
+    "subcode": "18CEC203T",
+    "department": "CIVIL",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18PDH201T",
+    "department": "CIVIL",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18CEE401T",
+    "department": "CIVIL -COMP.APP",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB602",
+    "subcode": "18BTB101T",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB602",
+    "subcode": "18CSC304J",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB602",
+    "subcode": "18CSE356T",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB602",
+    "subcode": "18CSE453T",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB602",
+    "subcode": "18CSE454T",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB602",
+    "subcode": "18CSE455T",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB601",
+    "subcode": "18CSE457T",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB602",
+    "subcode": "18ECO102J",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB602",
+    "subcode": "18ECO107T",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB601",
+    "subcode": "18MAB102T",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB602",
+    "subcode": "18MAB201T",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB602",
+    "subcode": "18MAB204T",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB602",
+    "subcode": "18MAB302T",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB601",
+    "subcode": "18MEO102T",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB602",
+    "subcode": "18MEO104T",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB602",
+    "subcode": "18MEO113T",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB602",
+    "subcode": "18MEO113T",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18PDH101T",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18PDH201T",
+    "department": "CSE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB602",
+    "subcode": "18CSC302J",
+    "department": "CSE-AI&ML",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB602",
+    "subcode": "18MAB102T",
+    "department": "CSE-AI&ML",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18PDH201T",
+    "department": "CSE-AI&ML",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18MAB102T",
+    "department": "CSE-BCT",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB602",
+    "subcode": "18MEO113T",
+    "department": "CSE-BD",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18MAB102T",
+    "department": "CSE-CC",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18MAB201T",
+    "department": "CSE-CC",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18PDH201T",
+    "department": "CSE-CC",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18MAB102T",
+    "department": "CSE-CN",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18MAB102T",
+    "department": "CSE-GT",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18MAB201T",
+    "department": "CSE-IO",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18MAB204T",
+    "department": "CSE-IO",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18MAB201T",
+    "department": "CSE-IT",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18CSE466T",
+    "department": "CSE-SE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18MAB201T",
+    "department": "CSE-SE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18ECC301T",
+    "department": "ECE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18ECE203T",
+    "department": "ECE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18ECE220T",
+    "department": "ECE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18ECE226T",
+    "department": "ECE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18ECE302T",
+    "department": "ECE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18ECE321T",
+    "department": "ECE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18MEO104T",
+    "department": "ECE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18PDH201T",
+    "department": "ECE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18ECC301T",
+    "department": "ECE-DS",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB603",
+    "subcode": "18ECO106J",
+    "department": "EEE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18MAB201T",
+    "department": "EIE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18MAB102T",
+    "department": "ELECTRONICS-CE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18MAB201T",
+    "department": "ELECTRONICS-CE",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB601",
+    "subcode": "18MEC106T",
+    "department": "MECH",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB601",
+    "subcode": "18MEC108T",
+    "department": "MECH",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB601",
+    "subcode": "18MEC202T",
+    "department": "MECH",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB605",
+    "subcode": "18MEC202T",
+    "department": "MECH-AI&ML",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18MHC107T",
+    "department": "MECHATRONICS ENGG",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18MHC108J",
+    "department": "MECHATRONICS ENGG",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18MHC201J",
+    "department": "MECHATRONICS ENGG",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18MHE426T",
+    "department": "MECHATRONICS ENGG",
+    "date": "26/07/2025",
+    "session": "FN"
+  },
+  {
+    "registerNumber": "RA2311003012246",
+    "room": "UB604",
+    "subcode": "18MHC201J",
+    "department": "MH-RO",
+    "date": "26/07/2025",
+    "session": "FN"
+  }
+]

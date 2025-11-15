@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function SeatFinder() {
   const [examDate, setExamDate] = useState('today');
@@ -7,6 +7,19 @@ export default function SeatFinder() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [seatInfo, setSeatInfo] = useState(null);
+  const [seatData, setSeatData] = useState([]);
+
+  // Load seat data on component mount
+  useEffect(() => {
+    fetch('/seat-data.json')
+      .then(res => res.json())
+      .then(data => {
+        setSeatData(data);
+      })
+      .catch(err => {
+        console.error('Error loading seat data:', err);
+      });
+  }, []);
 
   // Get today's and tomorrow's dates
   const today = new Date();
@@ -67,12 +80,38 @@ export default function SeatFinder() {
     setSeatInfo(null);
 
     try {
-      // TODO: Replace with actual API endpoint
-      // For now, simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Simulate error (register number not found)
-      setError('Register number not found in any venue/session for this date');
+      // Search for register number in seat data
+      const regNoUpper = registerNumber.trim().toUpperCase();
+      // Normalize date format for comparison (handle DD/MM/YYYY format)
+      const normalizeDate = (dateStr) => {
+        if (!dateStr) return '';
+        // Convert DD/MM/YYYY to consistent format
+        return dateStr.replace(/\//g, '/');
+      };
+      
+      const normalizedSelectedDate = normalizeDate(selectedDate);
+      // First, find all seats matching the register number
+      const allMatchingSeats = seatData.filter(seat => {
+        const seatRegNo = seat.registerNumber ? seat.registerNumber.toUpperCase() : '';
+        return seatRegNo === regNoUpper;
+      });
+      
+      // Then filter by date if date is specified, otherwise show all matches
+      const foundSeats = normalizedSelectedDate 
+        ? allMatchingSeats.filter(seat => {
+            const seatDate = normalizeDate(seat.date);
+            return seatDate === normalizedSelectedDate || !seatDate || seatDate === '';
+          })
+        : allMatchingSeats;
+
+      if (foundSeats.length === 0) {
+        setError('Register number not found in any venue/session for this date');
+      } else {
+        setSeatInfo(foundSeats);
+      }
     } catch (err) {
       setError('Failed to fetch seat information. Please try again.');
     } finally {
@@ -392,22 +431,67 @@ export default function SeatFinder() {
           )}
 
           {/* Seat Info (when found) */}
-          {seatInfo && (
+          {seatInfo && seatInfo.length > 0 && (
             <div style={{
-              marginTop: '20px',
-              padding: '20px',
+              marginTop: 'clamp(16px, 4vw, 20px)',
+              padding: 'clamp(16px, 4vw, 20px)',
               background: 'rgba(34, 197, 94, 0.1)',
               border: '1px solid rgba(34, 197, 94, 0.3)',
               borderRadius: '8px'
             }}>
-              {/* Seat information will be displayed here */}
-              <p style={{
-                fontSize: '14px',
-                color: '#22c55e',
-                margin: 0
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '16px'
               }}>
-                Seat information found!
-              </p>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#22c55e', flexShrink: 0 }}>
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <h3 style={{
+                  fontSize: 'clamp(16px, 4vw, 18px)',
+                  fontWeight: 600,
+                  color: '#22c55e',
+                  margin: 0
+                }}>
+                  Seat Information Found!
+                </h3>
+              </div>
+              
+              {seatInfo.map((seat, index) => (
+                <div key={index} style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: '8px',
+                  padding: 'clamp(12px, 3vw, 16px)',
+                  marginBottom: index < seatInfo.length - 1 ? '12px' : '0',
+                  border: '1px solid rgba(34, 197, 94, 0.2)'
+                }}>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                    gap: 'clamp(8px, 2vw, 12px)',
+                    fontSize: 'clamp(13px, 3.5vw, 14px)'
+                  }}>
+                    <div>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: '4px', fontSize: 'clamp(11px, 3vw, 12px)' }}>Room/Venue</div>
+                      <div style={{ color: '#22c55e', fontWeight: 600 }}>{seat.room || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: '4px', fontSize: 'clamp(11px, 3vw, 12px)' }}>Subject Code</div>
+                      <div style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{seat.subcode || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: '4px', fontSize: 'clamp(11px, 3vw, 12px)' }}>Department</div>
+                      <div style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{seat.department || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: '4px', fontSize: 'clamp(11px, 3vw, 12px)' }}>Session</div>
+                      <div style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{seat.session || 'N/A'}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
