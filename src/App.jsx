@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import GradeX from './components/GradeX';
 import SeatFinder from './components/SeatFinder';
 
@@ -461,7 +462,7 @@ export default function App() {
               LinkedIn
             </a>
           </div>
-        </header>
+      </header>
       <main className="app-main single">
         {currentPage === 'seatfinder' ? <SeatFinder /> : <GradeX />}
       </main>
@@ -470,6 +471,7 @@ export default function App() {
         src="/back-in-black.mp3"
         onEnded={() => setIsPlaying(false)}
       />
+      <Analytics />
     </div>
     </>
   );
