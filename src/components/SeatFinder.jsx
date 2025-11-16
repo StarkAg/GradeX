@@ -521,8 +521,50 @@ export default function SeatFinder() {
           border: '1px solid var(--border-color)',
           borderRadius: '12px',
           padding: 'clamp(20px, 5vw, 32px)',
-          marginBottom: '24px'
+          marginBottom: '24px',
+          position: 'relative'
         }}>
+          {/* Loading Overlay */}
+          {loading && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              borderRadius: '12px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 'clamp(12px, 3vw, 16px)',
+              zIndex: 1000,
+              transition: 'opacity 0.3s ease'
+            }}>
+              {/* Circular Loading Spinner */}
+              <div style={{
+                width: 'clamp(48px, 12vw, 56px)',
+                height: 'clamp(48px, 12vw, 56px)',
+                border: '4px solid var(--border-color)',
+                borderTop: '4px solid var(--text-primary)',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }}></div>
+              <p style={{
+                fontSize: 'clamp(14px, 3.5vw, 16px)',
+                fontWeight: 500,
+                color: 'var(--text-primary)',
+                margin: 0,
+                opacity: 0.9
+              }}>
+                Fetching seat details...
+              </p>
+            </div>
+          )}
+          
           <div style={{
             marginBottom: 'clamp(20px, 5vw, 24px)'
           }}>
