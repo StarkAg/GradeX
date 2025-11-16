@@ -664,24 +664,10 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
     let html = '';
     let fetchUrl = campusConfig.fetchData;
     
-    // For Tech Park 2, also try report.php as an additional source (not just fallback)
-    if (campusName === 'Tech Park 2' && campusConfig.report) {
-      try {
-        const reportHtml = await fetchPage(campusConfig.report, 12000, 1);
-        const hasRAPattern = /(?:>|"|'|\b)(RA\d{2,})/i.test(reportHtml);
-        const hasTargetRA = ra ? new RegExp(ra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(reportHtml) : true;
-        
-        if (reportHtml.length > 5000 && (hasRAPattern || hasTargetRA)) {
-          html = reportHtml;
-          fetchUrl = campusConfig.report;
-          console.log(`[DEBUG ${campusName}] Using HTML from report.php, length: ${html.length}, hasTargetRA: ${hasTargetRA}`);
-        }
-      } catch (e) {
-        console.log(`[${campusName}] Could not fetch from report.php:`, e.message);
-      }
-    }
-    
     // Try POST request to fetch_data.php with date and session (room-wise data only)
+    // Collect HTML from all sessions to merge results
+    let allHtmlSources = [];
+    
     if (dateVariants && dateVariants.length > 0) {
       const dateParam = dateVariants[0];
       
@@ -721,16 +707,38 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
           const hasTargetRA = ra ? new RegExp(ra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(postHtml) : true;
           
           if (postHtml.length > 5000 && (hasRAPattern || hasTargetRA)) {
-            html = postHtml;
+            allHtmlSources.push(postHtml);
             fetchUrl = `${campusConfig.fetchData}?dated=${encodeURIComponent(formattedDate)}&session=${session}`;
-            console.log(`[DEBUG ${campusName}] Using HTML from ${session} session, length: ${html.length}, hasTargetRA: ${hasTargetRA}`);
-            break; // Found room-wise data, no need to try other sessions
+            console.log(`[DEBUG ${campusName}] Found HTML from ${session} session, length: ${postHtml.length}, hasTargetRA: ${hasTargetRA}`);
           }
         } catch (e) {
           console.error(`Error POSTing to ${campusName} (${session}):`, e.message);
           continue;
         }
       }
+    }
+    
+    // For Tech Park 2, also try report.php as an additional source to merge with fetch_data.php results
+    if (campusName === 'Tech Park 2' && campusConfig.report) {
+      try {
+        const reportHtml = await fetchPage(campusConfig.report, 12000, 1);
+        const hasRAPattern = /(?:>|"|'|\b)(RA\d{2,})/i.test(reportHtml);
+        const hasTargetRA = ra ? new RegExp(ra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(reportHtml) : true;
+        
+        if (reportHtml.length > 5000 && (hasRAPattern || hasTargetRA)) {
+          allHtmlSources.push(reportHtml);
+          console.log(`[DEBUG ${campusName}] Found HTML from report.php, length: ${reportHtml.length}, hasTargetRA: ${hasTargetRA}`);
+        }
+      } catch (e) {
+        console.log(`[${campusName}] Could not fetch from report.php:`, e.message);
+      }
+    }
+    
+    // Merge all HTML sources (combine them to find all entries)
+    if (allHtmlSources.length > 0) {
+      // Combine all HTML sources - this ensures we find all entries across all endpoints
+      html = allHtmlSources.join('\n<!-- MERGED FROM MULTIPLE SOURCES -->\n');
+      console.log(`[DEBUG ${campusName}] Merged ${allHtmlSources.length} HTML sources, total length: ${html.length}`);
     }
     
     // Fallback: Try GET request to report.php (prioritize explicit report endpoint if available)
