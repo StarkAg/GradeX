@@ -838,24 +838,63 @@ async function loadStudentData() {
     let loadMethod = 'unknown';
     
     try {
-      // STRATEGY 1: Try file system FIRST (most reliable, no network needed)
-      console.log(`[loadStudentData] Attempting to load from file system...`);
-      const fs = await import('fs');
-      const path = await import('path');
-      
-      console.log(`[loadStudentData] process.cwd(): ${process.cwd()}`);
-      
-      // Try to get __dirname equivalent for ES modules first
-      let currentDir = null;
+      // STRATEGY 0: Try createRequire (works in Node.js serverless functions)
       try {
+        console.log(`[loadStudentData] Attempting createRequire...`);
+        const { createRequire } = await import('module');
+        const require = createRequire(import.meta.url);
+        const path = await import('path');
         const { fileURLToPath } = await import('url');
+        
+        // Get current file directory
         const currentFileUrl = import.meta.url;
         const currentFilePath = fileURLToPath(currentFileUrl);
-        currentDir = path.dirname(currentFilePath);
-        console.log(`[loadStudentData] __dirname: ${currentDir}`);
-      } catch (e) {
-        console.log(`[loadStudentData] Could not get __dirname: ${e.message}`);
+        const currentDir = path.dirname(currentFilePath);
+        
+        // Try multiple paths
+        const possibleRequirePaths = [
+          path.join(currentDir, 'data', 'seat-data.json'),
+          path.join(currentDir, '..', 'data', 'seat-data.json'),
+          './data/seat-data.json',
+          '../data/seat-data.json',
+        ];
+        
+        for (const requirePath of possibleRequirePaths) {
+          try {
+            console.log(`[loadStudentData] Trying require: ${requirePath}`);
+            const data = require(requirePath);
+            fileContent = JSON.stringify(data);
+            loadMethod = `createRequire: ${requirePath}`;
+            console.log(`[loadStudentData] ✓ Successfully loaded via createRequire (${fileContent.length} bytes)`);
+            break;
+          } catch (reqError) {
+            console.log(`[loadStudentData] require failed for ${requirePath}: ${reqError.message}`);
+            continue;
+          }
+        }
+      } catch (requireError) {
+        console.log(`[loadStudentData] createRequire approach failed: ${requireError.message}`);
       }
+      
+      // STRATEGY 1: Try file system (if direct import failed)
+      if (!fileContent) {
+        console.log(`[loadStudentData] Attempting to load from file system...`);
+        const fs = await import('fs');
+        const path = await import('path');
+        
+        console.log(`[loadStudentData] process.cwd(): ${process.cwd()}`);
+        
+        // Try to get __dirname equivalent for ES modules first
+        let currentDir = null;
+        try {
+          const { fileURLToPath } = await import('url');
+          const currentFileUrl = import.meta.url;
+          const currentFilePath = fileURLToPath(currentFileUrl);
+          currentDir = path.dirname(currentFilePath);
+          console.log(`[loadStudentData] __dirname: ${currentDir}`);
+        } catch (e) {
+          console.log(`[loadStudentData] Could not get __dirname: ${e.message}`);
+        }
       
       // Try multiple possible paths for Vercel serverless functions
       // NOTE: api/data/seat-data.json will be included in the serverless function bundle
