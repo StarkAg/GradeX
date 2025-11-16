@@ -74,13 +74,7 @@ export default function SeatFinder() {
   };
 
   const getSelectedDate = () => {
-    if (examDate === 'today') {
-      return formatDate(today);
-    } else if (examDate === 'tomorrow') {
-      return formatDate(tomorrow);
-    } else {
-      return dateInput;
-    }
+    return dateInput || formatDate(today);
   };
 
   const handleDateChange = (type) => {
@@ -574,49 +568,6 @@ export default function SeatFinder() {
             }}>
               Exam Date
             </label>
-            {/* Quick Date Buttons */}
-            <div style={{
-              display: 'flex',
-              gap: 'clamp(6px, 2vw, 8px)',
-              marginBottom: 'clamp(12px, 3vw, 16px)',
-              flexWrap: 'wrap'
-            }}>
-              <button
-                onClick={() => handleDateChange('today')}
-                style={{
-                  padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px)',
-                  fontSize: 'clamp(12px, 3vw, 13px)',
-                  fontWeight: 500,
-                  border: '1px solid var(--border-color)',
-                  background: examDate === 'today' ? 'var(--text-primary)' : 'var(--card-bg)',
-                  color: examDate === 'today' ? 'var(--bg-primary)' : 'var(--text-primary)',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  minHeight: '36px'
-                }}
-              >
-                Today
-              </button>
-              <button
-                onClick={() => handleDateChange('tomorrow')}
-                style={{
-                  padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px)',
-                  fontSize: 'clamp(12px, 3vw, 13px)',
-                  fontWeight: 500,
-                  border: '1px solid var(--border-color)',
-                  background: examDate === 'tomorrow' ? 'var(--text-primary)' : 'var(--card-bg)',
-                  color: examDate === 'tomorrow' ? 'var(--bg-primary)' : 'var(--text-primary)',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  minHeight: '36px'
-                }}
-              >
-                Tomorrow
-              </button>
-            </div>
-            
             {/* Date Navigator with Arrows */}
             <div style={{
               display: 'flex',
@@ -664,7 +615,7 @@ export default function SeatFinder() {
               }}>
                 <input
                   type="text"
-                  value={examDate === 'today' ? formatDate(today) : examDate === 'tomorrow' ? formatDate(tomorrow) : dateInput}
+                  value={dateInput || formatDate(today)}
                   onChange={handleDateInputChange}
                   placeholder="DD/MM/YYYY"
                   style={{
@@ -745,7 +696,7 @@ export default function SeatFinder() {
               type="text"
               value={registerNumber}
               onChange={handleRegisterNumberChange}
-              placeholder="RA23XXXX"
+              placeholder="Enter your Full RA Number"
               style={{
                 width: '100%',
                 padding: 'clamp(12px, 3vw, 14px) clamp(14px, 4vw, 16px)',
