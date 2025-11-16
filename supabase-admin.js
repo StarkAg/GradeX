@@ -13,9 +13,10 @@ const __dirname = path.dirname(__filename);
 
 // Load credentials from environment or config
 const supabaseUrl = process.env.SUPABASE_URL || 'https://phlggcheaajkupppozho.supabase.co';
+// ⚠️ SECURITY: Service role key must be set via environment variable
+// Never hardcode service role keys in source code!
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY 
-  || process.env.SUPABASE_ACCESS_TOKEN
-  || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBobGdnY2hlYWFqa3VwcHBvemhvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzI4NDQ1OCwiZXhwIjoyMDc4ODYwNDU4fQ.sqWGVGXWameUo1v7nDcRprwa5A4bP52RqAwhyjDqRH4';
+  || process.env.SUPABASE_ACCESS_TOKEN;
 
 if (!serviceRoleKey) {
   console.error('❌ SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ACCESS_TOKEN required for admin operations');

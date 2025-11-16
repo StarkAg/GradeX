@@ -19,9 +19,10 @@ const supabaseKey = process.env.SUPABASE_ANON_KEY
   || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBobGdnY2hlYWFqa3VwcHBvemhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyODQ0NTgsImV4cCI6MjA3ODg2MDQ1OH0.TGEDpm2uqKceOxAMB5aG6fd8uHESmwfdKF-cqm2QU84';
 
 // Service role key for admin operations (full access)
+// ⚠️ SECURITY: Never hardcode service role keys! Use environment variables only.
 export const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY 
   || process.env.SUPABASE_ACCESS_TOKEN
-  || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBobGdnY2hlYWFqa3VwcHBvemhvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzI4NDQ1OCwiZXhwIjoyMDc4ODYwNDU4fQ.sqWGVGXWameUo1v7nDcRprwa5A4bP52RqAwhyjDqRH4';
+  || null;
 
 // Create admin client with service role (for admin operations)
 export const supabaseAdmin = supabaseUrl && serviceRoleKey
