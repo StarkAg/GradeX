@@ -101,7 +101,7 @@ function extractSeatingData(pdfText, defaultDate = '17/11/2025', defaultSession 
       if (roomMatch) {
         currentContext.room = roomMatch[1];
         // Determine building from room
-        if (currentContext.room.startsWith('CLS') || currentContext.room.startsWith('LS')) {
+        if (currentContext.room.startsWith('CLS') || currentContext.room.startsWith('LS') || currentContext.room.startsWith('LH')) {
           currentContext.building = 'Tech Park 2';
         } else if (currentContext.room.startsWith('TP-') || currentContext.room.startsWith('TP')) {
           currentContext.building = 'Tech Park';
@@ -120,7 +120,7 @@ function extractSeatingData(pdfText, defaultDate = '17/11/2025', defaultSession 
       const roomMatch = line.match(roomPattern);
       if (roomMatch && !currentContext.room) {
         currentContext.room = roomMatch[0];
-        if (currentContext.room.startsWith('CLS') || currentContext.room.startsWith('LS')) {
+        if (currentContext.room.startsWith('CLS') || currentContext.room.startsWith('LS') || currentContext.room.startsWith('LH')) {
           currentContext.building = 'Tech Park 2';
         } else if (currentContext.room.startsWith('TP-') || currentContext.room.startsWith('TP')) {
           currentContext.building = 'Tech Park';

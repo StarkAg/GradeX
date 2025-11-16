@@ -329,8 +329,8 @@ export default function SeatFinder() {
               formattedRoom = formattedRoom.replace('TPVPT-', 'VPT-');
             }
             
-            // CLS and LS rooms are in Tech Park 2
-            if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS')) {
+            // CLS, LS, and LH rooms are in Tech Park 2
+            if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS') || formattedRoom.startsWith('LH')) {
               buildingName = 'Tech Park 2';
             }
             
@@ -506,8 +506,8 @@ export default function SeatFinder() {
         formattedRoom = formattedRoom.replace('TPVPT-', 'VPT-');
       }
       
-      // CLS and LS rooms are in Tech Park 2
-      if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS')) {
+      // CLS, LS, and LH rooms are in Tech Park 2
+      if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS') || formattedRoom.startsWith('LH')) {
         buildingName = 'Tech Park 2';
       }
       
@@ -1309,8 +1309,8 @@ export default function SeatFinder() {
                 // Also check the original hall name for TPVPT before it was formatted
                 const originalHallUpper = seat.context && typeof seat.context === 'string' ? seat.context.toUpperCase() : '';
                 const hasTPVPT = originalHallUpper.includes('TPVPT') || roomUpper.includes('VPT') || roomUpper.includes('TPVPT');
-                const hasCLSorLS = roomUpper.startsWith('CLS') || roomUpper.startsWith('LS');
-                const hasImage = roomUpper && roomUpper.length > 0 && (roomUpper.startsWith('TP2') || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT || hasCLSorLS);
+                const hasCLSorLSorLH = roomUpper.startsWith('CLS') || roomUpper.startsWith('LS') || roomUpper.startsWith('LH');
+                const hasImage = roomUpper && roomUpper.length > 0 && (roomUpper.startsWith('TP2') || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT || hasCLSorLSorLH);
                 
                 return (
                 <div key={index} style={{
@@ -1325,7 +1325,7 @@ export default function SeatFinder() {
                   flexDirection: hasImage ? (isMobile ? 'column' : 'row') : 'column'
                 }}>
                   {hasImage ? (() => {
-                    if (roomUpper.startsWith('TP2') || hasCLSorLS) {
+                    if (roomUpper.startsWith('TP2') || hasCLSorLSorLH) {
                       return (
                         <div style={{
                           flexShrink: 0,
@@ -1670,8 +1670,8 @@ export default function SeatFinder() {
                 // Also check the original hall name for TPVPT before it was formatted
                 const originalHallUpper = seat.context && typeof seat.context === 'string' ? seat.context.toUpperCase() : '';
                 const hasTPVPT = originalHallUpper.includes('TPVPT') || roomUpper.includes('VPT') || roomUpper.includes('TPVPT');
-                const hasCLSorLS = roomUpper.startsWith('CLS') || roomUpper.startsWith('LS');
-                const hasImage = roomUpper && roomUpper.length > 0 && (roomUpper.startsWith('TP2') || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT || hasCLSorLS);
+                const hasCLSorLSorLH = roomUpper.startsWith('CLS') || roomUpper.startsWith('LS') || roomUpper.startsWith('LH');
+                const hasImage = roomUpper && roomUpper.length > 0 && (roomUpper.startsWith('TP2') || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT || hasCLSorLSorLH);
                 
                 return (
                 <div key={index} style={{
@@ -1686,7 +1686,7 @@ export default function SeatFinder() {
                   flexDirection: hasImage ? 'row' : 'column'
                 }}>
                   {hasImage ? (() => {
-                    if (roomUpper.startsWith('TP2') || hasCLSorLS) {
+                    if (roomUpper.startsWith('TP2') || hasCLSorLSorLH) {
                       return (
                         <div style={{
                           flexShrink: 0,
