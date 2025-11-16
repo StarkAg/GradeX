@@ -406,9 +406,11 @@ export default function SeatFinder() {
         });
         setSeatInfo(transformedSeats);
         setError(null);
+        return transformedSeats.length > 0; // Return true if found
       } else {
         setSeatInfo(null);
         setError('No seating information found for this register number and date.');
+        return false; // Return false if not found
       }
     } catch (err) {
       console.error('Error in fetchFromLiveAPI:', err);
@@ -551,7 +553,21 @@ export default function SeatFinder() {
 
     try {
       if (useLiveAPI) {
-        await fetchFromLiveAPI(registerNumber.trim(), selectedDate);
+        let foundInLiveAPI = false;
+        try {
+          foundInLiveAPI = await fetchFromLiveAPI(registerNumber.trim(), selectedDate);
+          // If live API found results, we're done
+          if (foundInLiveAPI) {
+            return;
+          }
+        } catch (apiErr) {
+          console.warn('Live API failed, falling back to static data:', apiErr.message);
+        }
+        // Fallback to static data if live API didn't find results
+        if (!foundInLiveAPI) {
+          console.log('Falling back to static data...');
+          await fetchFromStaticData(registerNumber.trim(), selectedDate);
+        }
       } else {
         await fetchFromStaticData(registerNumber.trim(), selectedDate);
       }
