@@ -619,29 +619,17 @@ export default function SeatFinder() {
           // Merge results from both sources
           const allSeats = [...liveApiSeats];
           staticSeats.forEach(staticSeat => {
-            // Check for duplicates: same room + bench (regardless of session)
-            // A student can't be in the same room with the same seat in different sessions
-            // Also check exact match with session for stricter duplicate detection
-            const isDuplicate = allSeats.some(existing => {
-              // Exact match: room + session + bench
-              const exactMatch = existing.room === staticSeat.room && 
-                                existing.session === staticSeat.session &&
-                                existing.bench === staticSeat.bench;
-              
-              // Same room + bench (conflicting entry - prioritize live API)
-              const conflictingEntry = existing.room === staticSeat.room && 
-                                      existing.room && staticSeat.room && // Both must have room
-                                      existing.bench === staticSeat.bench &&
-                                      existing.bench && staticSeat.bench; // Both must have bench
-              
-              return exactMatch || conflictingEntry;
-            });
-            
+            // Only add if not already present (avoid duplicates)
+            const isDuplicate = allSeats.some(existing => 
+              existing.room === staticSeat.room && 
+              existing.session === staticSeat.session &&
+              existing.bench === staticSeat.bench
+            );
             if (!isDuplicate) {
               allSeats.push(staticSeat);
               console.log(`➕ Added static seat: ${staticSeat.room}, ${staticSeat.session}`);
             } else {
-              console.log(`⚠️ Duplicate/conflicting entry skipped: ${staticSeat.room}, ${staticSeat.session} (prioritizing live API)`);
+              console.log(`⚠️ Duplicate skipped: ${staticSeat.room}, ${staticSeat.session}`);
             }
           });
           

@@ -33286,17 +33286,5 @@
     "bench": "25",
     "date": "17/11/2025",
     "session": "Forenoon"
-  },
-  {
-    "registerNumber": "RA2311026010219",
-    "name": null,
-    "room": "LH506",
-    "floor": "5th",
-    "building": "Tech Park 2",
-    "subcode": "21ECO101T",
-    "department": "CSE.AI.ML",
-    "bench": "13",
-    "date": "17/11/2025",
-    "session": "Forenoon"
   }
 ]
