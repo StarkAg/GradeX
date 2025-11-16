@@ -46,10 +46,10 @@
 
 @keyframes arrowBounce {
   0%, 100% {
-    transform: rotate(180deg) translateX(0);
+    transform: translateX(0);
   }
   50% {
-    transform: rotate(180deg) translateX(-4px);
+    transform: translateX(4px);
   }
 }
 
