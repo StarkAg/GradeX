@@ -73,12 +73,11 @@ const seatData = data
     }
     
     const name = nameColumn ? String(row[nameColumn] || '').trim() : null;
-    const department = deptColumn ? String(row[deptColumn] || '').trim() : null;
     
     return {
       registerNumber: ra,
       name: name || null,
-      department: department || null,
+      // Department and all venue details come from API, not JSON
       // These fields will be empty initially, filled by seating arrangement data
       room: null,
       floor: null,
@@ -92,16 +91,27 @@ const seatData = data
 
 console.log(`\nGenerated ${seatData.length} valid entries`);
 
-// Write to seat-data.json
-const outputPath = path.join(__dirname, 'public', 'seat-data.json');
-fs.writeFileSync(outputPath, JSON.stringify(seatData, null, 2), 'utf8');
+// Write to seat-data.json in both public and api/data directories
+const publicPath = path.join(__dirname, 'public', 'seat-data.json');
+const apiDataPath = path.join(__dirname, 'api', 'data', 'seat-data.json');
 
-console.log(`\n✓ Successfully generated: ${outputPath}`);
+// Ensure api/data directory exists
+const apiDataDir = path.dirname(apiDataPath);
+if (!fs.existsSync(apiDataDir)) {
+  fs.mkdirSync(apiDataDir, { recursive: true });
+}
+
+fs.writeFileSync(publicPath, JSON.stringify(seatData, null, 2), 'utf8');
+fs.writeFileSync(apiDataPath, JSON.stringify(seatData, null, 2), 'utf8');
+
+console.log(`\n✓ Successfully generated:`);
+console.log(`  ${publicPath}`);
+console.log(`  ${apiDataPath}`);
 console.log(`  Total entries: ${seatData.length}`);
 
 // Show sample entries
 console.log(`\nSample entries:`);
 seatData.slice(0, 3).forEach((entry, i) => {
-  console.log(`  ${i + 1}. ${entry.registerNumber} - ${entry.name || 'N/A'} - ${entry.department || 'N/A'}`);
+  console.log(`  ${i + 1}. ${entry.registerNumber} - ${entry.name || 'N/A'}`);
 });
 

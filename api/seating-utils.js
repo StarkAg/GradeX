@@ -1058,10 +1058,9 @@ async function loadStudentData() {
       
       console.log(`[loadStudentData] ✓ Parsed JSON successfully: ${seatData.length} entries (loaded via ${loadMethod})`);
       
-      // Create a lookup map: RA -> {name, department}
+      // Create a lookup map: RA -> {name} (only name from JSON, department comes from API)
       const lookup = new Map();
       let entriesWithNames = 0;
-      let entriesWithDepts = 0;
       
       seatData.forEach((entry, index) => {
         if (!entry || typeof entry !== 'object') {
@@ -1069,17 +1068,16 @@ async function loadStudentData() {
           return;
         }
         
-        if (entry.registerNumber && (entry.name || entry.department)) {
+        if (entry.registerNumber && entry.name) {
           const ra = normalizeRA(entry.registerNumber);
           if (ra) {
             // Store the first occurrence or update if we have better data
             if (!lookup.has(ra) || (entry.name && !lookup.get(ra).name)) {
               lookup.set(ra, {
                 name: entry.name || null,
-                department: entry.department || null,
+                // Department removed - comes from API only
               });
               if (entry.name) entriesWithNames++;
-              if (entry.department) entriesWithDepts++;
             }
           }
         }
@@ -1087,13 +1085,12 @@ async function loadStudentData() {
       
       console.log(`[loadStudentData] ✓ Created lookup map: ${lookup.size} unique RAs`);
       console.log(`[loadStudentData]   - Entries with names: ${entriesWithNames}`);
-      console.log(`[loadStudentData]   - Entries with departments: ${entriesWithDepts}`);
       
       // Test lookup with a known RA
       const testRA = 'RA2311003012124';
       const testResult = lookup.get(normalizeRA(testRA));
       if (testResult) {
-        console.log(`[loadStudentData] ✓ Test lookup for ${testRA}: Name=${testResult.name || 'N/A'}, Dept=${testResult.department || 'N/A'}`);
+        console.log(`[loadStudentData] ✓ Test lookup for ${testRA}: Name=${testResult.name || 'N/A'}`);
       } else {
         console.log(`[loadStudentData] ⚠ Test lookup for ${testRA}: NOT FOUND`);
       }
@@ -1130,25 +1127,25 @@ export function clearStudentDataCache() {
 }
 
 /**
- * Lookup student name and department by RA number
+ * Lookup student name by RA number (department comes from API)
  * @param {string} ra - Register number
- * @returns {Promise<Object>} - {name, department} or {name: null, department: null}
+ * @returns {Promise<Object>} - {name} or {name: null}
  */
 async function lookupStudentInfo(ra) {
   const normalizedRA = normalizeRA(ra);
   if (!normalizedRA) {
     console.log(`[lookupStudentInfo] Invalid RA: ${ra}`);
-    return { name: null, department: null };
+    return { name: null };
   }
   
   try {
     const studentData = await loadStudentData();
-    const result = studentData.get(normalizedRA) || { name: null, department: null };
-    console.log(`[lookupStudentInfo] RA: ${normalizedRA}, Found: ${result.name ? 'YES' : 'NO'}, Name: ${result.name || 'N/A'}, Dept: ${result.department || 'N/A'}`);
+    const result = studentData.get(normalizedRA) || { name: null };
+    console.log(`[lookupStudentInfo] RA: ${normalizedRA}, Found: ${result.name ? 'YES' : 'NO'}, Name: ${result.name || 'N/A'}`);
     return result;
   } catch (error) {
     console.error('Error looking up student info:', error);
-    return { name: null, department: null };
+    return { name: null };
   }
 }
 
@@ -1166,21 +1163,21 @@ async function enhanceMatchesWithStudentInfo(matches, ra) {
   // Lookup student info once
   const studentInfo = await lookupStudentInfo(ra);
   
-  // Add name and student department to each match (preserve exam department)
+  // Add name from JSON, department comes from API (match.department)
   return matches.map(match => ({
     ...match,
-    name: studentInfo.name,
-    studentDepartment: studentInfo.department, // Student's department from JSON
-    // Keep match.department as the exam department (e.g., "CSE" from "CSE/21MAB201T")
+    name: studentInfo.name || match.name || null, // Name from JSON
+    // Department comes from API (match.department from exam seating data)
+    // Keep all other API fields: hall, bench, session, subjectCode, etc.
   }));
 }
 
 /**
  * Enhance matches with pre-loaded student information (from JSON)
- * This is more efficient as it uses already-loaded student data
+ * Only name comes from JSON, everything else (department, venue details) comes from API
  * @param {Array} matches - Array of match objects
- * @param {Object} studentInfo - Pre-loaded student info {name, department}
- * @returns {Array} - Enhanced matches with name and department
+ * @param {Object} studentInfo - Pre-loaded student info {name} (department removed)
+ * @returns {Array} - Enhanced matches with name from JSON, all else from API
  */
 function enhanceMatchesWithPreloadedStudentInfo(matches, studentInfo) {
   if (!matches || matches.length === 0) {
@@ -1191,15 +1188,14 @@ function enhanceMatchesWithPreloadedStudentInfo(matches, studentInfo) {
   console.log(`[enhanceMatchesWithPreloadedStudentInfo] studentInfo:`, JSON.stringify(studentInfo));
   
   if (!studentInfo) {
-    studentInfo = { name: null, department: null };
+    studentInfo = { name: null };
     console.log(`[enhanceMatchesWithPreloadedStudentInfo] No student info provided, using null values`);
   } else {
-    console.log(`[enhanceMatchesWithPreloadedStudentInfo] Enhancing ${matches.length} matches with Name="${studentInfo.name || 'N/A'}", Dept="${studentInfo.department || 'N/A'}"`);
+    console.log(`[enhanceMatchesWithPreloadedStudentInfo] Enhancing ${matches.length} matches with Name="${studentInfo.name || 'N/A'}"`);
     console.log(`[enhanceMatchesWithPreloadedStudentInfo] studentInfo.name type: ${typeof studentInfo.name}, value: ${studentInfo.name}`);
-    console.log(`[enhanceMatchesWithPreloadedStudentInfo] studentInfo.department type: ${typeof studentInfo.department}, value: ${studentInfo.department}`);
   }
   
-  // Add name from JSON, use API department (from exam seating data)
+  // Add name from JSON, use API for everything else (department, venue details)
   // Ensure both name and venue details are preserved
   const enhanced = matches.map(match => {
     // Use studentInfo.name from JSON if it exists
@@ -1214,8 +1210,8 @@ function enhanceMatchesWithPreloadedStudentInfo(matches, studentInfo) {
     
     // Preserve all venue details from API
     return {
-      ...match, // This includes all venue details: hall, bench, session, subjectCode, etc.
-      name: finalName, // Name from JSON
+      ...match, // This includes all venue details: hall, bench, session, subjectCode, department, etc.
+      name: finalName, // Name from JSON only
       department: finalDept, // Department from API (exam department)
       // Keep all other API fields: hall, bench, session, subjectCode, context, url, etc.
     };
@@ -1248,10 +1244,10 @@ export async function getSeatingInfo(ra, date) {
     };
   }
   
-  // STEP 1: Load student data from JSON FIRST (before API fetch)
-  // This ensures name and department are available even if API fails
-  console.log(`[getSeatingInfo] Pre-loading student data for RA: ${normalizedRA}`);
-  let studentInfo = { name: null, department: null };
+  // STEP 1: Load student name from JSON FIRST (before API fetch)
+  // Only name comes from JSON, department and venue details come from API
+  console.log(`[getSeatingInfo] Pre-loading student name from JSON for RA: ${normalizedRA}`);
+  let studentInfo = { name: null };
   
   // Try multiple times with different strategies
   let studentData = null;
@@ -1293,14 +1289,14 @@ export async function getSeatingInfo(ra, date) {
     const lookupResult = studentData.get(normalizedRA);
     if (lookupResult) {
       studentInfo = lookupResult;
-      console.log(`[getSeatingInfo] ✓ Student found in map: Name="${studentInfo.name}", Dept="${studentInfo.department}"`);
+      console.log(`[getSeatingInfo] ✓ Student found in map: Name="${studentInfo.name || 'N/A'}"`);
     } else {
       console.log(`[getSeatingInfo] ⚠ Student NOT found in map for RA: ${normalizedRA}`);
       // Try case-insensitive search
       for (const [key, value] of studentData.entries()) {
         if (key.toUpperCase() === normalizedRA.toUpperCase()) {
           studentInfo = value;
-          console.log(`[getSeatingInfo] ✓ Student found (case-insensitive): Name="${studentInfo.name}", Dept="${studentInfo.department}"`);
+          console.log(`[getSeatingInfo] ✓ Student found (case-insensitive): Name="${studentInfo.name || 'N/A'}"`);
           break;
         }
       }
