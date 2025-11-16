@@ -753,6 +753,43 @@ export default function SeatFinder() {
             </div>
           )}
 
+          {/* Contact Information */}
+          <div style={{
+            marginTop: 'clamp(20px, 5vw, 24px)',
+            paddingTop: 'clamp(16px, 4vw, 20px)',
+            borderTop: '1px solid var(--border-color)',
+            textAlign: 'center'
+          }}>
+            <p style={{
+              fontSize: 'clamp(10px, 2.5vw, 11px)',
+              color: 'var(--text-secondary)',
+              margin: 0,
+              lineHeight: '1.5',
+              opacity: 0.7
+            }}>
+              For any Problems/inquiries contact{' '}
+              <a 
+                href="mailto:ha1487@srmist.edu.in" 
+                style={{
+                  color: 'var(--text-primary)',
+                  textDecoration: 'none',
+                  fontWeight: 500,
+                  opacity: 0.9
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.textDecoration = 'underline';
+                  e.currentTarget.style.opacity = '1';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.textDecoration = 'none';
+                  e.currentTarget.style.opacity = '0.9';
+                }}
+              >
+                ha1487@srmist.edu.in
+              </a>
+            </p>
+          </div>
+
           {/* Seat Info - Mobile only (inside form) */}
           {!isDesktop && seatInfo && seatInfo.length > 0 && (
             <div style={{
