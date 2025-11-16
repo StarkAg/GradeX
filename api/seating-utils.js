@@ -826,97 +826,130 @@ async function loadStudentData() {
   
   // Start loading
   studentDataLoadPromise = (async () => {
+    let fileContent = null;
+    let loadMethod = 'unknown';
+    
     try {
-      const fs = await import('fs');
-      const path = await import('path');
+      // STRATEGY 1: Try fetching from public URL FIRST (most reliable in Vercel)
+      // This works because Vercel serves files from /public directory
+      const possibleUrls = [];
       
-      // Try multiple possible paths for Vercel serverless functions
-      const possiblePaths = [
-        path.join(process.cwd(), 'public', 'seat-data.json'),
-        path.join(process.cwd(), '..', 'public', 'seat-data.json'),
-        path.join(process.cwd(), 'seat-data.json'),
-      ];
+      // Get the correct base URL
+      const baseUrl = process.env.VERCEL_URL 
+        ? `https://${process.env.VERCEL_URL}`
+        : process.env.VERCEL 
+          ? 'https://gradex.vercel.app'
+          : 'https://gradex.vercel.app';
       
-      // Try to get __dirname equivalent for ES modules
-      try {
-        const { fileURLToPath } = await import('url');
-        const currentFileUrl = import.meta.url;
-        const currentFilePath = fileURLToPath(currentFileUrl);
-        const currentDir = path.dirname(currentFilePath);
-        possiblePaths.unshift(path.join(currentDir, '..', 'public', 'seat-data.json'));
-      } catch (e) {
-        // __dirname not available, continue with other paths
-      }
+      possibleUrls.push(`${baseUrl}/seat-data.json`);
+      possibleUrls.push('https://gradex.vercel.app/seat-data.json');
       
-      let fileContent = null;
-      let publicPath = null;
-      
-      for (const tryPath of possiblePaths) {
+      // Try fetching from URLs first (most reliable in Vercel)
+      for (const url of possibleUrls) {
         try {
-          if (fs.existsSync(tryPath)) {
-            fileContent = fs.readFileSync(tryPath, 'utf-8');
-            publicPath = tryPath;
+          console.log(`[loadStudentData] Attempting to fetch from URL: ${url}`);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+          
+          const response = await fetch(url, {
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent': 'GradeX-SeatFinder/1.0',
+            },
+            signal: controller.signal,
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (response.ok) {
+            fileContent = await response.text();
+            loadMethod = `URL: ${url}`;
+            console.log(`[loadStudentData] ✓ Successfully loaded from ${url} (${fileContent.length} bytes)`);
             break;
+          } else {
+            console.log(`[loadStudentData] URL ${url} returned status ${response.status}`);
           }
-        } catch (e) {
-          // Try next path
+        } catch (fetchError) {
+          if (fetchError.name === 'AbortError') {
+            console.log(`[loadStudentData] Timeout fetching from ${url}`);
+          } else {
+            console.log(`[loadStudentData] Error fetching from ${url}: ${fetchError.message}`);
+          }
           continue;
         }
       }
       
-      // If file system access failed, try fetching from public URL (Vercel)
+      // STRATEGY 2: Fallback to file system if URL fetch failed
       if (!fileContent) {
+        console.log(`[loadStudentData] URL fetch failed, trying file system...`);
+        const fs = await import('fs');
+        const path = await import('path');
+        
+        // Try multiple possible paths for Vercel serverless functions
+        const possiblePaths = [
+          path.join(process.cwd(), 'public', 'seat-data.json'),
+          path.join(process.cwd(), '..', 'public', 'seat-data.json'),
+          path.join(process.cwd(), 'seat-data.json'),
+        ];
+        
+        // Try to get __dirname equivalent for ES modules
         try {
-          // Try multiple URL strategies for Vercel
-          const possibleUrls = [];
-          
-          // Strategy 1: Use VERCEL_URL if available
-          if (process.env.VERCEL_URL) {
-            possibleUrls.push(`https://${process.env.VERCEL_URL}/seat-data.json`);
-          }
-          
-          // Strategy 2: Use production URL
-          possibleUrls.push('https://gradex.vercel.app/seat-data.json');
-          
-          // Strategy 3: Try with www subdomain
-          possibleUrls.push('https://www.gradex.vercel.app/seat-data.json');
-          
-          for (const url of possibleUrls) {
-            try {
-              console.log(`[loadStudentData] Trying to fetch from URL: ${url}`);
-              const response = await fetch(url, {
-                headers: {
-                  'Accept': 'application/json',
-                },
-              });
-              if (response.ok) {
-                fileContent = await response.text();
-                console.log(`[loadStudentData] Successfully fetched from URL: ${url}`);
-                break;
-              }
-            } catch (fetchError) {
-              console.error(`[loadStudentData] Fetch error for ${url}:`, fetchError.message);
-              continue;
+          const { fileURLToPath } = await import('url');
+          const currentFileUrl = import.meta.url;
+          const currentFilePath = fileURLToPath(currentFileUrl);
+          const currentDir = path.dirname(currentFilePath);
+          possiblePaths.unshift(path.join(currentDir, '..', 'public', 'seat-data.json'));
+        } catch (e) {
+          // __dirname not available, continue with other paths
+        }
+        
+        for (const tryPath of possiblePaths) {
+          try {
+            if (fs.existsSync(tryPath)) {
+              fileContent = fs.readFileSync(tryPath, 'utf-8');
+              loadMethod = `File: ${tryPath}`;
+              console.log(`[loadStudentData] ✓ Successfully loaded from file system: ${tryPath} (${fileContent.length} bytes)`);
+              break;
             }
+          } catch (e) {
+            console.log(`[loadStudentData] File system error for ${tryPath}: ${e.message}`);
+            continue;
           }
-        } catch (fetchError) {
-          console.error('[loadStudentData] All fetch attempts failed:', fetchError);
         }
       }
       
       if (!fileContent) {
-        console.error(`[loadStudentData] Could not find seat-data.json in any of the expected paths: ${possiblePaths.join(', ')}`);
-        throw new Error(`Could not find seat-data.json in any of the expected paths: ${possiblePaths.join(', ')}`);
+        const errorMsg = `[loadStudentData] ✗ Failed to load seat-data.json from any source`;
+        console.error(errorMsg);
+        throw new Error(errorMsg);
       }
       
       // Read and parse the JSON file
-      const seatData = JSON.parse(fileContent);
-      console.log(`[loadStudentData] Loaded ${seatData.length} entries from seat-data.json`);
+      let seatData;
+      try {
+        seatData = JSON.parse(fileContent);
+      } catch (parseError) {
+        console.error(`[loadStudentData] JSON parse error: ${parseError.message}`);
+        throw new Error(`Failed to parse seat-data.json: ${parseError.message}`);
+      }
+      
+      if (!Array.isArray(seatData)) {
+        throw new Error(`seat-data.json is not an array. Got: ${typeof seatData}`);
+      }
+      
+      console.log(`[loadStudentData] ✓ Parsed JSON successfully: ${seatData.length} entries (loaded via ${loadMethod})`);
       
       // Create a lookup map: RA -> {name, department}
       const lookup = new Map();
+      let entriesWithNames = 0;
+      let entriesWithDepts = 0;
       
-      seatData.forEach(entry => {
+      seatData.forEach((entry, index) => {
+        if (!entry || typeof entry !== 'object') {
+          console.log(`[loadStudentData] Skipping invalid entry at index ${index}`);
+          return;
+        }
+        
         if (entry.registerNumber && (entry.name || entry.department)) {
           const ra = normalizeRA(entry.registerNumber);
           if (ra) {
@@ -926,10 +959,25 @@ async function loadStudentData() {
                 name: entry.name || null,
                 department: entry.department || null,
               });
+              if (entry.name) entriesWithNames++;
+              if (entry.department) entriesWithDepts++;
             }
           }
         }
       });
+      
+      console.log(`[loadStudentData] ✓ Created lookup map: ${lookup.size} unique RAs`);
+      console.log(`[loadStudentData]   - Entries with names: ${entriesWithNames}`);
+      console.log(`[loadStudentData]   - Entries with departments: ${entriesWithDepts}`);
+      
+      // Test lookup with a known RA
+      const testRA = 'RA2311003012124';
+      const testResult = lookup.get(normalizeRA(testRA));
+      if (testResult) {
+        console.log(`[loadStudentData] ✓ Test lookup for ${testRA}: Name=${testResult.name || 'N/A'}, Dept=${testResult.department || 'N/A'}`);
+      } else {
+        console.log(`[loadStudentData] ⚠ Test lookup for ${testRA}: NOT FOUND`);
+      }
       
       studentDataCache = lookup;
       return lookup;
@@ -1004,15 +1052,26 @@ function enhanceMatchesWithPreloadedStudentInfo(matches, studentInfo) {
   
   if (!studentInfo) {
     studentInfo = { name: null, department: null };
+    console.log(`[enhanceMatchesWithPreloadedStudentInfo] No student info provided, using null values`);
+  } else {
+    console.log(`[enhanceMatchesWithPreloadedStudentInfo] Enhancing ${matches.length} matches with Name=${studentInfo.name || 'N/A'}, Dept=${studentInfo.department || 'N/A'}`);
   }
   
   // Add name and student department to each match (preserve exam department)
-  return matches.map(match => ({
+  const enhanced = matches.map(match => ({
     ...match,
-    name: studentInfo.name,
-    studentDepartment: studentInfo.department, // Student's department from JSON
+    name: studentInfo.name || match.name || null,
+    studentDepartment: studentInfo.department || null, // Student's department from JSON
     // Keep match.department as the exam department (e.g., "CSE" from "CSE/21MAB201T")
   }));
+  
+  // Log first match for debugging
+  if (enhanced.length > 0) {
+    const firstMatch = enhanced[0];
+    console.log(`[enhanceMatchesWithPreloadedStudentInfo] First match enhanced: Name=${firstMatch.name || 'N/A'}, Dept=${firstMatch.studentDepartment || 'N/A'}, ExamDept=${firstMatch.department || 'N/A'}`);
+  }
+  
+  return enhanced;
 }
 
 /**
