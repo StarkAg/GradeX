@@ -13,7 +13,10 @@ export default function SeatFinder() {
   const [apiResults, setApiResults] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [useLiveAPI, setUseLiveAPI] = useState(true); // Toggle between live API and static data
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState('default');
   const autoRefreshIntervalRef = useRef(null);
+  const notificationCheckIntervalRef = useRef(null);
 
   // Check if desktop/mobile on mount and resize
   useEffect(() => {
@@ -37,6 +40,62 @@ export default function SeatFinder() {
         console.error('Error loading seat data:', err);
       });
   }, []);
+
+  // Check notification permission on mount
+  useEffect(() => {
+    if ('Notification' in window) {
+      setNotificationPermission(Notification.permission);
+      // Load saved notification preference
+      const saved = localStorage.getItem('seatFinder_notifications');
+      if (saved === 'true' && Notification.permission === 'granted') {
+        setNotificationsEnabled(true);
+      }
+    }
+  }, []);
+
+  // Request notification permission
+  const requestNotificationPermission = async () => {
+    if (!('Notification' in window)) {
+      alert('This browser does not support notifications');
+      return;
+    }
+
+    if (Notification.permission === 'granted') {
+      setNotificationsEnabled(true);
+      setNotificationPermission('granted');
+      localStorage.setItem('seatFinder_notifications', 'true');
+    } else if (Notification.permission !== 'denied') {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      if (permission === 'granted') {
+        setNotificationsEnabled(true);
+        localStorage.setItem('seatFinder_notifications', 'true');
+      }
+    } else {
+      alert('Notifications are blocked. Please enable them in your browser settings.');
+    }
+  };
+
+  // Show notification when seat info becomes available
+  const showNotification = (ra, date, seatInfo) => {
+    if (!notificationsEnabled || Notification.permission !== 'granted') return;
+
+    const notification = new Notification('Seat Information Available! 🎉', {
+      body: `Seat details for ${ra} on ${date} are now available.`,
+      icon: '/arc-reactor.png',
+      badge: '/arc-reactor.png',
+      tag: `seat-${ra}-${date}`,
+      requireInteraction: false
+    });
+
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
+
+    // Auto-close after 5 seconds
+    setTimeout(() => notification.close(), 5000);
+  };
 
   // Get today's and tomorrow's dates
   const today = new Date();
@@ -567,6 +626,81 @@ export default function SeatFinder() {
     }
   }, [seatInfo, useLiveAPI, registerNumber, examDate, dateInput]);
 
+  // Notification check: Periodically check if seat info becomes available
+  useEffect(() => {
+    if (notificationsEnabled && 
+        Notification.permission === 'granted' && 
+        registerNumber.trim() && 
+        !seatInfo) {
+      // Only check if we don't have seat info yet
+      const selectedDate = getSelectedDate();
+      
+      // Check every 2 minutes for seat availability
+      const checkForSeatInfo = async () => {
+        try {
+          const apiDate = formatDateForAPI(selectedDate);
+          const params = new URLSearchParams({ ra: registerNumber.trim() });
+          if (apiDate) params.append('date', apiDate);
+          
+          const response = await fetch(`/api/seating?${params.toString()}`);
+          if (response.ok) {
+            const data = await response.json();
+            const hasMatches = Object.values(data.results || {}).some(campus => 
+              campus.some(result => result.matched)
+            );
+            
+            if (hasMatches) {
+              // Seat info is now available!
+              if (notificationsEnabled && Notification.permission === 'granted') {
+                const notification = new Notification('Seat Information Available! 🎉', {
+                  body: `Seat details for ${registerNumber.trim()} on ${selectedDate} are now available.`,
+                  icon: '/arc-reactor.png',
+                  badge: '/arc-reactor.png',
+                  tag: `seat-${registerNumber.trim()}-${selectedDate}`,
+                  requireInteraction: false
+                });
+
+                notification.onclick = () => {
+                  window.focus();
+                  notification.close();
+                };
+
+                setTimeout(() => notification.close(), 5000);
+              }
+              
+              // Stop checking and fetch the data
+              if (notificationCheckIntervalRef.current) {
+                clearInterval(notificationCheckIntervalRef.current);
+                notificationCheckIntervalRef.current = null;
+              }
+              // Trigger a fetch to update the UI
+              fetchFromLiveAPI(registerNumber.trim(), selectedDate);
+            }
+          }
+        } catch (error) {
+          console.error('Notification check error:', error);
+        }
+      };
+
+      // Start checking immediately, then every 2 minutes
+      checkForSeatInfo();
+      notificationCheckIntervalRef.current = setInterval(checkForSeatInfo, 2 * 60 * 1000);
+
+      return () => {
+        if (notificationCheckIntervalRef.current) {
+          clearInterval(notificationCheckIntervalRef.current);
+          notificationCheckIntervalRef.current = null;
+        }
+      };
+    } else {
+      // Clear notification check if conditions not met
+      if (notificationCheckIntervalRef.current) {
+        clearInterval(notificationCheckIntervalRef.current);
+        notificationCheckIntervalRef.current = null;
+      }
+    }
+  }, [notificationsEnabled, registerNumber, seatInfo, examDate, dateInput]);
+
   const hasSeatInfo = seatInfo && seatInfo.length > 0;
 
   return (
@@ -1062,27 +1196,127 @@ export default function SeatFinder() {
           {error && (
             <div style={{
               marginTop: 'clamp(16px, 4vw, 20px)',
-              padding: 'clamp(10px, 3vw, 12px) clamp(12px, 4vw, 16px)',
-              background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              borderRadius: '8px',
               display: 'flex',
-              alignItems: 'flex-start',
-              gap: 'clamp(8px, 2vw, 12px)'
+              flexDirection: 'column',
+              gap: 'clamp(12px, 3vw, 16px)'
             }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#ef4444', flexShrink: 0, marginTop: '2px', minWidth: '18px', width: 'clamp(18px, 4vw, 20px)', height: 'clamp(18px, 4vw, 20px)' }}>
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-              </svg>
-              <p style={{
-                fontSize: 'clamp(12px, 3vw, 13px)',
-                color: '#ef4444',
-                margin: 0,
-                lineHeight: '1.5'
+              <div style={{
+                padding: 'clamp(10px, 3vw, 12px) clamp(12px, 4vw, 16px)',
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 'clamp(8px, 2vw, 12px)'
               }}>
-                {error}
-              </p>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#ef4444', flexShrink: 0, marginTop: '2px', minWidth: '18px', width: 'clamp(18px, 4vw, 20px)', height: 'clamp(18px, 4vw, 20px)' }}>
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <p style={{
+                  fontSize: 'clamp(12px, 3vw, 13px)',
+                  color: '#ef4444',
+                  margin: 0,
+                  lineHeight: '1.5'
+                }}>
+                  {error}
+                </p>
+              </div>
+              
+              {/* Notification Toggle - Show when seat info not available */}
+              {(() => {
+                const shouldShow = error && (error.toLowerCase().includes('not found') || error.toLowerCase().includes('no seating')) && registerNumber.trim() && !seatInfo && 'Notification' in window;
+                // Debug log (remove in production)
+                if (error && registerNumber.trim()) {
+                  console.log('🔔 Notification button check:', {
+                    error: error,
+                    errorIncludesNotFound: error.toLowerCase().includes('not found'),
+                    errorIncludesNoSeating: error.toLowerCase().includes('no seating'),
+                    hasRegisterNumber: !!registerNumber.trim(),
+                    noSeatInfo: !seatInfo,
+                    hasNotificationAPI: 'Notification' in window,
+                    shouldShow: shouldShow
+                  });
+                }
+                return shouldShow;
+              })() && (
+                <div style={{
+                  padding: 'clamp(10px, 2.5vw, 12px)',
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  border: '1px solid rgba(59, 130, 246, 0.2)',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 'clamp(8px, 2vw, 12px)',
+                  flexWrap: 'wrap'
+                }}>
+                  <div style={{ flex: 1, minWidth: '200px' }}>
+                    <div style={{ fontSize: 'clamp(12px, 3vw, 13px)', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                      Get notified when seat info is available
+                    </div>
+                    <div style={{ fontSize: 'clamp(10px, 2.5vw, 11px)', color: 'var(--text-secondary)' }}>
+                      We'll check every 2 minutes and notify you
+                    </div>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (!notificationsEnabled) {
+                        await requestNotificationPermission();
+                      } else {
+                        setNotificationsEnabled(false);
+                        localStorage.removeItem('seatFinder_notifications');
+                        if (notificationCheckIntervalRef.current) {
+                          clearInterval(notificationCheckIntervalRef.current);
+                          notificationCheckIntervalRef.current = null;
+                        }
+                      }
+                    }}
+                    style={{
+                      padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px)',
+                      fontSize: 'clamp(11px, 2.5vw, 12px)',
+                      fontWeight: 600,
+                      border: '1px solid rgba(59, 130, 246, 0.3)',
+                      background: notificationsEnabled ? 'rgba(34, 197, 94, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+                      color: notificationsEnabled ? '#22c55e' : '#3b82f6',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      whiteSpace: 'nowrap',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '0.8';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                    }}
+                  >
+                    {notificationsEnabled ? (
+                      <>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        Enabled
+                      </>
+                    ) : notificationPermission === 'denied' ? (
+                      'Blocked'
+                    ) : (
+                      <>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        Enable
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
