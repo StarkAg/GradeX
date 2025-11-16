@@ -334,7 +334,7 @@ export default function SeatFinder() {
     }
   };
 
-  // Auto-refresh every 1 minute if seat info exists
+  // Auto-refresh every 3 minutes if seat info exists (ideal balance)
   useEffect(() => {
     if (seatInfo && seatInfo.length > 0 && useLiveAPI && registerNumber.trim()) {
       // Clear existing interval
@@ -350,7 +350,7 @@ export default function SeatFinder() {
         });
       };
       
-      autoRefreshIntervalRef.current = setInterval(refresh, 60000); // 1 minute
+      autoRefreshIntervalRef.current = setInterval(refresh, 3 * 60 * 1000); // 3 minutes - ideal refresh rate
       
       return () => {
         if (autoRefreshIntervalRef.current) {
@@ -687,7 +687,7 @@ export default function SeatFinder() {
               <span>Last updated: {new Date(lastUpdated).toLocaleTimeString()}</span>
               {useLiveAPI && (
                 <span style={{ marginLeft: 'auto', fontSize: 'clamp(10px, 2vw, 11px)', opacity: 0.7 }}>
-                  Auto-refreshing every minute
+                  Auto-refreshing every 3 minutes
                 </span>
               )}
             </div>

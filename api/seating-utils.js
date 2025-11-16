@@ -782,10 +782,10 @@ export function getCachedResult(ra, date) {
   
   if (!cached) return null;
   
-  // Check if cache is still valid (60 seconds TTL)
+  // Check if cache is still valid (5 minutes TTL - ideal for exam seating data)
   const now = Date.now();
   const age = now - cached.timestamp;
-  const ttl = 60 * 1000; // 1 minute
+  const ttl = 5 * 60 * 1000; // 5 minutes - ideal balance between freshness and efficiency
   
   if (age > ttl) {
     cache.delete(key);
