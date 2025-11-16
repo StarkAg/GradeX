@@ -814,9 +814,17 @@ export function setCachedResult(ra, date, data) {
  * @returns {Promise<Map>} - Map of RA -> {name, department}
  */
 async function loadStudentData() {
-  // Return cached data if already loaded
-  if (studentDataCache) {
+  // Return cached data if already loaded and valid (not empty)
+  if (studentDataCache && studentDataCache.size > 0) {
+    console.log(`[loadStudentData] Using cached data: ${studentDataCache.size} records`);
     return studentDataCache;
+  }
+  
+  // If cache exists but is empty, clear it and reload
+  if (studentDataCache && studentDataCache.size === 0) {
+    console.log(`[loadStudentData] Cache is empty, clearing and reloading...`);
+    studentDataCache = null;
+    studentDataLoadPromise = null;
   }
   
   // If already loading, wait for that promise
@@ -1021,17 +1029,35 @@ async function loadStudentData() {
         console.log(`[loadStudentData] ⚠ Test lookup for ${testRA}: NOT FOUND`);
       }
       
-      studentDataCache = lookup;
+      // Only cache if we have valid data
+      if (lookup.size > 0) {
+        studentDataCache = lookup;
+        console.log(`[loadStudentData] ✓ Cached ${lookup.size} student records`);
+      } else {
+        console.error(`[loadStudentData] ⚠ No valid student data found - not caching empty map`);
+        studentDataCache = null; // Don't cache empty data
+      }
       return lookup;
     } catch (error) {
-      console.error('Error loading student data:', error);
-      // Return empty map on error
-      studentDataCache = new Map();
-      return studentDataCache;
+      console.error('[loadStudentData] Error loading student data:', error);
+      // Don't cache empty map on error - set to null so we retry next time
+      studentDataCache = null;
+      studentDataLoadPromise = null; // Reset promise so we can retry
+      // Return empty map for this request, but don't cache it
+      return new Map();
     }
   })();
   
   return studentDataLoadPromise;
+}
+
+/**
+ * Clear student data cache (useful for debugging or forced reload)
+ */
+export function clearStudentDataCache() {
+  console.log('[clearStudentDataCache] Clearing student data cache');
+  studentDataCache = null;
+  studentDataLoadPromise = null;
 }
 
 /**
