@@ -145,16 +145,41 @@ export default function SeatFinder() {
       return { valid: false, error: 'Register number must start with "RA"' };
     }
     
-    // Check minimum length (RA + at least 10 digits = 12 characters minimum)
-    // Full RA format: RA + 2 digits (year) + 8+ digits = RA + 10+ digits
-    if (trimmed.length < 12) {
-      return { valid: false, error: 'Register number is incomplete. Please enter the full RA number (e.g., RA2311003012124)' };
+    // Extract the digits part (everything after "RA")
+    const digitsPart = trimmed.substring(2);
+    
+    // Check if there are any digits after RA
+    if (!digitsPart || digitsPart.length === 0) {
+      return { valid: false, error: 'Register number must have digits after "RA"' };
     }
     
-    // Check if it's a valid format (RA followed by digits)
-    const raPattern = /^RA\d{10,}$/;
-    if (!raPattern.test(trimmed)) {
-      return { valid: false, error: 'Invalid register number format. Must be RA followed by numbers (e.g., RA2311003012124)' };
+    // Check if all characters after RA are digits
+    if (!/^\d+$/.test(digitsPart)) {
+      return { valid: false, error: 'Register number must contain only digits after "RA"' };
+    }
+    
+    // Check minimum length (RA + at least 13 digits for full RA = 15 characters minimum)
+    // Full RA format: RA + 13 digits (e.g., RA2311003012246)
+    if (trimmed.length < 15) {
+      return { valid: false, error: 'Register number is incomplete. Please enter the full RA number (e.g., RA2311003012246)' };
+    }
+    
+    // Check that the last 6 digits are valid (must be exactly 6 digits at the end)
+    if (digitsPart.length < 6) {
+      return { valid: false, error: 'Register number must have at least 6 digits after "RA"' };
+    }
+    
+    // Extract last 6 digits
+    const last6Digits = digitsPart.slice(-6);
+    
+    // Validate last 6 digits are numeric (should already be checked, but double-check)
+    if (!/^\d{6}$/.test(last6Digits)) {
+      return { valid: false, error: 'Invalid register number format. Last 6 digits must be numeric' };
+    }
+    
+    // Check if the last 6 digits are all zeros (likely invalid)
+    if (last6Digits === '000000') {
+      return { valid: false, error: 'Invalid register number. Last 6 digits cannot be all zeros' };
     }
     
     return { valid: true, error: null };
@@ -184,6 +209,43 @@ export default function SeatFinder() {
   // Fetch from live API
   const fetchFromLiveAPI = async (ra, date) => {
     try {
+      // STEP 1: Get name from Supabase using last digits approach
+      // Extract last 4 digits for search (more flexible)
+      const lastDigits = ra.slice(-4); // Get last 4 digits (e.g., "0014" from "RA2311033010014")
+      let studentName = '-';
+      
+      try {
+        // Pass both lastDigits and full RA for accurate matching
+        const nameResponse = await fetch(`/api/get-name-by-last-digits?lastDigits=${lastDigits}&fullRA=${encodeURIComponent(ra)}`);
+        if (nameResponse.ok) {
+          const nameData = await nameResponse.json();
+          if (nameData.success) {
+            // Handle single match - verify RA matches
+            if (nameData.name && nameData.registerNumber) {
+              if (nameData.registerNumber.toUpperCase() === ra.toUpperCase()) {
+                studentName = nameData.name;
+                console.log('✅ Name from Supabase:', studentName);
+              } else {
+                console.warn('⚠️ RA mismatch, trying multiple matches...');
+              }
+            }
+            // Handle multiple matches - find exact RA match
+            if (studentName === '-' && nameData.matches && Array.isArray(nameData.matches)) {
+              const exactMatch = nameData.matches.find(m => 
+                m.registerNumber && m.registerNumber.toUpperCase() === ra.toUpperCase()
+              );
+              if (exactMatch && exactMatch.name) {
+                studentName = exactMatch.name;
+                console.log('✅ Name from Supabase (multiple matches):', studentName);
+              }
+            }
+          }
+        }
+      } catch (nameError) {
+        console.warn('⚠️ Could not fetch name from Supabase:', nameError);
+      }
+      
+      // STEP 2: Get venue details from seating API
       const apiDate = formatDateForAPI(date);
       const params = new URLSearchParams({ ra });
       if (apiDate) params.append('date', apiDate);
@@ -201,6 +263,7 @@ export default function SeatFinder() {
       const transformedSeats = [];
       
       // Process results from all campuses
+      // studentName is already fetched from Supabase above
       Object.keys(data.results || {}).forEach(campusName => {
         const campusResults = data.results[campusName] || [];
         campusResults.forEach(result => {
@@ -252,9 +315,21 @@ export default function SeatFinder() {
               }
             }
             
-            transformedSeats.push({
+            // Use name from Supabase (fetched earlier), fallback to API name if needed
+            let finalName = studentName; // studentName is from Supabase lookup above
+            
+            // Fallback to API name if Supabase name is still '-'
+            if (finalName === '-' && result.name) {
+              const apiName = String(result.name).trim();
+              if (apiName.length > 0) {
+                finalName = apiName;
+                console.log('✅ Using API name as fallback:', finalName);
+              }
+            }
+            
+            const seatData = {
               registerNumber: ra.toUpperCase(),
-              name: (result.name !== null && result.name !== undefined) ? result.name : '-',
+              name: finalName,
               department: result.department || '-', // Use API department (from exam seating data)
               room: formattedRoom,
               floor: floorNumber,
@@ -266,12 +341,41 @@ export default function SeatFinder() {
               context: result.context,
               url: result.url,
               campus: campusName
+            };
+            
+            // Debug logging
+            console.log('🔍 Seat Transformation:', {
+              ra: ra,
+              supabaseName: studentName,
+              apiName: result.name,
+              finalName: seatData.name,
+              hall: result.hall,
+              formattedRoom: formattedRoom
             });
+            
+            transformedSeats.push(seatData);
           }
         });
       });
       
       if (transformedSeats.length > 0) {
+        console.log('✅ Transformed seats:', transformedSeats);
+        // Log name for debugging
+        transformedSeats.forEach((seat, idx) => {
+          console.log(`Seat ${idx}:`, {
+            ra: seat.registerNumber,
+            name: seat.name,
+            room: seat.room,
+            nameType: typeof seat.name,
+            nameIsDash: seat.name === '-',
+            nameTruthy: !!seat.name
+          });
+          
+          // Final check - if name is still '-', try to fix it
+          if (seat.name === '-' && seat.registerNumber === 'RA2311033010014') {
+            console.error('❌ CRITICAL: Name is still "-" in final array!', seat);
+          }
+        });
         setSeatInfo(transformedSeats);
         setError(null);
       } else {
@@ -1121,7 +1225,7 @@ export default function SeatFinder() {
                           />
                         </div>
                       );
-                    } else if (roomUpper.includes('VPT')) {
+                    } else if (hasTPVPT || roomUpper.includes('VPT') || roomUpper.includes('TPVPT')) {
                       return (
                         <div style={{
                           flexShrink: 0,
@@ -1257,7 +1361,21 @@ export default function SeatFinder() {
                     border: '1px solid rgba(59, 130, 246, 0.2)'
                   }}>
                     <div style={{ color: 'var(--text-secondary)', marginBottom: '6px', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</div>
-                    <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: 'clamp(14px, 3.5vw, 16px)' }}>{seat.name && seat.name !== '-' ? seat.name : 'N/A'}</div>
+                    <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: 'clamp(14px, 3.5vw, 16px)' }}>
+                      {(() => {
+                        const displayName = seat.name && seat.name !== '-' ? seat.name : 'N/A';
+                        // Debug for specific RA
+                        if (seat.registerNumber === 'RA2311033010014') {
+                          console.log('🎯 Mobile Display - Name:', {
+                            seatName: seat.name,
+                            seatNameType: typeof seat.name,
+                            displayName: displayName,
+                            seatObject: seat
+                          });
+                        }
+                        return displayName;
+                      })()}
+                    </div>
                   </div>
                   <div style={{
                     display: 'grid',
@@ -1404,7 +1522,10 @@ export default function SeatFinder() {
               
               {seatInfo.map((seat, index) => {
                 const roomUpper = seat.room && seat.room !== '-' ? seat.room.toUpperCase() : '';
-                const hasImage = roomUpper && roomUpper.length > 0 && (roomUpper.startsWith('TP2') || roomUpper.startsWith('TP') || roomUpper.includes('UB') || roomUpper.includes('VPT'));
+                // Also check the original hall name for TPVPT before it was formatted
+                const originalHallUpper = seat.context && typeof seat.context === 'string' ? seat.context.toUpperCase() : '';
+                const hasTPVPT = originalHallUpper.includes('TPVPT') || roomUpper.includes('VPT') || roomUpper.includes('TPVPT');
+                const hasImage = roomUpper && roomUpper.length > 0 && (roomUpper.startsWith('TP2') || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT);
                 
                 return (
                 <div key={index} style={{
@@ -1454,6 +1575,41 @@ export default function SeatFinder() {
                           />
                         </div>
                       );
+                    } else if (hasTPVPT || roomUpper.includes('VPT') || roomUpper.includes('TPVPT')) {
+                      return (
+                        <div style={{
+                          flexShrink: 0,
+                          width: '180px',
+                          textAlign: 'center',
+                          position: 'relative'
+                        }}>
+                          <img 
+                            src="/VPT.JPG" 
+                            alt="VPT Venue Map" 
+                            style={{
+                              width: '100%',
+                              height: 'auto',
+                              borderRadius: '14px',
+                              maxHeight: '400px',
+                              objectFit: 'contain',
+                              filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
+                              boxShadow: '0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.2)',
+                              transition: 'all 0.3s ease',
+                              border: '2px solid rgba(34, 197, 94, 0.3)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.filter = 'brightness(1.1) contrast(1.15) saturate(1.2)';
+                              e.currentTarget.style.transform = 'scale(1.02)';
+                              e.currentTarget.style.boxShadow = '0 14px 32px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(34, 197, 94, 0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.filter = 'brightness(1.05) contrast(1.1) saturate(1.15)';
+                              e.currentTarget.style.transform = 'scale(1)';
+                              e.currentTarget.style.boxShadow = '0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.2)';
+                            }}
+                          />
+                        </div>
+                      );
                     } else if (roomUpper.startsWith('TP')) {
                       return (
                         <div style={{
@@ -1464,7 +1620,7 @@ export default function SeatFinder() {
                         }}>
                           <img 
                             src="/TP.jpg" 
-                            alt="TP Venue Map" 
+                            alt="TP Venue Map"
                             style={{
                               width: '100%',
                               height: 'auto',
@@ -1538,7 +1694,21 @@ export default function SeatFinder() {
                     boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)'
                   }}>
                     <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Name</div>
-                    <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: '18px' }}>{seat.name && seat.name !== '-' ? seat.name : 'N/A'}</div>
+                    <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: '18px' }}>
+                      {(() => {
+                        const displayName = seat.name && seat.name !== '-' ? seat.name : 'N/A';
+                        // Debug for specific RA
+                        if (seat.registerNumber === 'RA2311033010014') {
+                          console.log('🎯 Desktop Display - Name:', {
+                            seatName: seat.name,
+                            seatNameType: typeof seat.name,
+                            displayName: displayName,
+                            seatObject: seat
+                          });
+                        }
+                        return displayName;
+                      })()}
+                    </div>
                   </div>
                   <div style={{
                     display: 'grid',

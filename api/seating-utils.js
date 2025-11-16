@@ -1251,14 +1251,21 @@ function enhanceMatchesWithPreloadedStudentInfo(matches, studentInfo) {
     console.log(`[enhanceMatchesWithPreloadedStudentInfo] studentInfo.name type: ${typeof studentInfo.name}, value: ${studentInfo.name}`);
   }
   
-  // Add name from JSON, use API for everything else (department, venue details)
+  // Add name from Supabase/JSON, use API for everything else (department, venue details)
   // Ensure both name and venue details are preserved
   const enhanced = matches.map(match => {
-    // Use studentInfo.name from JSON if it exists
+    // Use studentInfo.name from Supabase/JSON if it exists
     // Only fall back to match.name if studentInfo.name is null/undefined
-    const finalName = studentInfo && studentInfo.name !== null && studentInfo.name !== undefined
+    const finalName = (studentInfo && studentInfo.name !== null && studentInfo.name !== undefined && studentInfo.name !== '-')
       ? studentInfo.name
       : (match.name || null);
+    
+    console.log(`[enhanceMatchesWithPreloadedStudentInfo] Match enhancement:`, {
+      originalName: match.name,
+      studentInfoName: studentInfo?.name,
+      finalName: finalName,
+      hasStudentInfo: !!studentInfo,
+    });
     
     // Use API department (from match.department) - this comes from exam seating data
     // This is the department from the exam (e.g., "CSE" from "CSE/21MAB201T")
@@ -1300,9 +1307,10 @@ export async function getSeatingInfo(ra, date) {
     };
   }
   
-  // STEP 1: Load student name from JSON FIRST (before API fetch)
-  // Only name comes from JSON, department and venue details come from API
-  console.log(`[getSeatingInfo] Pre-loading student name from JSON for RA: ${normalizedRA}`);
+  // STEP 1: Load student name from Supabase/JSON FIRST (before API fetch)
+  // Only name comes from Supabase/JSON, department and venue details come from API
+  console.log(`[getSeatingInfo] Pre-loading student name for RA: ${normalizedRA}`);
+  console.log(`[getSeatingInfo] Environment check - SUPABASE_URL: ${process.env.SUPABASE_URL ? 'SET' : 'NOT SET'}, SUPABASE_ANON_KEY: ${process.env.SUPABASE_ANON_KEY ? 'SET' : 'NOT SET'}`);
   let studentInfo = { name: null };
   
   // Try multiple times with different strategies
@@ -1342,6 +1350,13 @@ export async function getSeatingInfo(ra, date) {
   
   // Try direct lookup
   if (studentData && studentData.size > 0) {
+    console.log(`[getSeatingInfo] Student data map has ${studentData.size} entries`);
+    console.log(`[getSeatingInfo] Looking up RA: "${normalizedRA}"`);
+    
+    // Check if the exact RA exists in the map
+    const hasExactKey = studentData.has(normalizedRA);
+    console.log(`[getSeatingInfo] Has exact key "${normalizedRA}": ${hasExactKey}`);
+    
     const lookupResult = studentData.get(normalizedRA);
     if (lookupResult) {
       studentInfo = lookupResult;
@@ -1349,19 +1364,52 @@ export async function getSeatingInfo(ra, date) {
     } else {
       console.log(`[getSeatingInfo] ⚠ Student NOT found in map for RA: ${normalizedRA}`);
       // Try case-insensitive search
+      let found = false;
       for (const [key, value] of studentData.entries()) {
         if (key.toUpperCase() === normalizedRA.toUpperCase()) {
           studentInfo = value;
-          console.log(`[getSeatingInfo] ✓ Student found (case-insensitive): Name="${studentInfo.name || 'N/A'}"`);
+          found = true;
+          console.log(`[getSeatingInfo] ✓ Student found (case-insensitive): Key="${key}", Name="${studentInfo.name || 'N/A'}"`);
           break;
         }
       }
-      if (!studentInfo.name) {
-        console.log(`[getSeatingInfo] Sample RAs in map:`, Array.from(studentData.keys()).slice(0, 10));
+      if (!found && !studentInfo.name) {
+        console.log(`[getSeatingInfo] Sample RAs in map (first 10):`, Array.from(studentData.keys()).slice(0, 10));
+        // Check if a close match exists (for debugging)
+        const closeMatches = Array.from(studentData.keys()).filter(k => k.includes(normalizedRA.substring(0, 10)));
+        if (closeMatches.length > 0) {
+          console.log(`[getSeatingInfo] Close matches found:`, closeMatches.slice(0, 3));
+        }
+        console.log(`[getSeatingInfo] No exact match found for RA: ${normalizedRA}`);
       }
     }
   } else {
     console.error(`[getSeatingInfo] ✗ Failed to load student data after ${maxAttempts} attempts`);
+    console.error(`[getSeatingInfo] studentData is:`, studentData ? `Map with ${studentData.size} entries` : 'null/undefined');
+  }
+  
+  // Fallback: Direct Supabase lookup if map lookup failed
+  if (!studentInfo || !studentInfo.name) {
+    try {
+      console.log(`[getSeatingInfo] Attempting direct Supabase lookup for RA: ${normalizedRA}`);
+      const { supabase: supabaseClient, isSupabaseConfigured } = await import('./supabase-client.js');
+      if (isSupabaseConfigured() && supabaseClient) {
+        const { data, error } = await supabaseClient
+          .from('students')
+          .select('name')
+          .eq('register_number', normalizedRA)
+          .single();
+        
+        if (!error && data && data.name) {
+          studentInfo = { name: data.name };
+          console.log(`[getSeatingInfo] ✓ Direct Supabase lookup successful: Name="${studentInfo.name}"`);
+        } else if (error) {
+          console.log(`[getSeatingInfo] Direct Supabase lookup error: ${error.message}`);
+        }
+      }
+    } catch (fallbackError) {
+      console.error(`[getSeatingInfo] Direct Supabase fallback failed:`, fallbackError.message);
+    }
   }
   
   // Check cache first
