@@ -4,9 +4,8 @@
 
 1. Go to: https://supabase.com/dashboard/project/phlggcheaajkupppozho/sql/new
 
-2. Paste this SQL and click "Run":
+2. Paste this SQL and click "Run" (copy ONLY the SQL, not the markdown):
 
-```sql
 CREATE TABLE IF NOT EXISTS students (
   id BIGSERIAL PRIMARY KEY,
   register_number TEXT NOT NULL UNIQUE,
@@ -19,10 +18,10 @@ CREATE INDEX IF NOT EXISTS idx_students_register_number ON students(register_num
 
 ALTER TABLE students ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Allow public read access" ON students
+DROP POLICY IF EXISTS "Allow public read access" ON students;
+CREATE POLICY "Allow public read access" ON students
   FOR SELECT
   USING (true);
-```
 
 3. You should see "Success. No rows returned"
 

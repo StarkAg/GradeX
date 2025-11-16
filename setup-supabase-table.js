@@ -36,7 +36,8 @@ async function setupTable() {
 
     ALTER TABLE students ENABLE ROW LEVEL SECURITY;
 
-    CREATE POLICY IF NOT EXISTS "Allow public read access" ON students
+    DROP POLICY IF EXISTS "Allow public read access" ON students;
+    CREATE POLICY "Allow public read access" ON students
       FOR SELECT
       USING (true);
   `;
