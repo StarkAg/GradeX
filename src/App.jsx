@@ -297,15 +297,14 @@ export default function App() {
                 <div style={{
                   position: 'absolute',
                   top: '-12px',
-                  right: 'calc(100% + 8px)',
+                  left: 'calc(100% + 8px)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px',
                   opacity: 0.4,
                   pointerEvents: 'none',
                   animation: 'fadeInOut 3s ease-in-out infinite',
-                  whiteSpace: 'nowrap',
-                  flexDirection: 'row-reverse'
+                  whiteSpace: 'nowrap'
                 }}>
                   <span style={{
                     fontSize: '9px',
