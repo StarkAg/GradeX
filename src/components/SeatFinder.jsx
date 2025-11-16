@@ -436,7 +436,10 @@ export default function SeatFinder() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '6px',
-                marginTop: '8px'
+                marginTop: '8px',
+                flexWrap: 'wrap',
+                maxWidth: '100%',
+                padding: '0 clamp(10px, 3vw, 20px)'
               }}>
                 <div style={{
                   width: '8px',
@@ -444,15 +447,18 @@ export default function SeatFinder() {
                   borderRadius: '50%',
                   background: '#22c55e',
                   animation: 'livePulse 2s ease-in-out infinite',
-                  boxShadow: '0 0 0 0 rgba(34, 197, 94, 0.7)'
+                  boxShadow: '0 0 0 0 rgba(34, 197, 94, 0.7)',
+                  flexShrink: 0
                 }}></div>
                 <span style={{
-                  fontSize: 'clamp(11px, 2.8vw, 13px)',
+                  fontSize: 'clamp(10px, 2.5vw, 12px)',
                   fontWeight: 500,
                   color: '#22c55e',
-                  letterSpacing: '0.03em'
+                  letterSpacing: '0.02em',
+                  textAlign: 'center',
+                  lineHeight: '1.4'
                 }}>
-                  Live Real-Time Fetch
+                  Data fetched with the frequency of 1 minute with exceptional accuracy
                 </span>
               </div>
             </div>
