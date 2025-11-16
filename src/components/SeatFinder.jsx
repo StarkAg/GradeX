@@ -135,23 +135,27 @@ export default function SeatFinder() {
               formattedRoom = formattedRoom.replace('TPTP-', 'TP-');
             }
             
-            // Extract floor number from room name (e.g., TP-401 -> 4th floor)
+            // Extract floor number from room name (e.g., TP-401 -> 4th, H301F -> 3rd)
             let floorNumber = '-';
             if (formattedRoom !== '-') {
-              // Extract number from room name (e.g., TP-401, UB604, 1504)
+              // Extract number from room name (e.g., TP-401, UB604, H301F, 1504)
               const floorMatch = formattedRoom.match(/(\d+)/);
               if (floorMatch) {
                 const numStr = floorMatch[1];
-                // For TP-401, the first digit is the floor (4)
-                if (formattedRoom.startsWith('TP-')) {
+                // Check if room starts with letter(s) followed by number (e.g., H301F, S45, UB604)
+                const letterNumberPattern = /^[A-Z]+(\d+)/;
+                const letterMatch = formattedRoom.match(letterNumberPattern);
+                
+                if (letterMatch) {
+                  // For H301F, S45, UB604 - first digit after letter is floor
                   const firstDigit = parseInt(numStr.charAt(0));
                   floorNumber = `${firstDigit}th`;
-                } else if (formattedRoom.startsWith('UB')) {
-                  // For UB604, first digit is floor (6)
+                } else if (formattedRoom.startsWith('TP-')) {
+                  // For TP-401, the first digit is the floor (4)
                   const firstDigit = parseInt(numStr.charAt(0));
                   floorNumber = `${firstDigit}th`;
                 } else {
-                  // For 1504, first two digits might be floor (15)
+                  // For 1504 (pure number), first two digits might be floor (15)
                   if (numStr.length >= 2) {
                     const firstTwo = parseInt(numStr.substring(0, 2));
                     floorNumber = `${firstTwo}th`;
@@ -241,18 +245,25 @@ export default function SeatFinder() {
         formattedRoom = formattedRoom.replace('TPTP-', 'TP-');
       }
       
-      // Extract floor number from room name
+      // Extract floor number from room name (e.g., TP-401 -> 4th, H301F -> 3rd)
       let floorNumber = '-';
       const floorMatch = formattedRoom.match(/(\d+)/);
       if (floorMatch) {
         const numStr = floorMatch[1];
-        if (formattedRoom.startsWith('TP-')) {
+        // Check if room starts with letter(s) followed by number (e.g., H301F, S45, UB604)
+        const letterNumberPattern = /^[A-Z]+(\d+)/;
+        const letterMatch = formattedRoom.match(letterNumberPattern);
+        
+        if (letterMatch) {
+          // For H301F, S45, UB604 - first digit after letter is floor
           const firstDigit = parseInt(numStr.charAt(0));
           floorNumber = `${firstDigit}th`;
-        } else if (formattedRoom.startsWith('UB')) {
+        } else if (formattedRoom.startsWith('TP-')) {
+          // For TP-401, the first digit is the floor (4)
           const firstDigit = parseInt(numStr.charAt(0));
           floorNumber = `${firstDigit}th`;
         } else {
+          // For 1504 (pure number), first two digits might be floor (15)
           if (numStr.length >= 2) {
             const firstTwo = parseInt(numStr.substring(0, 2));
             floorNumber = `${firstTwo}th`;
