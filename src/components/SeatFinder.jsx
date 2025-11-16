@@ -576,7 +576,9 @@ export default function SeatFinder() {
       margin: '0 auto',
       padding: '0',
       minHeight: 'calc(100vh - 60px)',
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      background: 'var(--bg-primary)',
+      color: 'var(--text-primary)'
     }}>
       <div style={{
         display: isDesktop && hasSeatInfo ? 'flex' : 'block',
