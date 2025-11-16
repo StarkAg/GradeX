@@ -344,8 +344,8 @@ export default function SeatFinder() {
                 const letterNumberPattern = /^[A-Z]+[-]?(\d+)/;
                 const letterMatch = formattedRoom.match(letterNumberPattern);
                 
-                if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS')) {
-                  // For CLS1019, LS2019 - first digit after letters is floor
+                if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS') || formattedRoom.startsWith('LH')) {
+                  // For CLS1019, LS2019, LH506 - first digit after letters is floor
                   const firstDigit = parseInt(numStr.charAt(0));
                   floorNumber = formatFloorNumber(firstDigit);
                 } else if (letterMatch || formattedRoom.startsWith('VPT-')) {
