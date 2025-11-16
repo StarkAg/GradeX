@@ -164,12 +164,14 @@ export default function SeatFinder() {
         campusResults.forEach(result => {
           if (result.matched) {
             // Format room name: TPTP-401 -> TP-401, TPVPT-301 -> VPT-301
-            // Special case: TPVPT-028 -> Valliammai Block Behind TP, Ground Floor
+            // Special case: TPVPT-028 -> Room: VPT-028, Building: Valliammai Block Behind TP, Floor: Ground Floor
             let formattedRoom = result.hall || '-';
             let floorNumber = '-';
+            let buildingName = campusName; // Default to campus name
             
             if (formattedRoom === 'TPVPT-028') {
-              formattedRoom = 'Valliammai Block Behind TP';
+              formattedRoom = 'VPT-028';
+              buildingName = 'Valliammai Block Behind TP';
               floorNumber = 'Ground Floor';
             } else if (formattedRoom.startsWith('TPTP-')) {
               formattedRoom = formattedRoom.replace('TPTP-', 'TP-');
@@ -214,7 +216,7 @@ export default function SeatFinder() {
               department: result.department || result.studentDepartment || '-',
               room: formattedRoom,
               floor: floorNumber,
-              building: campusName,
+              building: buildingName,
               subcode: result.subjectCode || '-',
               session: result.session || '-',
               bench: result.bench || '-', // Seat number
@@ -275,18 +277,20 @@ export default function SeatFinder() {
       : allMatchingSeats;
     
     // Helper function to format room and extract floor
-    const formatRoomAndFloor = (room) => {
+    const formatRoomAndFloor = (room, existingBuilding = null) => {
       if (!room || room === '-') {
-        return { formattedRoom: '-', floorNumber: '-' };
+        return { formattedRoom: '-', floorNumber: '-', buildingName: existingBuilding || '-' };
       }
       
       // Format room name: TPTP-401 -> TP-401, TPVPT-301 -> VPT-301
-      // Special case: TPVPT-028 -> Valliammai Block Behind TP, Ground Floor
+      // Special case: TPVPT-028 -> Room: VPT-028, Building: Valliammai Block Behind TP, Floor: Ground Floor
       let formattedRoom = room;
       let floorNumber = '-';
+      let buildingName = existingBuilding || null;
       
       if (formattedRoom === 'TPVPT-028') {
-        formattedRoom = 'Valliammai Block Behind TP';
+        formattedRoom = 'VPT-028';
+        buildingName = 'Valliammai Block Behind TP';
         floorNumber = 'Ground Floor';
       } else if (formattedRoom.startsWith('TPTP-')) {
         formattedRoom = formattedRoom.replace('TPTP-', 'TP-');
@@ -324,7 +328,7 @@ export default function SeatFinder() {
         }
       }
       
-      return { formattedRoom, floorNumber };
+      return { formattedRoom, floorNumber, buildingName: buildingName || '-' };
     };
     
     if (foundSeats.length === 0) {
@@ -341,13 +345,14 @@ export default function SeatFinder() {
       }]);
     } else {
       const mergedSeats = foundSeats.map(seat => {
-        const { formattedRoom, floorNumber } = formatRoomAndFloor(seat.room);
+        const { formattedRoom, floorNumber, buildingName } = formatRoomAndFloor(seat.room, seat.building);
         return {
           ...seat,
           name: seat.name || permanentData.name || '-',
           department: seat.department || permanentData.department || '-',
           room: formattedRoom,
-          floor: floorNumber
+          floor: floorNumber,
+          building: buildingName
         };
       });
       setSeatInfo(mergedSeats);
