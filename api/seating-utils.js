@@ -252,20 +252,37 @@ export function extractSeatingRows(html, targetRA = null) {
   let currentSession = null;
   
   // Method 1: Simple approach - Find RA, then look above for "ROOM NO:"
-  // If targetRA is provided, only search for that specific RA
+  // If targetRA is provided, only search for that specific RA with exact matching
   let allRAMatches = [];
   if (targetRA) {
-    // Search for the specific RA (case-insensitive)
+    // Search for the specific RA with word boundaries to ensure exact match
+    // This prevents matching similar RAs (e.g., RA2311026010094 vs RA2311056010094)
     const escapedRA = targetRA.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const raPattern = new RegExp(`(${escapedRA})`, 'gi');
-    allRAMatches = [...html.matchAll(raPattern)];
+    // Use word boundary or HTML tag boundary to ensure exact match
+    const raPattern = new RegExp(`(?:>|"|'|\\b|\\s)(${escapedRA})(?:<|"|'|\\b|\\s)`, 'gi');
+    const matches = [...html.matchAll(raPattern)];
+    
+    // Filter to ensure we only get exact matches (case-insensitive) and extract the RA
+    allRAMatches = matches
+      .filter(match => match[1].toUpperCase() === targetRA.toUpperCase())
+      .map(match => ({
+        0: match[1], // The actual RA from capture group
+        index: match.index + (match[0].indexOf(match[1])) // Adjust index to point to RA
+      }));
   } else {
     // Search for all RAs
-    const raPattern = /(RA\d{10,15})/gi;
-    allRAMatches = [...html.matchAll(raPattern)];
+    const raPattern = /(?:>|"|'|\b|\s)(RA\d{10,15})(?:<|"|'|\b|\s)/gi;
+    const matches = [...html.matchAll(raPattern)];
+    allRAMatches = matches.map(match => ({
+      0: match[1],
+      index: match.index + (match[0].indexOf(match[1]))
+    }));
   }
   
   console.log(`[DEBUG extractSeatingRows] targetRA: ${targetRA}, found ${allRAMatches.length} RA matches`);
+  
+  // Track unique entries to avoid duplicates (same RA + room + session)
+  const seenEntries = new Set();
   
   for (const raMatch of allRAMatches) {
     const ra = raMatch[0].toUpperCase();
@@ -369,6 +386,18 @@ export function extractSeatingRows(html, targetRA = null) {
       .replace(/\s+/g, ' ')
       .trim();
     
+    // Create unique key for this entry (RA + room + session)
+    // This prevents duplicates when merging HTML from multiple sources
+    const entryKey = `${ra}_${roomName}_${session}`;
+    
+    // If we've already seen this exact entry, skip it (duplicate from merged HTML)
+    if (seenEntries.has(entryKey)) {
+      console.log(`[DEBUG extractSeatingRows] Skipping duplicate entry: ${entryKey}`);
+      continue;
+    }
+    
+    seenEntries.add(entryKey);
+    
     rows.push({
       ra,
       session: session,
@@ -439,7 +468,22 @@ export function extractSeatingRows(html, targetRA = null) {
     console.log(`[DEBUG extractSeatingRows] Final rows extracted: ${rows.length}`);
   }
   
-  return rows;
+  // Filter to ensure only one entry per RA + session combination
+  // A student cannot be in multiple rooms in the same session
+  const uniqueRows = [];
+  const raSessionKeys = new Set();
+  
+  for (const row of rows) {
+    const key = `${row.ra}_${row.session}`;
+    if (!raSessionKeys.has(key)) {
+      raSessionKeys.add(key);
+      uniqueRows.push(row);
+    } else {
+      console.log(`[DEBUG extractSeatingRows] Filtering duplicate RA+session: ${row.ra} in ${row.session} (keeping first occurrence)`);
+    }
+  }
+  
+  return uniqueRows;
 }
 
 /**
