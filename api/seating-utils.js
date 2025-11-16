@@ -323,17 +323,34 @@ export function extractSeatingRows(html, targetRA = null) {
     const roomNameMatch = lastRoomMatch.match(/ROOM\s+NO\s*[: ]+\s*([A-Z0-9\-]+)/i);
     const roomName = roomNameMatch ? roomNameMatch[1] : lastRoomMatch.replace(/ROOM\s+NO\s*[: ]+\s*/i, '').trim();
     
+    // Find the index of the room header to limit session search to this room section
+    const lastRoomMatchIndex = beforeRA.lastIndexOf(lastRoomMatch);
+    const roomSectionStart = lastRoomMatchIndex >= 0 ? lastRoomMatchIndex : 0;
+    const roomSection = beforeRA.substring(roomSectionStart);
+    
     console.log(`[DEBUG extractSeatingRows] RA: ${ra}, extracted room: ${roomName}, lastRoomMatch: ${lastRoomMatch}`);
     
-    // Find session (look backwards for SESSION header)
+    // Find session (look in the room section between ROOM NO and RA, not in entire beforeRA)
+    // This ensures we get the correct session for this specific room
     let session = 'Unknown';
-    const sessionMatch = beforeRA.match(/SESSION\s*[: ]\s*(FN|AN|FORENOON|AFTERNOON)/i);
+    const sessionMatch = roomSection.match(/SESSION\s*[: ]\s*(FN|AN|FORENOON|AFTERNOON)/i);
     if (sessionMatch) {
       const sessionValue = sessionMatch[1].toUpperCase();
       if (sessionValue === 'FN' || sessionValue === 'FORENOON') {
         session = 'Forenoon';
       } else if (sessionValue === 'AN' || sessionValue === 'AFTERNOON') {
         session = 'Afternoon';
+      }
+    } else {
+      // Fallback: look in entire beforeRA if not found in room section
+      const fallbackSessionMatch = beforeRA.match(/SESSION\s*[: ]\s*(FN|AN|FORENOON|AFTERNOON)/i);
+      if (fallbackSessionMatch) {
+        const sessionValue = fallbackSessionMatch[1].toUpperCase();
+        if (sessionValue === 'FN' || sessionValue === 'FORENOON') {
+          session = 'Forenoon';
+        } else if (sessionValue === 'AN' || sessionValue === 'AFTERNOON') {
+          session = 'Afternoon';
+        }
       }
     }
     
