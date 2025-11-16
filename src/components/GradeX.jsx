@@ -353,7 +353,7 @@ function GradeX() {
   const applyHAPreset = () => {
     applyPresetCourses(HA_PRESET);
   };
-
+  
   const resetToDefaults = () => {
     if (confirm('Reset all courses to default? This will replace your current courses.')) {
       setCourses(defaultCourses);
@@ -545,7 +545,7 @@ function GradeX() {
           </h1>
         </div>
       )}
-      <div className="gradex-layout">
+    <div className="gradex-layout">
       <div className="gradex-toolbar" style={{ position: 'relative' }}>
         <div>
           <h1>Semester Overview</h1>
@@ -784,8 +784,8 @@ function GradeX() {
                     </div>
                   ) : (
                     <>
-                      <h2>{course.title}</h2>
-                      <p>Credit: {course.credit}</p>
+                  <h2>{course.title}</h2>
+                  <p>Credit: {course.credit}</p>
                     </>
                   )}
                 </div>
@@ -816,10 +816,10 @@ function GradeX() {
                       >
                         Edit
                       </button>
-                      <label className="gradex-toggle">
-                        <input type="checkbox" checked={course.included} onChange={() => toggleIncluded(course.id)} />
-                        <span>Included</span>
-                      </label>
+                <label className="gradex-toggle">
+                  <input type="checkbox" checked={course.included} onChange={() => toggleIncluded(course.id)} />
+                  <span>Included</span>
+                </label>
                     </>
                   )}
                 </div>
@@ -828,13 +828,13 @@ function GradeX() {
               <div className="gradex-stat-row">
                 <div className="gradex-stat">
                   {editingCourseId === course.id ? (
-                    <input
-                      type="number"
-                      className="gradex-inline"
+                  <input
+                    type="number"
+                    className="gradex-inline"
                       value={editFormData.score}
                       onChange={(e) => setEditFormData((prev) => ({ ...prev, score: e.target.value }))}
                       style={{ width: '80px' }}
-                    />
+                  />
                   ) : (
                     <span className="gradex-inline" style={{ color: '#f8fafc', fontWeight: 600 }}>
                       {course.score}
@@ -849,27 +849,27 @@ function GradeX() {
               </div>
 
               {needsExam && (
-                <div className="gradex-slider">
-                  <input
-                    type="range"
+              <div className="gradex-slider">
+                <input
+                  type="range"
                     min={1}
-                    max={gradeScale.length - 1}
-                    value={course.gradeIndex}
-                    onChange={(e) => updateGrade(course.id, Number(e.target.value))}
-                  />
-                  <div className="gradex-scale">
+                  max={gradeScale.length - 1}
+                  value={course.gradeIndex}
+                  onChange={(e) => updateGrade(course.id, Number(e.target.value))}
+                />
+                <div className="gradex-scale">
                     {gradeScale.filter(g => g.label !== 'F').map((gradeOption) => (
-                      <span key={gradeOption.label}>{gradeOption.label}</span>
-                    ))}
-                  </div>
+                    <span key={gradeOption.label}>{gradeOption.label}</span>
+                  ))}
                 </div>
+              </div>
               )}
 
               <div className="gradex-goal">
                 {needsExam && requiredExamMarks !== null ? (
                   <>
-                    <div>Goal for sem exam</div>
-                    <div className="gradex-goal-display">
+                <div>Goal for sem exam</div>
+                <div className="gradex-goal-display">
                       <span className="gradex-goal-value" style={{ color: requiredExamMarks > maxExternalMarks ? '#ef4444' : '#4ade80' }}>
                         {requiredExamMarks.toFixed(2)}
                       </span>
@@ -890,7 +890,7 @@ function GradeX() {
                     <div className="gradex-goal-display">
                       <span className="gradex-goal-value">{displayGradeLabel}</span>
                       <span className="gradex-goal-max">{course.score} / {course.maxScore}</span>
-                    </div>
+                </div>
                   </>
                 )}
               </div>
@@ -904,7 +904,7 @@ function GradeX() {
           );
         })}
       </div>
-      </div>
+    </div>
     </>
   );
 }

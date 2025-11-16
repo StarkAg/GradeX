@@ -710,19 +710,13 @@ export default function SeatFinder() {
       margin: '0 auto',
       padding: '0',
       minHeight: 'calc(100vh - 60px)',
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      background: 'transparent',
-      position: 'relative',
-      zIndex: 0
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
     }}>
       <div style={{
         display: isDesktop && hasSeatInfo ? 'flex' : 'block',
         gap: '32px',
         alignItems: 'flex-start',
         padding: 'clamp(20px, 5vw, 40px) clamp(16px, 4vw, 20px)',
-        position: 'relative',
-        zIndex: 0,
-        overflow: 'visible',
         maxWidth: isDesktop && hasSeatInfo ? '1200px' : '600px',
         margin: '0 auto',
         transition: 'all 0.5s ease-in-out'
@@ -812,9 +806,7 @@ export default function SeatFinder() {
           borderRadius: '12px',
           padding: 'clamp(20px, 5vw, 32px)',
           marginBottom: '24px',
-          position: 'relative',
-          overflow: 'visible',
-          zIndex: 1
+          position: 'relative'
         }}>
           {/* Loading Overlay */}
           {loading && (
@@ -834,8 +826,7 @@ export default function SeatFinder() {
               justifyContent: 'center',
               gap: 'clamp(12px, 3vw, 16px)',
               zIndex: 1000,
-              transition: 'opacity 0.3s ease',
-              pointerEvents: loading ? 'auto' : 'none'
+              transition: 'opacity 0.3s ease'
             }}>
               {/* Circular Loading Spinner */}
               <div style={{
@@ -1235,27 +1226,16 @@ export default function SeatFinder() {
               
               {/* Notification Toggle - Show when seat info not available */}
               {(() => {
-                // Check if Notification API is available (works on most modern mobile browsers)
-                const hasNotificationAPI = typeof window !== 'undefined' && 'Notification' in window;
-                const hasError = error && typeof error === 'string';
-                const errorText = hasError ? error.toLowerCase() : '';
-                const shouldShow = hasError && 
-                  (errorText.includes('not found') || errorText.includes('no seating')) && 
-                  registerNumber.trim() && 
-                  !seatInfo && 
-                  hasNotificationAPI;
-                
+                const shouldShow = error && (error.toLowerCase().includes('not found') || error.toLowerCase().includes('no seating')) && registerNumber.trim() && !seatInfo && 'Notification' in window;
                 // Debug log (remove in production)
-                if (hasError && registerNumber.trim()) {
+                if (error && registerNumber.trim()) {
                   console.log('🔔 Notification button check:', {
                     error: error,
-                    errorText: errorText,
-                    errorIncludesNotFound: errorText.includes('not found'),
-                    errorIncludesNoSeating: errorText.includes('no seating'),
+                    errorIncludesNotFound: error.toLowerCase().includes('not found'),
+                    errorIncludesNoSeating: error.toLowerCase().includes('no seating'),
                     hasRegisterNumber: !!registerNumber.trim(),
                     noSeatInfo: !seatInfo,
-                    hasNotificationAPI: hasNotificationAPI,
-                    isMobile: isMobile,
+                    hasNotificationAPI: 'Notification' in window,
                     shouldShow: shouldShow
                   });
                 }
@@ -1270,14 +1250,9 @@ export default function SeatFinder() {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   gap: 'clamp(8px, 2vw, 12px)',
-                  flexWrap: isMobile ? 'wrap' : 'nowrap',
-                  flexDirection: isMobile ? 'column' : 'row'
+                  flexWrap: 'wrap'
                 }}>
-                  <div style={{ 
-                    flex: isMobile ? 'none' : 1, 
-                    minWidth: isMobile ? '100%' : '200px',
-                    width: isMobile ? '100%' : 'auto'
-                  }}>
+                  <div style={{ flex: 1, minWidth: '200px' }}>
                     <div style={{ fontSize: 'clamp(12px, 3vw, 13px)', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
                       Get notified when seat info is available
                     </div>
@@ -1311,12 +1286,7 @@ export default function SeatFinder() {
                       whiteSpace: 'nowrap',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                      width: isMobile ? '100%' : 'auto',
-                      minWidth: isMobile ? '100%' : 'auto',
-                      touchAction: 'manipulation',
-                      WebkitTapHighlightColor: 'transparent'
+                      gap: '6px'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.opacity = '0.8';
@@ -1395,11 +1365,7 @@ export default function SeatFinder() {
               background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(34, 197, 94, 0.08) 100%)',
               border: '1.5px solid rgba(34, 197, 94, 0.4)',
               borderRadius: '16px',
-              boxShadow: '0 8px 24px rgba(34, 197, 94, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-              position: 'relative',
-              zIndex: 1,
-              overflow: 'visible',
-              minHeight: 'auto'
+              boxShadow: '0 8px 24px rgba(34, 197, 94, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
             }}>
               <div style={{
                 display: 'flex',
@@ -1449,10 +1415,7 @@ export default function SeatFinder() {
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                   display: 'flex',
                   gap: 'clamp(10px, 2.5vw, 16px)',
-                  flexDirection: hasImage ? (isMobile ? 'column' : 'row') : 'column',
-                  position: 'relative',
-                  zIndex: 1,
-                  overflow: 'visible'
+                  flexDirection: hasImage ? (isMobile ? 'column' : 'row') : 'column'
                 }}>
                   {hasImage ? (() => {
                     if (roomUpper.startsWith('TP2')) {
@@ -1460,23 +1423,20 @@ export default function SeatFinder() {
                         <div style={{
                           flexShrink: 0,
                           width: isMobile ? '100%' : 'clamp(100px, 20vw, 150px)',
-                          maxWidth: isMobile ? '100%' : 'none',
-                          margin: isMobile ? '0 auto clamp(12px, 3vw, 16px) auto' : '0',
+                          maxWidth: isMobile ? '200px' : 'none',
+                          margin: isMobile ? '0 auto' : '0',
                           textAlign: 'center',
                           position: 'relative'
                         }}>
                           <img 
                             src="/TP2.JPG" 
                             alt="TP2 Venue Map" 
-                            loading="lazy"
                             style={{
                               width: '100%',
                               height: 'auto',
-                              maxWidth: '100%',
                               borderRadius: '14px',
-                              maxHeight: isMobile ? 'clamp(200px, 50vw, 300px)' : '300px',
+                              maxHeight: isMobile ? '250px' : '300px',
                               objectFit: 'contain',
-                              display: 'block',
                               filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
                               boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(34, 197, 94, 0.15)',
                               transition: 'all 0.3s ease',
@@ -1504,23 +1464,20 @@ export default function SeatFinder() {
                         <div style={{
                           flexShrink: 0,
                           width: isMobile ? '100%' : 'clamp(100px, 20vw, 150px)',
-                          maxWidth: isMobile ? '100%' : 'none',
-                          margin: isMobile ? '0 auto clamp(12px, 3vw, 16px) auto' : '0',
+                          maxWidth: isMobile ? '200px' : 'none',
+                          margin: isMobile ? '0 auto' : '0',
                           textAlign: 'center',
                           position: 'relative'
                         }}>
                           <img 
                             src="/VPT.JPG" 
                             alt="VPT Venue Map" 
-                            loading="lazy"
                             style={{
                               width: '100%',
                               height: 'auto',
-                              maxWidth: '100%',
                               borderRadius: '14px',
-                              maxHeight: isMobile ? 'clamp(200px, 50vw, 300px)' : '300px',
+                              maxHeight: isMobile ? '250px' : '300px',
                               objectFit: 'contain',
-                              display: 'block',
                               filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
                               boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(34, 197, 94, 0.15)',
                               transition: 'all 0.3s ease',
@@ -1548,23 +1505,20 @@ export default function SeatFinder() {
                         <div style={{
                           flexShrink: 0,
                           width: isMobile ? '100%' : 'clamp(100px, 20vw, 150px)',
-                          maxWidth: isMobile ? '100%' : 'none',
-                          margin: isMobile ? '0 auto clamp(12px, 3vw, 16px) auto' : '0',
+                          maxWidth: isMobile ? '200px' : 'none',
+                          margin: isMobile ? '0 auto' : '0',
                           textAlign: 'center',
                           position: 'relative'
                         }}>
                           <img 
                             src="/TP.jpg" 
                             alt="TP Venue Map" 
-                            loading="lazy"
                             style={{
                               width: '100%',
                               height: 'auto',
-                              maxWidth: '100%',
                               borderRadius: '14px',
-                              maxHeight: isMobile ? 'clamp(200px, 50vw, 300px)' : '300px',
+                              maxHeight: isMobile ? '250px' : '300px',
                               objectFit: 'contain',
-                              display: 'block',
                               filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
                               boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(34, 197, 94, 0.15)',
                               transition: 'all 0.3s ease',
@@ -1592,23 +1546,20 @@ export default function SeatFinder() {
                         <div style={{
                           flexShrink: 0,
                           width: isMobile ? '100%' : 'clamp(100px, 20vw, 150px)',
-                          maxWidth: isMobile ? '100%' : 'none',
-                          margin: isMobile ? '0 auto clamp(12px, 3vw, 16px) auto' : '0',
+                          maxWidth: isMobile ? '200px' : 'none',
+                          margin: isMobile ? '0 auto' : '0',
                           textAlign: 'center',
                           position: 'relative'
                         }}>
                           <img 
                             src="/UB.png" 
                             alt="UB Venue Map" 
-                            loading="lazy"
                             style={{
                               width: '100%',
                               height: 'auto',
-                              maxWidth: '100%',
                               borderRadius: '14px',
-                              maxHeight: isMobile ? 'clamp(200px, 50vw, 300px)' : '300px',
+                              maxHeight: isMobile ? '250px' : '300px',
                               objectFit: 'contain',
-                              display: 'block',
                               filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
                               boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(34, 197, 94, 0.15)',
                               transition: 'all 0.3s ease',
@@ -1814,37 +1765,32 @@ export default function SeatFinder() {
                 <div key={index} style={{
                   background: 'rgba(34, 197, 94, 0.1)',
                   borderRadius: '14px',
-                  padding: 'clamp(12px, 3vw, 20px)',
-                  marginBottom: index < seatInfo.length - 1 ? 'clamp(12px, 3vw, 20px)' : '0',
+                  padding: '20px',
+                  marginBottom: index < seatInfo.length - 1 ? '20px' : '0',
                   border: '1.5px solid rgba(34, 197, 94, 0.3)',
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
                   display: 'flex',
-                  gap: 'clamp(10px, 2.5vw, 20px)',
-                  flexDirection: hasImage ? (isMobile ? 'column' : 'row') : 'column'
+                  gap: '20px',
+                  flexDirection: hasImage ? 'row' : 'column'
                 }}>
                   {hasImage ? (() => {
                     if (roomUpper.startsWith('TP2')) {
                       return (
                         <div style={{
                           flexShrink: 0,
-                          width: isMobile ? '100%' : 'clamp(100px, 20vw, 180px)',
-                          maxWidth: isMobile ? '100%' : 'none',
-                          margin: isMobile ? '0 auto clamp(12px, 3vw, 16px) auto' : '0',
+                          width: '180px',
                           textAlign: 'center',
                           position: 'relative'
                         }}>
                           <img 
                             src="/TP2.JPG" 
                             alt="TP2 Venue Map" 
-                            loading="lazy"
                             style={{
                               width: '100%',
                               height: 'auto',
-                              maxWidth: '100%',
                               borderRadius: '14px',
-                              maxHeight: isMobile ? 'clamp(200px, 50vw, 300px)' : '400px',
+                              maxHeight: '400px',
                               objectFit: 'contain',
-                              display: 'block',
                               filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
                               boxShadow: '0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.2)',
                               transition: 'all 0.3s ease',
@@ -1867,24 +1813,19 @@ export default function SeatFinder() {
                       return (
                         <div style={{
                           flexShrink: 0,
-                          width: isMobile ? '100%' : 'clamp(100px, 20vw, 180px)',
-                          maxWidth: isMobile ? '100%' : 'none',
-                          margin: isMobile ? '0 auto clamp(12px, 3vw, 16px) auto' : '0',
+                          width: '180px',
                           textAlign: 'center',
                           position: 'relative'
                         }}>
                           <img 
                             src="/VPT.JPG" 
                             alt="VPT Venue Map" 
-                            loading="lazy"
                             style={{
                               width: '100%',
                               height: 'auto',
-                              maxWidth: '100%',
                               borderRadius: '14px',
-                              maxHeight: isMobile ? 'clamp(200px, 50vw, 300px)' : '400px',
+                              maxHeight: '400px',
                               objectFit: 'contain',
-                              display: 'block',
                               filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
                               boxShadow: '0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.2)',
                               transition: 'all 0.3s ease',
@@ -1907,24 +1848,19 @@ export default function SeatFinder() {
                       return (
                         <div style={{
                           flexShrink: 0,
-                          width: isMobile ? '100%' : 'clamp(100px, 20vw, 180px)',
-                          maxWidth: isMobile ? '100%' : 'none',
-                          margin: isMobile ? '0 auto clamp(12px, 3vw, 16px) auto' : '0',
+                          width: '180px',
                           textAlign: 'center',
                           position: 'relative'
                         }}>
                           <img 
                             src="/TP.jpg" 
                             alt="TP Venue Map"
-                            loading="lazy"
                             style={{
                               width: '100%',
                               height: 'auto',
-                              maxWidth: '100%',
                               borderRadius: '14px',
-                              maxHeight: isMobile ? 'clamp(200px, 50vw, 300px)' : '400px',
+                              maxHeight: '400px',
                               objectFit: 'contain',
-                              display: 'block',
                               filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
                               boxShadow: '0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.2)',
                               transition: 'all 0.3s ease',
@@ -1947,24 +1883,19 @@ export default function SeatFinder() {
                       return (
                         <div style={{
                           flexShrink: 0,
-                          width: isMobile ? '100%' : 'clamp(100px, 20vw, 180px)',
-                          maxWidth: isMobile ? '100%' : 'none',
-                          margin: isMobile ? '0 auto clamp(12px, 3vw, 16px) auto' : '0',
+                          width: '180px',
                           textAlign: 'center',
                           position: 'relative'
                         }}>
                           <img 
                             src="/UB.png" 
                             alt="UB Venue Map" 
-                            loading="lazy"
                             style={{
                               width: '100%',
                               height: 'auto',
-                              maxWidth: '100%',
                               borderRadius: '14px',
-                              maxHeight: isMobile ? 'clamp(200px, 50vw, 300px)' : '400px',
+                              maxHeight: '400px',
                               objectFit: 'contain',
-                              display: 'block',
                               filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
                               boxShadow: '0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.2)',
                               transition: 'all 0.3s ease',
