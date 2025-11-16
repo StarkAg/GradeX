@@ -235,6 +235,7 @@ export default function SeatFinder() {
   };
 
   // Fetch from live API
+  // Returns: { found: boolean, seats: array }
   const fetchFromLiveAPI = async (ra, date) => {
     try {
       // STEP 1: Get name from Supabase using last digits approach
@@ -406,11 +407,11 @@ export default function SeatFinder() {
         });
         setSeatInfo(transformedSeats);
         setError(null);
-        return transformedSeats.length > 0; // Return true if found
+        return { found: true, seats: transformedSeats }; // Return seats array
       } else {
         setSeatInfo(null);
         setError('No seating information found for this register number and date.');
-        return false; // Return false if not found
+        return { found: false, seats: [] }; // Return empty array
       }
     } catch (err) {
       console.error('Error in fetchFromLiveAPI:', err);
@@ -532,6 +533,7 @@ export default function SeatFinder() {
         };
       });
       setSeatInfo(mergedSeats);
+      return mergedSeats; // Return seats array
     }
   };
 
@@ -555,10 +557,10 @@ export default function SeatFinder() {
       if (useLiveAPI) {
         let liveApiSeats = [];
         try {
-          const foundInLiveAPI = await fetchFromLiveAPI(registerNumber.trim(), selectedDate);
+          const liveApiResult = await fetchFromLiveAPI(registerNumber.trim(), selectedDate);
           // Store live API results if found
-          if (foundInLiveAPI && seatInfo && seatInfo.length > 0) {
-            liveApiSeats = [...seatInfo];
+          if (liveApiResult.found && liveApiResult.seats.length > 0) {
+            liveApiSeats = liveApiResult.seats;
             console.log(`✅ Found ${liveApiSeats.length} seat(s) from live API`);
           }
         } catch (apiErr) {
@@ -567,11 +569,9 @@ export default function SeatFinder() {
         
         // Always check static data to find additional results (e.g., different sessions)
         console.log('Checking static data for additional results...');
-        const tempSeatInfo = seatInfo; // Save current state
-        setSeatInfo(null); // Reset to allow fetchFromStaticData to work
+        let staticSeats = [];
         try {
-          await fetchFromStaticData(registerNumber.trim(), selectedDate);
-          const staticSeats = seatInfo || [];
+          staticSeats = await fetchFromStaticData(registerNumber.trim(), selectedDate);
           
           // Merge results from both sources
           const allSeats = [...liveApiSeats];
