@@ -1423,20 +1423,23 @@ export default function SeatFinder() {
                         <div style={{
                           flexShrink: 0,
                           width: isMobile ? '100%' : 'clamp(100px, 20vw, 150px)',
-                          maxWidth: isMobile ? '200px' : 'none',
-                          margin: isMobile ? '0 auto' : '0',
+                          maxWidth: isMobile ? '100%' : 'none',
+                          margin: isMobile ? '0 auto clamp(12px, 3vw, 16px) auto' : '0',
                           textAlign: 'center',
                           position: 'relative'
                         }}>
                           <img 
                             src="/TP2.JPG" 
                             alt="TP2 Venue Map" 
+                            loading="lazy"
                             style={{
                               width: '100%',
                               height: 'auto',
+                              maxWidth: '100%',
                               borderRadius: '14px',
-                              maxHeight: isMobile ? '250px' : '300px',
+                              maxHeight: isMobile ? 'clamp(200px, 50vw, 300px)' : '300px',
                               objectFit: 'contain',
+                              display: 'block',
                               filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
                               boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(34, 197, 94, 0.15)',
                               transition: 'all 0.3s ease',
@@ -1464,20 +1467,23 @@ export default function SeatFinder() {
                         <div style={{
                           flexShrink: 0,
                           width: isMobile ? '100%' : 'clamp(100px, 20vw, 150px)',
-                          maxWidth: isMobile ? '200px' : 'none',
-                          margin: isMobile ? '0 auto' : '0',
+                          maxWidth: isMobile ? '100%' : 'none',
+                          margin: isMobile ? '0 auto clamp(12px, 3vw, 16px) auto' : '0',
                           textAlign: 'center',
                           position: 'relative'
                         }}>
                           <img 
                             src="/VPT.JPG" 
                             alt="VPT Venue Map" 
+                            loading="lazy"
                             style={{
                               width: '100%',
                               height: 'auto',
+                              maxWidth: '100%',
                               borderRadius: '14px',
-                              maxHeight: isMobile ? '250px' : '300px',
+                              maxHeight: isMobile ? 'clamp(200px, 50vw, 300px)' : '300px',
                               objectFit: 'contain',
+                              display: 'block',
                               filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
                               boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(34, 197, 94, 0.15)',
                               transition: 'all 0.3s ease',
@@ -1505,20 +1511,23 @@ export default function SeatFinder() {
                         <div style={{
                           flexShrink: 0,
                           width: isMobile ? '100%' : 'clamp(100px, 20vw, 150px)',
-                          maxWidth: isMobile ? '200px' : 'none',
-                          margin: isMobile ? '0 auto' : '0',
+                          maxWidth: isMobile ? '100%' : 'none',
+                          margin: isMobile ? '0 auto clamp(12px, 3vw, 16px) auto' : '0',
                           textAlign: 'center',
                           position: 'relative'
                         }}>
                           <img 
                             src="/TP.jpg" 
                             alt="TP Venue Map" 
+                            loading="lazy"
                             style={{
                               width: '100%',
                               height: 'auto',
+                              maxWidth: '100%',
                               borderRadius: '14px',
-                              maxHeight: isMobile ? '250px' : '300px',
+                              maxHeight: isMobile ? 'clamp(200px, 50vw, 300px)' : '300px',
                               objectFit: 'contain',
+                              display: 'block',
                               filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
                               boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(34, 197, 94, 0.15)',
                               transition: 'all 0.3s ease',
@@ -1546,20 +1555,23 @@ export default function SeatFinder() {
                         <div style={{
                           flexShrink: 0,
                           width: isMobile ? '100%' : 'clamp(100px, 20vw, 150px)',
-                          maxWidth: isMobile ? '200px' : 'none',
-                          margin: isMobile ? '0 auto' : '0',
+                          maxWidth: isMobile ? '100%' : 'none',
+                          margin: isMobile ? '0 auto clamp(12px, 3vw, 16px) auto' : '0',
                           textAlign: 'center',
                           position: 'relative'
                         }}>
                           <img 
                             src="/UB.png" 
                             alt="UB Venue Map" 
+                            loading="lazy"
                             style={{
                               width: '100%',
                               height: 'auto',
+                              maxWidth: '100%',
                               borderRadius: '14px',
-                              maxHeight: isMobile ? '250px' : '300px',
+                              maxHeight: isMobile ? 'clamp(200px, 50vw, 300px)' : '300px',
                               objectFit: 'contain',
+                              display: 'block',
                               filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
                               boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(34, 197, 94, 0.15)',
                               transition: 'all 0.3s ease',
@@ -1765,32 +1777,37 @@ export default function SeatFinder() {
                 <div key={index} style={{
                   background: 'rgba(34, 197, 94, 0.1)',
                   borderRadius: '14px',
-                  padding: '20px',
-                  marginBottom: index < seatInfo.length - 1 ? '20px' : '0',
+                  padding: 'clamp(12px, 3vw, 20px)',
+                  marginBottom: index < seatInfo.length - 1 ? 'clamp(12px, 3vw, 20px)' : '0',
                   border: '1.5px solid rgba(34, 197, 94, 0.3)',
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
                   display: 'flex',
-                  gap: '20px',
-                  flexDirection: hasImage ? 'row' : 'column'
+                  gap: 'clamp(10px, 2.5vw, 20px)',
+                  flexDirection: hasImage ? (isMobile ? 'column' : 'row') : 'column'
                 }}>
                   {hasImage ? (() => {
                     if (roomUpper.startsWith('TP2')) {
                       return (
                         <div style={{
                           flexShrink: 0,
-                          width: '180px',
+                          width: isMobile ? '100%' : 'clamp(100px, 20vw, 180px)',
+                          maxWidth: isMobile ? '100%' : 'none',
+                          margin: isMobile ? '0 auto clamp(12px, 3vw, 16px) auto' : '0',
                           textAlign: 'center',
                           position: 'relative'
                         }}>
                           <img 
                             src="/TP2.JPG" 
                             alt="TP2 Venue Map" 
+                            loading="lazy"
                             style={{
                               width: '100%',
                               height: 'auto',
+                              maxWidth: '100%',
                               borderRadius: '14px',
-                              maxHeight: '400px',
+                              maxHeight: isMobile ? 'clamp(200px, 50vw, 300px)' : '400px',
                               objectFit: 'contain',
+                              display: 'block',
                               filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
                               boxShadow: '0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.2)',
                               transition: 'all 0.3s ease',
@@ -1813,19 +1830,24 @@ export default function SeatFinder() {
                       return (
                         <div style={{
                           flexShrink: 0,
-                          width: '180px',
+                          width: isMobile ? '100%' : 'clamp(100px, 20vw, 180px)',
+                          maxWidth: isMobile ? '100%' : 'none',
+                          margin: isMobile ? '0 auto clamp(12px, 3vw, 16px) auto' : '0',
                           textAlign: 'center',
                           position: 'relative'
                         }}>
                           <img 
                             src="/VPT.JPG" 
                             alt="VPT Venue Map" 
+                            loading="lazy"
                             style={{
                               width: '100%',
                               height: 'auto',
+                              maxWidth: '100%',
                               borderRadius: '14px',
-                              maxHeight: '400px',
+                              maxHeight: isMobile ? 'clamp(200px, 50vw, 300px)' : '400px',
                               objectFit: 'contain',
+                              display: 'block',
                               filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
                               boxShadow: '0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.2)',
                               transition: 'all 0.3s ease',
@@ -1848,19 +1870,24 @@ export default function SeatFinder() {
                       return (
                         <div style={{
                           flexShrink: 0,
-                          width: '180px',
+                          width: isMobile ? '100%' : 'clamp(100px, 20vw, 180px)',
+                          maxWidth: isMobile ? '100%' : 'none',
+                          margin: isMobile ? '0 auto clamp(12px, 3vw, 16px) auto' : '0',
                           textAlign: 'center',
                           position: 'relative'
                         }}>
                           <img 
                             src="/TP.jpg" 
                             alt="TP Venue Map"
+                            loading="lazy"
                             style={{
                               width: '100%',
                               height: 'auto',
+                              maxWidth: '100%',
                               borderRadius: '14px',
-                              maxHeight: '400px',
+                              maxHeight: isMobile ? 'clamp(200px, 50vw, 300px)' : '400px',
                               objectFit: 'contain',
+                              display: 'block',
                               filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
                               boxShadow: '0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.2)',
                               transition: 'all 0.3s ease',
@@ -1883,19 +1910,24 @@ export default function SeatFinder() {
                       return (
                         <div style={{
                           flexShrink: 0,
-                          width: '180px',
+                          width: isMobile ? '100%' : 'clamp(100px, 20vw, 180px)',
+                          maxWidth: isMobile ? '100%' : 'none',
+                          margin: isMobile ? '0 auto clamp(12px, 3vw, 16px) auto' : '0',
                           textAlign: 'center',
                           position: 'relative'
                         }}>
                           <img 
                             src="/UB.png" 
                             alt="UB Venue Map" 
+                            loading="lazy"
                             style={{
                               width: '100%',
                               height: 'auto',
+                              maxWidth: '100%',
                               borderRadius: '14px',
-                              maxHeight: '400px',
+                              maxHeight: isMobile ? 'clamp(200px, 50vw, 300px)' : '400px',
                               objectFit: 'contain',
+                              display: 'block',
                               filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
                               boxShadow: '0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.2)',
                               transition: 'all 0.3s ease',
