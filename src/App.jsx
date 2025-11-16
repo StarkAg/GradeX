@@ -265,7 +265,15 @@ export default function App() {
           />
         </div>
       )}
-      <div className="app-container" style={{ opacity: showSplash ? 0 : 1, transition: 'opacity 0.5s ease-in' }}>
+      <div className="app-container" style={{ 
+        opacity: showSplash ? 0 : 1, 
+        transition: 'opacity 0.5s ease-in',
+        backgroundColor: '#020202', // Fallback for mobile
+        color: '#f5f5f5', // Fallback for mobile
+        minHeight: '100vh',
+        display: 'block',
+        visibility: 'visible'
+      }}>
       <header className="app-header single">
           <div>
             <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
