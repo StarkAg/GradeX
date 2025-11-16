@@ -439,22 +439,22 @@ export default function SeatFinder() {
                 marginTop: '8px',
                 flexWrap: 'wrap',
                 maxWidth: '100%',
-                padding: '0 clamp(10px, 3vw, 20px)',
-                opacity: 0.7
+                padding: '0 clamp(10px, 3vw, 20px)'
               }}>
                 <div style={{
-                  width: '6px',
-                  height: '6px',
+                  width: '8px',
+                  height: '8px',
                   borderRadius: '50%',
-                  background: 'var(--text-secondary)',
-                  flexShrink: 0,
-                  opacity: 0.6
+                  background: '#22c55e',
+                  animation: 'livePulse 2s ease-in-out infinite',
+                  boxShadow: '0 0 0 0 rgba(34, 197, 94, 0.7)',
+                  flexShrink: 0
                 }}></div>
                 <span style={{
-                  fontSize: 'clamp(9px, 2.2vw, 11px)',
-                  fontWeight: 400,
-                  color: 'var(--text-secondary)',
-                  letterSpacing: '0.01em',
+                  fontSize: 'clamp(10px, 2.5vw, 12px)',
+                  fontWeight: 500,
+                  color: '#22c55e',
+                  letterSpacing: '0.02em',
                   textAlign: 'center',
                   lineHeight: '1.4'
                 }}>
@@ -495,25 +495,26 @@ export default function SeatFinder() {
           {/* Warning Note - Only show if no seat info found */}
           {(!seatInfo || seatInfo.length === 0 || seatInfo.every(seat => !seat.room || seat.room === '-')) && (
             <div style={{
-              background: 'rgba(251, 191, 36, 0.1)',
-              border: '1px solid rgba(251, 191, 36, 0.3)',
+              background: 'rgba(251, 191, 36, 0.05)',
+              border: '1px solid rgba(251, 191, 36, 0.15)',
               borderRadius: '8px',
-              padding: 'clamp(10px, 3vw, 12px) clamp(12px, 4vw, 16px)',
+              padding: 'clamp(8px, 2.5vw, 10px) clamp(10px, 3vw, 14px)',
               marginBottom: 'clamp(20px, 5vw, 24px)',
               display: 'flex',
               alignItems: 'flex-start',
-              gap: 'clamp(8px, 2vw, 12px)'
+              gap: 'clamp(6px, 1.5vw, 8px)'
             }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#fbbf24', flexShrink: 0, marginTop: '2px', minWidth: '18px', width: 'clamp(18px, 4vw, 20px)', height: 'clamp(18px, 4vw, 20px)' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-secondary)', flexShrink: 0, marginTop: '2px', minWidth: '14px', width: 'clamp(14px, 3.5vw, 16px)', height: 'clamp(14px, 3.5vw, 16px)', opacity: 0.7 }}>
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                 <line x1="12" y1="9" x2="12" y2="13"></line>
                 <line x1="12" y1="17" x2="12.01" y2="17"></line>
               </svg>
               <p style={{
-                fontSize: 'clamp(12px, 3vw, 13px)',
-                color: '#fbbf24',
+                fontSize: 'clamp(11px, 2.8vw, 12px)',
+                color: 'var(--text-secondary)',
                 margin: 0,
-                lineHeight: '1.5'
+                lineHeight: '1.5',
+                opacity: 0.8
               }}>
                 Note: Seat info appears 24h before exams. Not available? Check back later.
               </p>
