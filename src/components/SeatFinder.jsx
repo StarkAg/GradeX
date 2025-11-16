@@ -710,13 +710,19 @@ export default function SeatFinder() {
       margin: '0 auto',
       padding: '0',
       minHeight: 'calc(100vh - 60px)',
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      background: 'transparent',
+      position: 'relative',
+      zIndex: 0
     }}>
       <div style={{
         display: isDesktop && hasSeatInfo ? 'flex' : 'block',
         gap: '32px',
         alignItems: 'flex-start',
         padding: 'clamp(20px, 5vw, 40px) clamp(16px, 4vw, 20px)',
+        position: 'relative',
+        zIndex: 0,
+        overflow: 'visible',
         maxWidth: isDesktop && hasSeatInfo ? '1200px' : '600px',
         margin: '0 auto',
         transition: 'all 0.5s ease-in-out'
@@ -806,7 +812,9 @@ export default function SeatFinder() {
           borderRadius: '12px',
           padding: 'clamp(20px, 5vw, 32px)',
           marginBottom: '24px',
-          position: 'relative'
+          position: 'relative',
+          overflow: 'visible',
+          zIndex: 1
         }}>
           {/* Loading Overlay */}
           {loading && (
@@ -826,7 +834,8 @@ export default function SeatFinder() {
               justifyContent: 'center',
               gap: 'clamp(12px, 3vw, 16px)',
               zIndex: 1000,
-              transition: 'opacity 0.3s ease'
+              transition: 'opacity 0.3s ease',
+              pointerEvents: loading ? 'auto' : 'none'
             }}>
               {/* Circular Loading Spinner */}
               <div style={{
@@ -1386,7 +1395,11 @@ export default function SeatFinder() {
               background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(34, 197, 94, 0.08) 100%)',
               border: '1.5px solid rgba(34, 197, 94, 0.4)',
               borderRadius: '16px',
-              boxShadow: '0 8px 24px rgba(34, 197, 94, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+              boxShadow: '0 8px 24px rgba(34, 197, 94, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+              position: 'relative',
+              zIndex: 1,
+              overflow: 'visible',
+              minHeight: 'auto'
             }}>
               <div style={{
                 display: 'flex',
@@ -1436,7 +1449,10 @@ export default function SeatFinder() {
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                   display: 'flex',
                   gap: 'clamp(10px, 2.5vw, 16px)',
-                  flexDirection: hasImage ? (isMobile ? 'column' : 'row') : 'column'
+                  flexDirection: hasImage ? (isMobile ? 'column' : 'row') : 'column',
+                  position: 'relative',
+                  zIndex: 1,
+                  overflow: 'visible'
                 }}>
                   {hasImage ? (() => {
                     if (roomUpper.startsWith('TP2')) {
