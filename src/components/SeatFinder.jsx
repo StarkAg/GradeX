@@ -577,7 +577,15 @@ export default function SeatFinder() {
         console.log('Checking static data for additional results...');
         let staticSeats = [];
         try {
+          // Temporarily prevent fetchFromStaticData from setting state
+          // We'll merge and set state ourselves
+          const prevSetSeatInfo = setSeatInfo;
+          let tempSeatInfo = null;
+          const tempSetSeatInfo = (seats) => { tempSeatInfo = seats; };
+          
+          // Call fetchFromStaticData but capture return value
           staticSeats = await fetchFromStaticData(registerNumber.trim(), selectedDate);
+          console.log(`✅ Found ${staticSeats.length} seat(s) from static data`);
           
           // Merge results from both sources
           const allSeats = [...liveApiSeats];
@@ -590,6 +598,9 @@ export default function SeatFinder() {
             );
             if (!isDuplicate) {
               allSeats.push(staticSeat);
+              console.log(`➕ Added static seat: ${staticSeat.room}, ${staticSeat.session}`);
+            } else {
+              console.log(`⚠️ Duplicate skipped: ${staticSeat.room}, ${staticSeat.session}`);
             }
           });
           
