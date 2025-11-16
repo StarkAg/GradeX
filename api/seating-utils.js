@@ -1118,11 +1118,16 @@ function enhanceMatchesWithPreloadedStudentInfo(matches, studentInfo) {
     return matches;
   }
   
+  console.log(`[enhanceMatchesWithPreloadedStudentInfo] Called with ${matches.length} matches`);
+  console.log(`[enhanceMatchesWithPreloadedStudentInfo] studentInfo:`, JSON.stringify(studentInfo));
+  
   if (!studentInfo) {
     studentInfo = { name: null, department: null };
     console.log(`[enhanceMatchesWithPreloadedStudentInfo] No student info provided, using null values`);
   } else {
-    console.log(`[enhanceMatchesWithPreloadedStudentInfo] Enhancing ${matches.length} matches with Name=${studentInfo.name || 'N/A'}, Dept=${studentInfo.department || 'N/A'}`);
+    console.log(`[enhanceMatchesWithPreloadedStudentInfo] Enhancing ${matches.length} matches with Name="${studentInfo.name || 'N/A'}", Dept="${studentInfo.department || 'N/A'}"`);
+    console.log(`[enhanceMatchesWithPreloadedStudentInfo] studentInfo.name type: ${typeof studentInfo.name}, value: ${studentInfo.name}`);
+    console.log(`[enhanceMatchesWithPreloadedStudentInfo] studentInfo.department type: ${typeof studentInfo.department}, value: ${studentInfo.department}`);
   }
   
   // Add name and student department to each match (preserve exam department)
@@ -1176,24 +1181,64 @@ export async function getSeatingInfo(ra, date) {
   // This ensures name and department are available even if API fails
   console.log(`[getSeatingInfo] Pre-loading student data for RA: ${normalizedRA}`);
   let studentInfo = { name: null, department: null };
-  try {
-    // Force reload student data to ensure it's fresh
-    const studentData = await loadStudentData();
-    console.log(`[getSeatingInfo] Student data map loaded: ${studentData.size} records`);
-    
-    // Direct lookup from the map
+  
+  // Try multiple times with different strategies
+  let studentData = null;
+  let attempts = 0;
+  const maxAttempts = 3;
+  
+  while (attempts < maxAttempts && !studentData) {
+    attempts++;
+    try {
+      console.log(`[getSeatingInfo] Attempt ${attempts}/${maxAttempts} to load student data...`);
+      studentData = await loadStudentData();
+      
+      if (studentData && studentData.size > 0) {
+        console.log(`[getSeatingInfo] ✓ Student data map loaded: ${studentData.size} records`);
+        break;
+      } else {
+        console.log(`[getSeatingInfo] ⚠ Student data map is empty, clearing cache and retrying...`);
+        // Clear cache and retry
+        studentDataCache = null;
+        studentDataLoadPromise = null;
+        studentData = null;
+        if (attempts < maxAttempts) {
+          // Wait a bit before retry
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+    } catch (error) {
+      console.error(`[getSeatingInfo] Attempt ${attempts} failed:`, error.message);
+      studentDataCache = null;
+      studentDataLoadPromise = null;
+      if (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+  }
+  
+  // Try direct lookup
+  if (studentData && studentData.size > 0) {
     const lookupResult = studentData.get(normalizedRA);
     if (lookupResult) {
       studentInfo = lookupResult;
-      console.log(`[getSeatingInfo] ✓ Student found in map: Name=${studentInfo.name || 'N/A'}, Dept=${studentInfo.department || 'N/A'}`);
+      console.log(`[getSeatingInfo] ✓ Student found in map: Name="${studentInfo.name}", Dept="${studentInfo.department}"`);
     } else {
       console.log(`[getSeatingInfo] ⚠ Student NOT found in map for RA: ${normalizedRA}`);
-      console.log(`[getSeatingInfo] Sample RAs in map:`, Array.from(studentData.keys()).slice(0, 5));
+      // Try case-insensitive search
+      for (const [key, value] of studentData.entries()) {
+        if (key.toUpperCase() === normalizedRA.toUpperCase()) {
+          studentInfo = value;
+          console.log(`[getSeatingInfo] ✓ Student found (case-insensitive): Name="${studentInfo.name}", Dept="${studentInfo.department}"`);
+          break;
+        }
+      }
+      if (!studentInfo.name) {
+        console.log(`[getSeatingInfo] Sample RAs in map:`, Array.from(studentData.keys()).slice(0, 10));
+      }
     }
-  } catch (error) {
-    console.error(`[getSeatingInfo] Failed to load student data:`, error);
-    console.error(`[getSeatingInfo] Error stack:`, error.stack);
-    // Continue even if student data fails - we'll still fetch seating info
+  } else {
+    console.error(`[getSeatingInfo] ✗ Failed to load student data after ${maxAttempts} attempts`);
   }
   
   // Check cache first
@@ -1241,9 +1286,15 @@ export async function getSeatingInfo(ra, date) {
   
   // STEP 3: Enhance all matches with pre-loaded student information
   // Use the student info we loaded at the start (from JSON)
+  console.log(`[getSeatingInfo] About to enhance results with studentInfo:`, JSON.stringify(studentInfo));
   const enhancedResults = {};
   for (const [campusName, matches] of Object.entries(results)) {
-    enhancedResults[campusName] = enhanceMatchesWithPreloadedStudentInfo(matches, studentInfo);
+    console.log(`[getSeatingInfo] Enhancing ${matches.length} matches for ${campusName}`);
+    const enhanced = enhanceMatchesWithPreloadedStudentInfo(matches, studentInfo);
+    enhancedResults[campusName] = enhanced;
+    if (enhanced.length > 0) {
+      console.log(`[getSeatingInfo] First enhanced match for ${campusName}:`, JSON.stringify(enhanced[0]));
+    }
   }
   
   // Build response
