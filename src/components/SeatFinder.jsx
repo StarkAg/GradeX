@@ -439,22 +439,22 @@ export default function SeatFinder() {
                 marginTop: '8px',
                 flexWrap: 'wrap',
                 maxWidth: '100%',
-                padding: '0 clamp(10px, 3vw, 20px)'
+                padding: '0 clamp(10px, 3vw, 20px)',
+                opacity: 0.7
               }}>
                 <div style={{
-                  width: '8px',
-                  height: '8px',
+                  width: '6px',
+                  height: '6px',
                   borderRadius: '50%',
-                  background: '#22c55e',
-                  animation: 'livePulse 2s ease-in-out infinite',
-                  boxShadow: '0 0 0 0 rgba(34, 197, 94, 0.7)',
-                  flexShrink: 0
+                  background: 'var(--text-secondary)',
+                  flexShrink: 0,
+                  opacity: 0.6
                 }}></div>
                 <span style={{
-                  fontSize: 'clamp(10px, 2.5vw, 12px)',
-                  fontWeight: 500,
-                  color: '#22c55e',
-                  letterSpacing: '0.02em',
+                  fontSize: 'clamp(9px, 2.2vw, 11px)',
+                  fontWeight: 400,
+                  color: 'var(--text-secondary)',
+                  letterSpacing: '0.01em',
                   textAlign: 'center',
                   lineHeight: '1.4'
                 }}>
