@@ -843,11 +843,15 @@ async function loadStudentData() {
       const fs = await import('fs');
       const path = await import('path');
       
+      console.log(`[loadStudentData] process.cwd(): ${process.cwd()}`);
+      
       // Try multiple possible paths for Vercel serverless functions
       const possiblePaths = [
         path.join(process.cwd(), 'public', 'seat-data.json'),
         path.join(process.cwd(), '..', 'public', 'seat-data.json'),
         path.join(process.cwd(), 'seat-data.json'),
+        '/var/task/public/seat-data.json',
+        '/var/task/seat-data.json',
       ];
       
       // Try to get __dirname equivalent for ES modules
@@ -857,20 +861,27 @@ async function loadStudentData() {
         const currentFilePath = fileURLToPath(currentFileUrl);
         const currentDir = path.dirname(currentFilePath);
         possiblePaths.unshift(path.join(currentDir, '..', 'public', 'seat-data.json'));
+        console.log(`[loadStudentData] __dirname: ${currentDir}`);
       } catch (e) {
-        // __dirname not available, continue with other paths
+        console.log(`[loadStudentData] Could not get __dirname: ${e.message}`);
       }
+      
+      console.log(`[loadStudentData] Trying paths:`, possiblePaths);
       
       for (const tryPath of possiblePaths) {
         try {
+          console.log(`[loadStudentData] Checking: ${tryPath}`);
           if (fs.existsSync(tryPath)) {
+            console.log(`[loadStudentData] ✓ Found file at: ${tryPath}`);
             fileContent = fs.readFileSync(tryPath, 'utf-8');
             loadMethod = `File: ${tryPath}`;
             console.log(`[loadStudentData] ✓ Successfully loaded from file system: ${tryPath} (${fileContent.length} bytes)`);
             break;
+          } else {
+            console.log(`[loadStudentData] ✗ File does not exist: ${tryPath}`);
           }
         } catch (e) {
-          console.log(`[loadStudentData] File system error for ${tryPath}: ${e.message}`);
+          console.log(`[loadStudentData] ✗ File system error for ${tryPath}: ${e.message}`);
           continue;
         }
       }
