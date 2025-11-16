@@ -1199,30 +1199,32 @@ function enhanceMatchesWithPreloadedStudentInfo(matches, studentInfo) {
     console.log(`[enhanceMatchesWithPreloadedStudentInfo] studentInfo.department type: ${typeof studentInfo.department}, value: ${studentInfo.department}`);
   }
   
-  // Add name and student department to each match (preserve exam department)
+  // Add name from JSON, use API department (from exam seating data)
+  // Ensure both name and venue details are preserved
   const enhanced = matches.map(match => {
-    // Use studentInfo.name if it exists (even if it's an empty string, use it)
+    // Use studentInfo.name from JSON if it exists
     // Only fall back to match.name if studentInfo.name is null/undefined
     const finalName = studentInfo && studentInfo.name !== null && studentInfo.name !== undefined
       ? studentInfo.name
       : (match.name || null);
     
-    const finalDept = studentInfo && studentInfo.department !== null && studentInfo.department !== undefined
-      ? studentInfo.department
-      : null;
+    // Use API department (from match.department) - this comes from exam seating data
+    // This is the department from the exam (e.g., "CSE" from "CSE/21MAB201T")
+    const finalDept = match.department || null;
     
+    // Preserve all venue details from API
     return {
-      ...match,
-      name: finalName,
-      studentDepartment: finalDept, // Student's department from JSON
-      // Keep match.department as the exam department (e.g., "CSE" from "CSE/21MAB201T")
+      ...match, // This includes all venue details: hall, bench, session, subjectCode, etc.
+      name: finalName, // Name from JSON
+      department: finalDept, // Department from API (exam department)
+      // Keep all other API fields: hall, bench, session, subjectCode, context, url, etc.
     };
   });
   
   // Log first match for debugging
   if (enhanced.length > 0) {
     const firstMatch = enhanced[0];
-    console.log(`[enhanceMatchesWithPreloadedStudentInfo] First match enhanced: Name=${firstMatch.name || 'N/A'}, Dept=${firstMatch.studentDepartment || 'N/A'}, ExamDept=${firstMatch.department || 'N/A'}`);
+    console.log(`[enhanceMatchesWithPreloadedStudentInfo] First match enhanced: Name=${firstMatch.name || 'N/A'}, Dept=${firstMatch.department || 'N/A'}, Hall=${firstMatch.hall || 'N/A'}, Bench=${firstMatch.bench || 'N/A'}, Session=${firstMatch.session || 'N/A'}`);
   }
   
   return enhanced;
