@@ -149,14 +149,14 @@
 }
 
 html {
-  background: #020202; /* Fallback for mobile */
+  background-color: #020202; /* Fallback for mobile */
   background-color: var(--bg-primary, #020202);
 }
 
 body {
   margin: 0;
   font-family: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  background: #020202; /* Fallback for mobile */
+  background-color: #020202; /* Fallback for mobile */
   background-color: var(--bg-primary, #020202);
   color: #f5f5f5; /* Fallback for mobile */
   color: var(--text-primary, #f5f5f5);
@@ -175,7 +175,7 @@ body {
   padding: 12px clamp(12px, 2vw, 24px);
   height: 100vh;
   overflow: hidden;
-  background: #020202; /* Fallback for mobile */
+  background-color: #020202; /* Fallback for mobile */
   background-color: var(--bg-primary, #020202);
 }
 
