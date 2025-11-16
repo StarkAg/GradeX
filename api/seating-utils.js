@@ -16,7 +16,8 @@ const CAMPUS_ENDPOINTS = {
   },
   'Tech Park 2': {
     base: 'https://examcell.srmist.edu.in/tp2/seating/bench',
-    fetchData: 'https://examcell.srmist.edu.in/tp2/seating/bench/fetch_data.php'
+    fetchData: 'https://examcell.srmist.edu.in/tp2/seating/bench/fetch_data.php',
+    report: 'https://examcell.srmist.edu.in/tp2/seating/bench/report.php'
   },
   'Biotech & Architecture': {
     base: 'https://examcell.srmist.edu.in/bio/seating/bench',
@@ -715,11 +716,13 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
       }
     }
     
-    // Fallback: Try GET request to base URL
+    // Fallback: Try GET request to report.php (prioritize explicit report endpoint if available)
     if (!html || html.length < 5000) {
       try {
-        html = await fetchPage(`${campusConfig.base}/report.php`, 12000, 1);
-        fetchUrl = `${campusConfig.base}/report.php`;
+        // Use explicit report endpoint if available, otherwise construct from base
+        const reportUrl = campusConfig.report || `${campusConfig.base}/report.php`;
+        html = await fetchPage(reportUrl, 12000, 1);
+        fetchUrl = reportUrl;
       } catch (e) {
         // 404 errors are expected for some campuses - log as warning, not error
         if (e.message && e.message.includes('404')) {
