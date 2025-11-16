@@ -430,6 +430,31 @@ export default function SeatFinder() {
                   v3.0
                 </span>
               </div>
+              {/* Live Real-Time Tagline */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                marginTop: '8px'
+              }}>
+                <div style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: '#22c55e',
+                  animation: 'livePulse 2s ease-in-out infinite',
+                  boxShadow: '0 0 0 0 rgba(34, 197, 94, 0.7)'
+                }}></div>
+                <span style={{
+                  fontSize: 'clamp(11px, 2.8vw, 13px)',
+                  fontWeight: 500,
+                  color: '#22c55e',
+                  letterSpacing: '0.03em'
+                }}>
+                  Live Real-Time Fetch
+                </span>
+              </div>
             </div>
           )}
           
