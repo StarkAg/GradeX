@@ -131,12 +131,54 @@ export default function SeatFinder() {
     setSeatInfo(null);
   };
 
+  // Validate RA number format
+  const validateRA = (ra) => {
+    const trimmed = ra.trim().toUpperCase();
+    
+    // Check if empty
+    if (!trimmed) {
+      return { valid: false, error: 'Please enter your register number' };
+    }
+    
+    // Check if starts with RA
+    if (!trimmed.startsWith('RA')) {
+      return { valid: false, error: 'Register number must start with "RA"' };
+    }
+    
+    // Check minimum length (RA + at least 10 digits = 12 characters minimum)
+    // Full RA format: RA + 2 digits (year) + 8+ digits = RA + 10+ digits
+    if (trimmed.length < 12) {
+      return { valid: false, error: 'Register number is incomplete. Please enter the full RA number (e.g., RA2311003012124)' };
+    }
+    
+    // Check if it's a valid format (RA followed by digits)
+    const raPattern = /^RA\d{10,}$/;
+    if (!raPattern.test(trimmed)) {
+      return { valid: false, error: 'Invalid register number format. Must be RA followed by numbers (e.g., RA2311003012124)' };
+    }
+    
+    return { valid: true, error: null };
+  };
+
   const handleRegisterNumberChange = (e) => {
     // Convert to uppercase for consistency, but allow any case input
     const value = e.target.value.toUpperCase();
     setRegisterNumber(value);
-    setError(null);
+    
+    // Clear previous errors and seat info
     setSeatInfo(null);
+    
+    // Real-time validation feedback (only show error if user has typed something and it's incomplete)
+    if (value.trim().length > 0) {
+      const validation = validateRA(value);
+      if (!validation.valid && value.trim().length >= 3) { // Only show error if they've typed at least "RA" + 1 char
+        setError(validation.error);
+      } else {
+        setError(null);
+      }
+    } else {
+      setError(null);
+    }
   };
 
   // Fetch from live API
@@ -360,8 +402,12 @@ export default function SeatFinder() {
   };
 
   const handleFindSeat = async () => {
-    if (!registerNumber.trim()) {
-      setError('Please enter your register number');
+    // Validate RA number
+    const validation = validateRA(registerNumber);
+    if (!validation.valid) {
+      setError(validation.error);
+      setSeatInfo(null);
+      setApiResults(null);
       return;
     }
 
@@ -799,7 +845,9 @@ export default function SeatFinder() {
                 width: '100%',
                 padding: 'clamp(12px, 3vw, 14px) clamp(14px, 4vw, 16px)',
                 fontSize: 'clamp(14px, 3.5vw, 16px)',
-                border: '1px solid var(--border-color)',
+                border: error && registerNumber.trim().length >= 3 
+                  ? '1px solid #ef4444' 
+                  : '1px solid var(--border-color)',
                 borderRadius: '8px',
                 background: 'var(--bg-primary)',
                 color: 'var(--text-primary)',
@@ -810,10 +858,20 @@ export default function SeatFinder() {
                 minHeight: '44px'
               }}
               onFocus={(e) => {
-                e.currentTarget.style.borderColor = 'var(--text-primary)';
+                const validation = validateRA(registerNumber);
+                if (!validation.valid && registerNumber.trim().length >= 3) {
+                  e.currentTarget.style.borderColor = '#ef4444';
+                } else {
+                  e.currentTarget.style.borderColor = 'var(--text-primary)';
+                }
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = 'var(--border-color)';
+                const validation = validateRA(registerNumber);
+                if (!validation.valid && registerNumber.trim().length >= 3) {
+                  e.currentTarget.style.borderColor = '#ef4444';
+                } else {
+                  e.currentTarget.style.borderColor = 'var(--border-color)';
+                }
               }}
             />
           </div>
