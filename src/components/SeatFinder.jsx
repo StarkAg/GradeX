@@ -449,9 +449,15 @@ export default function SeatFinder() {
     const foundSeats = normalizedSelectedDate 
       ? allMatchingSeats.filter(seat => {
           const seatDate = normalizeDate(seat.date);
-          return seatDate === normalizedSelectedDate || !seatDate || seatDate === '';
+          const matchesDate = seatDate === normalizedSelectedDate || !seatDate || seatDate === '';
+          // Also filter out entries with no room information (incomplete data)
+          const hasRoomInfo = seat.room && seat.room !== null && seat.room !== '-';
+          return matchesDate && hasRoomInfo;
         })
-      : allMatchingSeats;
+      : allMatchingSeats.filter(seat => {
+          // Filter out entries with no room information even when no date specified
+          return seat.room && seat.room !== null && seat.room !== '-';
+        });
     
     // Helper function to format room and extract floor
     const formatRoomAndFloor = (room, existingBuilding = null) => {
