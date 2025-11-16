@@ -463,7 +463,7 @@ export default function SeatFinder() {
     if (allMatchingSeats.length === 0) {
       setError('Register number not found');
       setSeatInfo(null);
-      return;
+      return []; // Return empty array instead of undefined
     }
     
     const permanentData = {
