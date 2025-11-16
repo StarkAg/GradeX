@@ -13,12 +13,17 @@ const __dirname = path.dirname(__filename);
 
 // Get Supabase credentials from environment variables
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
+// Prefer service role key/access token over anon key (for write operations)
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY 
+  || process.env.SUPABASE_ACCESS_TOKEN
+  || process.env.SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  console.error('Error: SUPABASE_URL and SUPABASE_ANON_KEY environment variables are required');
+  console.error('Error: SUPABASE_URL and SUPABASE_ANON_KEY (or SUPABASE_SERVICE_ROLE_KEY/SUPABASE_ACCESS_TOKEN) environment variables are required');
   console.log('\nPlease set them:');
   console.log('export SUPABASE_URL="your-supabase-url"');
+  console.log('export SUPABASE_ACCESS_TOKEN="your-access-token"');
+  console.log('  OR');
   console.log('export SUPABASE_ANON_KEY="your-supabase-anon-key"');
   process.exit(1);
 }
