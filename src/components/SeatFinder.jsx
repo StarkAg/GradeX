@@ -553,20 +553,55 @@ export default function SeatFinder() {
 
     try {
       if (useLiveAPI) {
-        let foundInLiveAPI = false;
+        let liveApiSeats = [];
         try {
-          foundInLiveAPI = await fetchFromLiveAPI(registerNumber.trim(), selectedDate);
-          // If live API found results, we're done
-          if (foundInLiveAPI) {
-            return;
+          const foundInLiveAPI = await fetchFromLiveAPI(registerNumber.trim(), selectedDate);
+          // Store live API results if found
+          if (foundInLiveAPI && seatInfo && seatInfo.length > 0) {
+            liveApiSeats = [...seatInfo];
+            console.log(`✅ Found ${liveApiSeats.length} seat(s) from live API`);
           }
         } catch (apiErr) {
-          console.warn('Live API failed, falling back to static data:', apiErr.message);
+          console.warn('Live API failed, will try static data:', apiErr.message);
         }
-        // Fallback to static data if live API didn't find results
-        if (!foundInLiveAPI) {
-          console.log('Falling back to static data...');
+        
+        // Always check static data to find additional results (e.g., different sessions)
+        console.log('Checking static data for additional results...');
+        const tempSeatInfo = seatInfo; // Save current state
+        setSeatInfo(null); // Reset to allow fetchFromStaticData to work
+        try {
           await fetchFromStaticData(registerNumber.trim(), selectedDate);
+          const staticSeats = seatInfo || [];
+          
+          // Merge results from both sources
+          const allSeats = [...liveApiSeats];
+          staticSeats.forEach(staticSeat => {
+            // Only add if not already present (avoid duplicates)
+            const isDuplicate = allSeats.some(existing => 
+              existing.room === staticSeat.room && 
+              existing.session === staticSeat.session &&
+              existing.bench === staticSeat.bench
+            );
+            if (!isDuplicate) {
+              allSeats.push(staticSeat);
+            }
+          });
+          
+          if (allSeats.length > 0) {
+            console.log(`✅ Total seats found: ${allSeats.length} (${liveApiSeats.length} live + ${staticSeats.length} static)`);
+            setSeatInfo(allSeats);
+            setError(null);
+          } else if (liveApiSeats.length === 0 && staticSeats.length === 0) {
+            setSeatInfo(null);
+            setError('No seating information found for this register number and date.');
+          }
+        } catch (staticErr) {
+          console.warn('Static data fetch failed:', staticErr);
+          // If we have live API results, use those
+          if (liveApiSeats.length > 0) {
+            setSeatInfo(liveApiSeats);
+            setError(null);
+          }
         }
       } else {
         await fetchFromStaticData(registerNumber.trim(), selectedDate);
