@@ -576,15 +576,7 @@ export default function SeatFinder() {
       margin: '0 auto',
       padding: '0',
       minHeight: 'calc(100vh - 60px)',
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      backgroundColor: '#020202', // Hardcoded fallback for mobile
-      color: '#f5f5f5', // Hardcoded fallback for mobile
-      // Ensure visibility on mobile
-      position: 'relative',
-      zIndex: 1,
-      display: 'block',
-      visibility: 'visible',
-      opacity: 1
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
     }}>
       <div style={{
         display: isDesktop && hasSeatInfo ? 'flex' : 'block',
@@ -1192,11 +1184,7 @@ export default function SeatFinder() {
                   flexDirection: hasImage ? (isMobile ? 'column' : 'row') : 'column'
                 }}>
                   {hasImage ? (() => {
-                    // Check for VPT first (most specific)
-                    const hasTPVPT = seat.context && seat.context.toUpperCase().includes('TPVPT');
-                    const isVPT = hasTPVPT || roomUpper.includes('VPT') || roomUpper.includes('TPVPT');
-                    
-                    if (isVPT) {
+                    if (roomUpper.startsWith('TP2')) {
                       return (
                         <div style={{
                           flexShrink: 0,
@@ -1207,8 +1195,8 @@ export default function SeatFinder() {
                           position: 'relative'
                         }}>
                           <img 
-                            src="/VPT.JPG" 
-                            alt="VPT Venue Map" 
+                            src="/TP2.JPG" 
+                            alt="TP2 Venue Map" 
                             style={{
                               width: '100%',
                               height: 'auto',
@@ -1237,7 +1225,7 @@ export default function SeatFinder() {
                           />
                         </div>
                       );
-                    } else if (roomUpper.startsWith('TP2')) {
+                    } else if (hasTPVPT || roomUpper.includes('VPT') || roomUpper.includes('TPVPT')) {
                       return (
                         <div style={{
                           flexShrink: 0,
@@ -1248,8 +1236,8 @@ export default function SeatFinder() {
                           position: 'relative'
                         }}>
                           <img 
-                            src="/TP2.JPG" 
-                            alt="TP2 Venue Map" 
+                            src="/VPT.JPG" 
+                            alt="VPT Venue Map" 
                             style={{
                               width: '100%',
                               height: 'auto',
