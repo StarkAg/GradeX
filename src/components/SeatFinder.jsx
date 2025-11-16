@@ -164,16 +164,21 @@ export default function SeatFinder() {
         campusResults.forEach(result => {
           if (result.matched) {
             // Format room name: TPTP-401 -> TP-401, TPVPT-301 -> VPT-301
+            // Special case: TPVPT-028 -> Valliammai Block Behind TP, Ground Floor
             let formattedRoom = result.hall || '-';
-            if (formattedRoom.startsWith('TPTP-')) {
+            let floorNumber = '-';
+            
+            if (formattedRoom === 'TPVPT-028') {
+              formattedRoom = 'Valliammai Block Behind TP';
+              floorNumber = 'Ground Floor';
+            } else if (formattedRoom.startsWith('TPTP-')) {
               formattedRoom = formattedRoom.replace('TPTP-', 'TP-');
             } else if (formattedRoom.startsWith('TPVPT-')) {
               formattedRoom = formattedRoom.replace('TPVPT-', 'VPT-');
             }
             
             // Extract floor number from room name (e.g., TP-401 -> 4th, H301F -> 3rd)
-            let floorNumber = '-';
-            if (formattedRoom !== '-') {
+            if (formattedRoom !== '-' && floorNumber === '-') {
               // Extract number from room name (e.g., TP-401, UB604, H301F, 1504)
               const floorMatch = formattedRoom.match(/(\d+)/);
               if (floorMatch) {
@@ -276,38 +281,45 @@ export default function SeatFinder() {
       }
       
       // Format room name: TPTP-401 -> TP-401, TPVPT-301 -> VPT-301
+      // Special case: TPVPT-028 -> Valliammai Block Behind TP, Ground Floor
       let formattedRoom = room;
-      if (formattedRoom.startsWith('TPTP-')) {
+      let floorNumber = '-';
+      
+      if (formattedRoom === 'TPVPT-028') {
+        formattedRoom = 'Valliammai Block Behind TP';
+        floorNumber = 'Ground Floor';
+      } else if (formattedRoom.startsWith('TPTP-')) {
         formattedRoom = formattedRoom.replace('TPTP-', 'TP-');
       } else if (formattedRoom.startsWith('TPVPT-')) {
         formattedRoom = formattedRoom.replace('TPVPT-', 'VPT-');
       }
       
       // Extract floor number from room name (e.g., TP-401 -> 4th, H301F -> 3rd, VPT-301 -> 3rd)
-      let floorNumber = '-';
-      const floorMatch = formattedRoom.match(/(\d+)/);
-      if (floorMatch) {
-        const numStr = floorMatch[1];
-        // Check if room starts with letter(s) followed by number (e.g., H301F, S45, UB604, VPT-301)
-        const letterNumberPattern = /^[A-Z]+[-]?(\d+)/;
-        const letterMatch = formattedRoom.match(letterNumberPattern);
-        
-        if (letterMatch || formattedRoom.startsWith('VPT-')) {
-          // For H301F, S45, UB604, VPT-301 - first digit after letter is floor
-          const firstDigit = parseInt(numStr.charAt(0));
-          floorNumber = `${firstDigit}th`;
-        } else if (formattedRoom.startsWith('TP-')) {
-          // For TP-401, the first digit is the floor (4)
-          const firstDigit = parseInt(numStr.charAt(0));
-          floorNumber = `${firstDigit}th`;
-        } else {
-          // For 1504 (pure number), first two digits might be floor (15)
-          if (numStr.length >= 2) {
-            const firstTwo = parseInt(numStr.substring(0, 2));
-            floorNumber = `${firstTwo}th`;
-          } else {
+      if (floorNumber === '-') {
+        const floorMatch = formattedRoom.match(/(\d+)/);
+        if (floorMatch) {
+          const numStr = floorMatch[1];
+          // Check if room starts with letter(s) followed by number (e.g., H301F, S45, UB604, VPT-301)
+          const letterNumberPattern = /^[A-Z]+[-]?(\d+)/;
+          const letterMatch = formattedRoom.match(letterNumberPattern);
+          
+          if (letterMatch || formattedRoom.startsWith('VPT-')) {
+            // For H301F, S45, UB604, VPT-301 - first digit after letter is floor
             const firstDigit = parseInt(numStr.charAt(0));
             floorNumber = `${firstDigit}th`;
+          } else if (formattedRoom.startsWith('TP-')) {
+            // For TP-401, the first digit is the floor (4)
+            const firstDigit = parseInt(numStr.charAt(0));
+            floorNumber = `${firstDigit}th`;
+          } else {
+            // For 1504 (pure number), first two digits might be floor (15)
+            if (numStr.length >= 2) {
+              const firstTwo = parseInt(numStr.substring(0, 2));
+              floorNumber = `${firstTwo}th`;
+            } else {
+              const firstDigit = parseInt(numStr.charAt(0));
+              floorNumber = `${firstDigit}th`;
+            }
           }
         }
       }
