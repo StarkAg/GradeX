@@ -128,6 +128,7 @@ npm run preview
 ### Backend (Seat Finder API)
 - **Node.js**: Serverless functions
 - **Vercel Functions**: API endpoints
+- **Supabase**: PostgreSQL database for student data (6,177+ records)
 - **HTML Scraping**: Real-time data extraction from SRM exam cell
 - **In-Memory Caching**: 5-minute TTL for optimal performance
 - **Multi-Campus Support**: Parallel fetching from 4 campus endpoints
