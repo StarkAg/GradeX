@@ -810,8 +810,8 @@ export function setCachedResult(ra, date, data) {
 }
 
 /**
- * Load student data from seat-data.json
- * @returns {Promise<Map>} - Map of RA -> {name, department}
+ * Load student data from Supabase (primary) or seat-data.json (fallback)
+ * @returns {Promise<Map>} - Map of RA -> {name}
  */
 async function loadStudentData() {
   // Return cached data if already loaded and valid (not empty)
@@ -834,11 +834,55 @@ async function loadStudentData() {
   
   // Start loading
   studentDataLoadPromise = (async () => {
-    let fileContent = null;
+    let studentData = null;
     let loadMethod = 'unknown';
     
     try {
-      // STRATEGY 0: Try createRequire (works in Node.js serverless functions)
+      // STRATEGY 0: Try Supabase first (most reliable)
+      try {
+        console.log(`[loadStudentData] Attempting to load from Supabase...`);
+        const { supabase, isSupabaseConfigured } = await import('./supabase-client.js');
+        
+        if (isSupabaseConfigured() && supabase) {
+          const { data, error } = await supabase
+            .from('students')
+            .select('register_number, name');
+          
+          if (error) {
+            console.log(`[loadStudentData] Supabase error: ${error.message}`);
+          } else if (data && data.length > 0) {
+            // Convert to Map
+            const lookup = new Map();
+            data.forEach(entry => {
+              if (entry.register_number && entry.name) {
+                const ra = normalizeRA(entry.register_number);
+                if (ra) {
+                  lookup.set(ra, {
+                    name: entry.name || null,
+                  });
+                }
+              }
+            });
+            
+            studentData = lookup;
+            loadMethod = 'Supabase';
+            console.log(`[loadStudentData] ✓ Successfully loaded ${lookup.size} records from Supabase`);
+          } else {
+            console.log(`[loadStudentData] Supabase returned no data`);
+          }
+        } else {
+          console.log(`[loadStudentData] Supabase not configured, trying fallback...`);
+        }
+      } catch (supabaseError) {
+        console.log(`[loadStudentData] Supabase failed: ${supabaseError.message}`);
+      }
+      
+      // STRATEGY 1: Fallback to JSON file if Supabase failed
+      if (!studentData || studentData.size === 0) {
+        console.log(`[loadStudentData] Falling back to JSON file...`);
+        let fileContent = null;
+        
+        // Try createRequire (works in Node.js serverless functions)
       try {
         console.log(`[loadStudentData] Attempting createRequire...`);
         const { createRequire } = await import('module');
@@ -1037,73 +1081,85 @@ async function loadStudentData() {
         }
       }
       
+      // Process JSON file content if we got it
       if (!fileContent) {
         const errorMsg = `[loadStudentData] ✗ Failed to load seat-data.json from any source`;
         console.error(errorMsg);
-        throw new Error(errorMsg);
-      }
-      
-      // Read and parse the JSON file
-      let seatData;
-      try {
-        seatData = JSON.parse(fileContent);
-      } catch (parseError) {
-        console.error(`[loadStudentData] JSON parse error: ${parseError.message}`);
-        throw new Error(`Failed to parse seat-data.json: ${parseError.message}`);
-      }
-      
-      if (!Array.isArray(seatData)) {
-        throw new Error(`seat-data.json is not an array. Got: ${typeof seatData}`);
-      }
-      
-      console.log(`[loadStudentData] ✓ Parsed JSON successfully: ${seatData.length} entries (loaded via ${loadMethod})`);
-      
-      // Create a lookup map: RA -> {name} (only name from JSON, department comes from API)
-      const lookup = new Map();
-      let entriesWithNames = 0;
-      
-      seatData.forEach((entry, index) => {
-        if (!entry || typeof entry !== 'object') {
-          console.log(`[loadStudentData] Skipping invalid entry at index ${index}`);
-          return;
+        // Don't throw - return empty map if both Supabase and JSON fail
+        studentData = new Map();
+        loadMethod = 'Failed - no data source';
+      } else {
+        // Read and parse the JSON file
+        let seatData;
+        try {
+          seatData = JSON.parse(fileContent);
+        } catch (parseError) {
+          console.error(`[loadStudentData] JSON parse error: ${parseError.message}`);
+          studentData = new Map();
+          loadMethod = 'JSON parse error';
         }
         
-        if (entry.registerNumber && entry.name) {
-          const ra = normalizeRA(entry.registerNumber);
-          if (ra) {
-            // Store the first occurrence or update if we have better data
-            if (!lookup.has(ra) || (entry.name && !lookup.get(ra).name)) {
-              lookup.set(ra, {
-                name: entry.name || null,
-                // Department removed - comes from API only
-              });
-              if (entry.name) entriesWithNames++;
+        if (seatData && Array.isArray(seatData)) {
+          console.log(`[loadStudentData] ✓ Parsed JSON successfully: ${seatData.length} entries (loaded via ${loadMethod})`);
+          
+          // Create a lookup map: RA -> {name} (only name from JSON, department comes from API)
+          const lookup = new Map();
+          let entriesWithNames = 0;
+          
+          seatData.forEach((entry, index) => {
+            if (!entry || typeof entry !== 'object') {
+              console.log(`[loadStudentData] Skipping invalid entry at index ${index}`);
+              return;
             }
-          }
+            
+            if (entry.registerNumber && entry.name) {
+              const ra = normalizeRA(entry.registerNumber);
+              if (ra) {
+                // Store the first occurrence or update if we have better data
+                if (!lookup.has(ra) || (entry.name && !lookup.get(ra).name)) {
+                  lookup.set(ra, {
+                    name: entry.name || null,
+                    // Department removed - comes from API only
+                  });
+                  if (entry.name) entriesWithNames++;
+                }
+              }
+            }
+          });
+          
+          studentData = lookup;
+          loadMethod = `JSON: ${loadMethod}`;
+          console.log(`[loadStudentData] ✓ Created lookup map: ${lookup.size} unique RAs`);
+          console.log(`[loadStudentData]   - Entries with names: ${entriesWithNames}`);
+        } else {
+          console.error(`[loadStudentData] JSON is not an array or invalid`);
+          studentData = new Map();
         }
-      });
-      
-      console.log(`[loadStudentData] ✓ Created lookup map: ${lookup.size} unique RAs`);
-      console.log(`[loadStudentData]   - Entries with names: ${entriesWithNames}`);
-      
-      // Test lookup with a known RA
+      }
+    }
+    
+    // Test lookup with a known RA
+    if (studentData && studentData.size > 0) {
       const testRA = 'RA2311003012124';
-      const testResult = lookup.get(normalizeRA(testRA));
+      const testResult = studentData.get(normalizeRA(testRA));
       if (testResult) {
         console.log(`[loadStudentData] ✓ Test lookup for ${testRA}: Name=${testResult.name || 'N/A'}`);
       } else {
         console.log(`[loadStudentData] ⚠ Test lookup for ${testRA}: NOT FOUND`);
       }
-      
-      // Only cache if we have valid data
-      if (lookup.size > 0) {
-        studentDataCache = lookup;
-        console.log(`[loadStudentData] ✓ Cached ${lookup.size} student records`);
-      } else {
-        console.error(`[loadStudentData] ⚠ No valid student data found - not caching empty map`);
-        studentDataCache = null; // Don't cache empty data
-      }
-      return lookup;
+    }
+    
+    // Only cache if we have valid data
+    if (studentData && studentData.size > 0) {
+      studentDataCache = studentData;
+      console.log(`[loadStudentData] ✓ Cached ${studentData.size} student records (loaded via ${loadMethod})`);
+    } else {
+      console.error(`[loadStudentData] ⚠ No valid student data found - not caching empty map`);
+      studentDataCache = null; // Don't cache empty data
+      studentData = new Map(); // Return empty map instead of null
+    }
+    
+    return studentData || new Map();
     } catch (error) {
       console.error('[loadStudentData] Error loading student data:', error);
       // Don't cache empty map on error - set to null so we retry next time
