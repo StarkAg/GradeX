@@ -268,30 +268,70 @@ export default function App() {
       <div className="app-container" style={{ opacity: showSplash ? 0 : 1, transition: 'opacity 0.5s ease-in' }}>
       <header className="app-header single">
           <div>
-            <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px', position: 'relative' }}>
               GradeX
-              <img 
-                src="/arc-reactor.png" 
-                alt="Arc Reactor" 
-                onClick={togglePlay}
-                style={{ 
-                  width: '1em', 
-                  height: '1em', 
-                  display: 'inline-block', 
-                  verticalAlign: 'baseline',
-                  objectFit: 'contain',
-                  cursor: 'pointer',
-                  transition: 'opacity 0.2s ease, filter 0.2s ease',
-                  filter: theme === 'light' ? 'invert(1)' : 'none'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = '0.7';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = '1';
-                }}
-                title="Easter Egg - Click to play"
-              />
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <img 
+                  src="/arc-reactor.png" 
+                  alt="Arc Reactor" 
+                  onClick={togglePlay}
+                  style={{ 
+                    width: '1em', 
+                    height: '1em', 
+                    display: 'inline-block', 
+                    verticalAlign: 'baseline',
+                    objectFit: 'contain',
+                    cursor: 'pointer',
+                    transition: 'opacity 0.2s ease, filter 0.2s ease',
+                    filter: theme === 'light' ? 'invert(1)' : 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = '0.7';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = '1';
+                  }}
+                  title="Easter Egg - Click to play"
+                />
+                {/* Subtle Easter Egg Hint */}
+                <div style={{
+                  position: 'absolute',
+                  top: '-12px',
+                  left: 'calc(100% + 8px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  opacity: 0.4,
+                  pointerEvents: 'none',
+                  animation: 'fadeInOut 3s ease-in-out infinite',
+                  whiteSpace: 'nowrap'
+                }}>
+                  <span style={{
+                    fontSize: '9px',
+                    color: 'var(--text-secondary)',
+                    fontWeight: 400
+                  }}>
+                    Check for easter eggs
+                  </span>
+                  <svg 
+                    width="10" 
+                    height="10" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2.5" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                    style={{
+                      color: 'var(--text-secondary)',
+                      animation: 'arrowBounce 1.5s ease-in-out infinite'
+                    }}
+                  >
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </div>
+              </div>
               <span style={{ fontSize: '14px', fontWeight: 400, color: 'var(--text-secondary)' }}>
                 By Stark
               </span>

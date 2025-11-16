@@ -35,6 +35,24 @@
   }
 }
 
+@keyframes fadeInOut {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes arrowBounce {
+  0%, 100% {
+    transform: rotate(180deg) translateX(0);
+  }
+  50% {
+    transform: rotate(180deg) translateX(-4px);
+  }
+}
+
 @keyframes reactorPulse {
   0%, 100% {
     transform: scale(1);
