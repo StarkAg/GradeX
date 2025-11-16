@@ -574,18 +574,13 @@ export default function SeatFinder() {
         }
         
         // Always check static data to find additional results (e.g., different sessions)
-        console.log('Checking static data for additional results...');
+        console.log('🔍 Checking static data for additional results...');
         let staticSeats = [];
         try {
-          // Temporarily prevent fetchFromStaticData from setting state
-          // We'll merge and set state ourselves
-          const prevSetSeatInfo = setSeatInfo;
-          let tempSeatInfo = null;
-          const tempSetSeatInfo = (seats) => { tempSeatInfo = seats; };
-          
           // Call fetchFromStaticData but capture return value
+          // Note: fetchFromStaticData will set seatInfo internally, but we'll override it with merged results
           staticSeats = await fetchFromStaticData(registerNumber.trim(), selectedDate);
-          console.log(`✅ Found ${staticSeats.length} seat(s) from static data`);
+          console.log(`✅ Found ${staticSeats.length} seat(s) from static data:`, staticSeats.map(s => `${s.room} (${s.session})`));
           
           // Merge results from both sources
           const allSeats = [...liveApiSeats];
