@@ -160,6 +160,22 @@ export default function SeatFinder() {
   };
 
   // Validate RA number format
+  // Helper function to format floor number with correct ordinal suffix
+  const formatFloorNumber = (num) => {
+    if (num === 0) return 'Ground Floor';
+    const lastDigit = num % 10;
+    const lastTwoDigits = num % 100;
+    
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
+      return `${num}th`;
+    }
+    
+    if (lastDigit === 1) return `${num}st`;
+    if (lastDigit === 2) return `${num}nd`;
+    if (lastDigit === 3) return `${num}rd`;
+    return `${num}th`;
+  };
+
   const validateRA = (ra) => {
     const trimmed = ra.trim().toUpperCase();
     
@@ -313,6 +329,11 @@ export default function SeatFinder() {
               formattedRoom = formattedRoom.replace('TPVPT-', 'VPT-');
             }
             
+            // CLS and LS rooms are in Tech Park 2
+            if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS')) {
+              buildingName = 'Tech Park 2';
+            }
+            
             // Extract floor number from room name (e.g., TP-401 -> 4th, H301F -> 3rd)
             if (formattedRoom !== '-' && floorNumber === '-') {
               // Extract number from room name (e.g., TP-401, UB604, H301F, 1504)
@@ -323,22 +344,26 @@ export default function SeatFinder() {
                 const letterNumberPattern = /^[A-Z]+[-]?(\d+)/;
                 const letterMatch = formattedRoom.match(letterNumberPattern);
                 
-                if (letterMatch || formattedRoom.startsWith('VPT-')) {
+                if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS')) {
+                  // For CLS1019, LS2019 - first digit after letters is floor
+                  const firstDigit = parseInt(numStr.charAt(0));
+                  floorNumber = formatFloorNumber(firstDigit);
+                } else if (letterMatch || formattedRoom.startsWith('VPT-')) {
                   // For H301F, S45, UB604, VPT-301 - first digit after letter is floor
                   const firstDigit = parseInt(numStr.charAt(0));
-                  floorNumber = `${firstDigit}th`;
+                  floorNumber = formatFloorNumber(firstDigit);
                 } else if (formattedRoom.startsWith('TP-')) {
                   // For TP-401, the first digit is the floor (4)
                   const firstDigit = parseInt(numStr.charAt(0));
-                  floorNumber = `${firstDigit}th`;
+                  floorNumber = formatFloorNumber(firstDigit);
                 } else {
                   // For 1504 (pure number), first two digits might be floor (15)
                   if (numStr.length >= 2) {
                     const firstTwo = parseInt(numStr.substring(0, 2));
-                    floorNumber = `${firstTwo}th`;
+                    floorNumber = formatFloorNumber(firstTwo);
                   } else {
                     const firstDigit = parseInt(numStr.charAt(0));
-                    floorNumber = `${firstDigit}th`;
+                    floorNumber = formatFloorNumber(firstDigit);
                   }
                 }
               }
@@ -481,6 +506,11 @@ export default function SeatFinder() {
         formattedRoom = formattedRoom.replace('TPVPT-', 'VPT-');
       }
       
+      // CLS and LS rooms are in Tech Park 2
+      if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS')) {
+        buildingName = 'Tech Park 2';
+      }
+      
       // Extract floor number from room name (e.g., TP-401 -> 4th, H301F -> 3rd, VPT-301 -> 3rd)
       if (floorNumber === '-') {
         const floorMatch = formattedRoom.match(/(\d+)/);
@@ -490,22 +520,26 @@ export default function SeatFinder() {
           const letterNumberPattern = /^[A-Z]+[-]?(\d+)/;
           const letterMatch = formattedRoom.match(letterNumberPattern);
           
-          if (letterMatch || formattedRoom.startsWith('VPT-')) {
+          if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS')) {
+            // For CLS1019, LS2019 - first digit after letters is floor
+            const firstDigit = parseInt(numStr.charAt(0));
+            floorNumber = formatFloorNumber(firstDigit);
+          } else if (letterMatch || formattedRoom.startsWith('VPT-')) {
             // For H301F, S45, UB604, VPT-301 - first digit after letter is floor
             const firstDigit = parseInt(numStr.charAt(0));
-            floorNumber = `${firstDigit}th`;
+            floorNumber = formatFloorNumber(firstDigit);
           } else if (formattedRoom.startsWith('TP-')) {
             // For TP-401, the first digit is the floor (4)
             const firstDigit = parseInt(numStr.charAt(0));
-            floorNumber = `${firstDigit}th`;
+            floorNumber = formatFloorNumber(firstDigit);
           } else {
             // For 1504 (pure number), first two digits might be floor (15)
             if (numStr.length >= 2) {
               const firstTwo = parseInt(numStr.substring(0, 2));
-              floorNumber = `${firstTwo}th`;
+              floorNumber = formatFloorNumber(firstTwo);
             } else {
               const firstDigit = parseInt(numStr.charAt(0));
-              floorNumber = `${firstDigit}th`;
+              floorNumber = formatFloorNumber(firstDigit);
             }
           }
         }
@@ -1275,7 +1309,8 @@ export default function SeatFinder() {
                 // Also check the original hall name for TPVPT before it was formatted
                 const originalHallUpper = seat.context && typeof seat.context === 'string' ? seat.context.toUpperCase() : '';
                 const hasTPVPT = originalHallUpper.includes('TPVPT') || roomUpper.includes('VPT') || roomUpper.includes('TPVPT');
-                const hasImage = roomUpper && roomUpper.length > 0 && (roomUpper.startsWith('TP2') || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT);
+                const hasCLSorLS = roomUpper.startsWith('CLS') || roomUpper.startsWith('LS');
+                const hasImage = roomUpper && roomUpper.length > 0 && (roomUpper.startsWith('TP2') || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT || hasCLSorLS);
                 
                 return (
                 <div key={index} style={{
@@ -1290,7 +1325,7 @@ export default function SeatFinder() {
                   flexDirection: hasImage ? (isMobile ? 'column' : 'row') : 'column'
                 }}>
                   {hasImage ? (() => {
-                    if (roomUpper.startsWith('TP2')) {
+                    if (roomUpper.startsWith('TP2') || hasCLSorLS) {
                       return (
                         <div style={{
                           flexShrink: 0,
@@ -1635,7 +1670,8 @@ export default function SeatFinder() {
                 // Also check the original hall name for TPVPT before it was formatted
                 const originalHallUpper = seat.context && typeof seat.context === 'string' ? seat.context.toUpperCase() : '';
                 const hasTPVPT = originalHallUpper.includes('TPVPT') || roomUpper.includes('VPT') || roomUpper.includes('TPVPT');
-                const hasImage = roomUpper && roomUpper.length > 0 && (roomUpper.startsWith('TP2') || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT);
+                const hasCLSorLS = roomUpper.startsWith('CLS') || roomUpper.startsWith('LS');
+                const hasImage = roomUpper && roomUpper.length > 0 && (roomUpper.startsWith('TP2') || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT || hasCLSorLS);
                 
                 return (
                 <div key={index} style={{
@@ -1650,7 +1686,7 @@ export default function SeatFinder() {
                   flexDirection: hasImage ? 'row' : 'column'
                 }}>
                   {hasImage ? (() => {
-                    if (roomUpper.startsWith('TP2')) {
+                    if (roomUpper.startsWith('TP2') || hasCLSorLS) {
                       return (
                         <div style={{
                           flexShrink: 0,

@@ -33290,12 +33290,12 @@
   {
     "registerNumber": "RA2311026010219",
     "name": null,
-    "room": "CLS1019",
-    "floor": "1st",
+    "room": "LH506",
+    "floor": "5th",
     "building": "Tech Park",
-    "subcode": null,
-    "department": null,
-    "bench": null,
+    "subcode": "21ECO101T",
+    "department": "CSE.AI.ML",
+    "bench": "13",
     "date": "17/11/2025",
     "session": "Forenoon"
   }

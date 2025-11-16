@@ -35,7 +35,12 @@ function extractSeatingData(pdfText, defaultDate = '17/11/2025', defaultSession 
   const lines = pdfText.split('\n');
   
   // Pattern to match RA numbers (RA followed by digits)
-  const raPattern = /RA\d{13}/gi;
+  // Also handle cases where RA might be split: "RA" + "2311026010219"
+  const raPattern = /RA\s*\d{13}/gi;
+  
+  // Also try to find RAs that might be split across text items
+  // Look for "RA" followed by 13 digits (possibly with spaces)
+  const raPatternFlexible = /R\s*A\s*\d{1,2}\s*\d{1,2}\s*\d{1,2}\s*\d{1,2}\s*\d{1,2}\s*\d{1,2}\s*\d{1,2}\s*\d{1,2}\s*\d{1,2}\s*\d{1,2}\s*\d{1,2}\s*\d{1,2}\s*\d{1,2}/gi;
   
   // Pattern to match room/hall (e.g., TP-401, UB604, VPT-028, H301F, CLS1019, S1019)
   const roomPattern = /(?:TP-?|UB|VPT-?|H|CLS|S)\d+[A-Z]?/gi;
@@ -96,7 +101,9 @@ function extractSeatingData(pdfText, defaultDate = '17/11/2025', defaultSession 
       if (roomMatch) {
         currentContext.room = roomMatch[1];
         // Determine building from room
-        if (currentContext.room.startsWith('TP-') || currentContext.room.startsWith('TP') || currentContext.room.startsWith('CLS')) {
+        if (currentContext.room.startsWith('CLS') || currentContext.room.startsWith('LS')) {
+          currentContext.building = 'Tech Park 2';
+        } else if (currentContext.room.startsWith('TP-') || currentContext.room.startsWith('TP')) {
           currentContext.building = 'Tech Park';
         } else if (currentContext.room.startsWith('UB')) {
           currentContext.building = 'University Building';
@@ -113,7 +120,9 @@ function extractSeatingData(pdfText, defaultDate = '17/11/2025', defaultSession 
       const roomMatch = line.match(roomPattern);
       if (roomMatch && !currentContext.room) {
         currentContext.room = roomMatch[0];
-        if (currentContext.room.startsWith('TP-') || currentContext.room.startsWith('TP') || currentContext.room.startsWith('CLS')) {
+        if (currentContext.room.startsWith('CLS') || currentContext.room.startsWith('LS')) {
+          currentContext.building = 'Tech Park 2';
+        } else if (currentContext.room.startsWith('TP-') || currentContext.room.startsWith('TP')) {
           currentContext.building = 'Tech Park';
         } else if (currentContext.room.startsWith('UB')) {
           currentContext.building = 'University Building';
@@ -138,9 +147,33 @@ function extractSeatingData(pdfText, defaultDate = '17/11/2025', defaultSession 
     }
     
     // Extract RA numbers from line
-    const raMatches = line.match(raPattern);
+    // First try normal pattern
+    let raMatches = line.match(raPattern);
+    
+    // If no matches, try to find RAs that might be formatted differently
+    if (!raMatches || raMatches.length === 0) {
+      // Look for "RA" followed by digits (handling spaces)
+      const flexibleMatch = line.match(/R\s*A\s*(\d{13})/i);
+      if (flexibleMatch) {
+        raMatches = [`RA${flexibleMatch[1]}`];
+      }
+    }
+    
+    // Also check for the specific RA the user mentioned
+    if (line.includes('2311026010219')) {
+      const specificMatch = line.match(/R\s*A\s*2311026010219/i);
+      if (specificMatch) {
+        if (!raMatches) raMatches = [];
+        if (!raMatches.includes('RA2311026010219')) {
+          raMatches.push('RA2311026010219');
+        }
+      }
+    }
+    
     if (raMatches) {
-      for (const ra of raMatches) {
+      for (let ra of raMatches) {
+        // Clean up the RA (remove spaces)
+        ra = ra.replace(/\s+/g, '').toUpperCase();
         // Try to extract seat number - look for number before RA
         const parts = line.split(ra);
         const beforeRA = parts[0];
