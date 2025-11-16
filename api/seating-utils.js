@@ -14,6 +14,10 @@ const CAMPUS_ENDPOINTS = {
     base: 'https://examcell.srmist.edu.in/tp/seating/bench',
     fetchData: 'https://examcell.srmist.edu.in/tp/seating/bench/fetch_data.php'
   },
+  'Tech Park 2': {
+    base: 'https://examcell.srmist.edu.in/tp2/seating/bench',
+    fetchData: 'https://examcell.srmist.edu.in/tp2/seating/bench/fetch_data.php'
+  },
   'Biotech & Architecture': {
     base: 'https://examcell.srmist.edu.in/bio/seating/bench',
     fetchData: 'https://examcell.srmist.edu.in/bio/seating/bench/fetch_data.php'
