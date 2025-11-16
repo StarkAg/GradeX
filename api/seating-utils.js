@@ -259,16 +259,32 @@ export function extractSeatingRows(html, targetRA = null) {
     // This prevents matching similar RAs (e.g., RA2311026010094 vs RA2311056010094)
     const escapedRA = targetRA.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     // Use word boundary or HTML tag boundary to ensure exact match
-    const raPattern = new RegExp(`(?:>|"|'|\\b|\\s)(${escapedRA})(?:<|"|'|\\b|\\s)`, 'gi');
-    const matches = [...html.matchAll(raPattern)];
+    let raPattern = new RegExp(`(?:>|"|'|\\b|\\s)(${escapedRA})(?:<|"|'|\\b|\\s)`, 'gi');
+    let matches = [...html.matchAll(raPattern)];
+    
+    // If strict pattern finds nothing, try a simpler pattern (fallback for edge cases)
+    if (matches.length === 0) {
+      raPattern = new RegExp(`(${escapedRA})`, 'gi');
+      matches = [...html.matchAll(raPattern)];
+    }
     
     // Filter to ensure we only get exact matches (case-insensitive) and extract the RA
     allRAMatches = matches
-      .filter(match => match[1].toUpperCase() === targetRA.toUpperCase())
-      .map(match => ({
-        0: match[1], // The actual RA from capture group
-        index: match.index + (match[0].indexOf(match[1])) // Adjust index to point to RA
-      }));
+      .filter(match => {
+        const matchedRA = match[1] || match[0];
+        return matchedRA.toUpperCase() === targetRA.toUpperCase();
+      })
+      .map(match => {
+        const matchedRA = match[1] || match[0];
+        const matchStart = match.index;
+        // If we used the simpler pattern, the index is already correct
+        // If we used the strict pattern, adjust index to point to RA
+        const raIndex = match[1] ? matchStart + (match[0].indexOf(match[1])) : matchStart;
+        return {
+          0: matchedRA, // The actual RA
+          index: raIndex
+        };
+      });
   } else {
     // Search for all RAs
     const raPattern = /(?:>|"|'|\b|\s)(RA\d{10,15})(?:<|"|'|\b|\s)/gi;
