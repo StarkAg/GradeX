@@ -717,7 +717,12 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
         html = await fetchPage(`${campusConfig.base}/report.php`, 12000, 1);
         fetchUrl = `${campusConfig.base}/report.php`;
       } catch (e) {
-        console.error(`Error fetching ${campusName} base URL:`, e.message);
+        // 404 errors are expected for some campuses - log as warning, not error
+        if (e.message && e.message.includes('404')) {
+          console.log(`[${campusName}] Base URL not available (404) - this is expected for some campuses`);
+        } else {
+          console.warn(`[${campusName}] Error fetching base URL:`, e.message);
+        }
       }
     }
     
@@ -1451,7 +1456,13 @@ export async function getSeatingInfo(ra, date) {
     } else {
       hasErrors = true;
       results[campusName] = [];
-      console.error(`Failed to fetch ${campusName}:`, result.reason);
+      // Log as warning, not error - some campuses may not be available
+      const errorMsg = result.reason?.message || String(result.reason);
+      if (errorMsg.includes('404')) {
+        console.log(`[${campusName}] Not available (404) - skipping`);
+      } else {
+        console.warn(`[${campusName}] Failed to fetch:`, errorMsg);
+      }
     }
   });
   

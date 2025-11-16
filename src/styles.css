@@ -148,14 +148,22 @@
   --splash-overlay: rgba(26, 26, 26, 0.05);
 }
 
+html {
+  height: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   font-family: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100%;
+  min-height: -webkit-fill-available;
+  overflow-x: hidden;
+  overflow-y: auto;
   transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-overflow-scrolling: touch;
 }
 
 * {
@@ -166,8 +174,9 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   padding: 12px clamp(12px, 2vw, 24px);
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100%;
+  min-height: -webkit-fill-available;
+  overflow-x: hidden;
 }
 
 .app-container {
@@ -697,20 +706,26 @@ body {
 
 /* Mobile landscape and below */
 @media (max-width: 768px) {
+  html {
+    height: auto;
+  }
+  
   #root {
     padding: 8px 12px;
-    overflow-y: auto;
     height: auto;
-    min-height: 100vh;
+    min-height: auto;
   }
 
   body {
+    height: auto;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
     overflow-y: auto;
     overflow-x: hidden;
   }
 
   .app-container {
-    min-height: 100vh;
+    min-height: auto;
   }
 
   .app-header.single {
