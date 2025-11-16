@@ -1126,12 +1126,24 @@ function enhanceMatchesWithPreloadedStudentInfo(matches, studentInfo) {
   }
   
   // Add name and student department to each match (preserve exam department)
-  const enhanced = matches.map(match => ({
-    ...match,
-    name: studentInfo.name || match.name || null,
-    studentDepartment: studentInfo.department || null, // Student's department from JSON
-    // Keep match.department as the exam department (e.g., "CSE" from "CSE/21MAB201T")
-  }));
+  const enhanced = matches.map(match => {
+    // Use studentInfo.name if it exists (even if it's an empty string, use it)
+    // Only fall back to match.name if studentInfo.name is null/undefined
+    const finalName = studentInfo && studentInfo.name !== null && studentInfo.name !== undefined
+      ? studentInfo.name
+      : (match.name || null);
+    
+    const finalDept = studentInfo && studentInfo.department !== null && studentInfo.department !== undefined
+      ? studentInfo.department
+      : null;
+    
+    return {
+      ...match,
+      name: finalName,
+      studentDepartment: finalDept, // Student's department from JSON
+      // Keep match.department as the exam department (e.g., "CSE" from "CSE/21MAB201T")
+    };
+  });
   
   // Log first match for debugging
   if (enhanced.length > 0) {
@@ -1165,10 +1177,22 @@ export async function getSeatingInfo(ra, date) {
   console.log(`[getSeatingInfo] Pre-loading student data for RA: ${normalizedRA}`);
   let studentInfo = { name: null, department: null };
   try {
-    studentInfo = await lookupStudentInfo(normalizedRA);
-    console.log(`[getSeatingInfo] Student data loaded: Name=${studentInfo.name || 'N/A'}, Dept=${studentInfo.department || 'N/A'}`);
+    // Force reload student data to ensure it's fresh
+    const studentData = await loadStudentData();
+    console.log(`[getSeatingInfo] Student data map loaded: ${studentData.size} records`);
+    
+    // Direct lookup from the map
+    const lookupResult = studentData.get(normalizedRA);
+    if (lookupResult) {
+      studentInfo = lookupResult;
+      console.log(`[getSeatingInfo] ✓ Student found in map: Name=${studentInfo.name || 'N/A'}, Dept=${studentInfo.department || 'N/A'}`);
+    } else {
+      console.log(`[getSeatingInfo] ⚠ Student NOT found in map for RA: ${normalizedRA}`);
+      console.log(`[getSeatingInfo] Sample RAs in map:`, Array.from(studentData.keys()).slice(0, 5));
+    }
   } catch (error) {
     console.error(`[getSeatingInfo] Failed to load student data:`, error);
+    console.error(`[getSeatingInfo] Error stack:`, error.stack);
     // Continue even if student data fails - we'll still fetch seating info
   }
   

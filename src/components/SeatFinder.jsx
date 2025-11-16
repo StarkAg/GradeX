@@ -212,7 +212,7 @@ export default function SeatFinder() {
             
             transformedSeats.push({
               registerNumber: ra.toUpperCase(),
-              name: result.name || '-',
+              name: (result.name !== null && result.name !== undefined) ? result.name : '-',
               department: result.department || result.studentDepartment || '-',
               room: formattedRoom,
               floor: floorNumber,
