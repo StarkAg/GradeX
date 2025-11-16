@@ -1226,16 +1226,27 @@ export default function SeatFinder() {
               
               {/* Notification Toggle - Show when seat info not available */}
               {(() => {
-                const shouldShow = error && (error.toLowerCase().includes('not found') || error.toLowerCase().includes('no seating')) && registerNumber.trim() && !seatInfo && 'Notification' in window;
+                // Check if Notification API is available (works on most modern mobile browsers)
+                const hasNotificationAPI = typeof window !== 'undefined' && 'Notification' in window;
+                const hasError = error && typeof error === 'string';
+                const errorText = hasError ? error.toLowerCase() : '';
+                const shouldShow = hasError && 
+                  (errorText.includes('not found') || errorText.includes('no seating')) && 
+                  registerNumber.trim() && 
+                  !seatInfo && 
+                  hasNotificationAPI;
+                
                 // Debug log (remove in production)
-                if (error && registerNumber.trim()) {
+                if (hasError && registerNumber.trim()) {
                   console.log('🔔 Notification button check:', {
                     error: error,
-                    errorIncludesNotFound: error.toLowerCase().includes('not found'),
-                    errorIncludesNoSeating: error.toLowerCase().includes('no seating'),
+                    errorText: errorText,
+                    errorIncludesNotFound: errorText.includes('not found'),
+                    errorIncludesNoSeating: errorText.includes('no seating'),
                     hasRegisterNumber: !!registerNumber.trim(),
                     noSeatInfo: !seatInfo,
-                    hasNotificationAPI: 'Notification' in window,
+                    hasNotificationAPI: hasNotificationAPI,
+                    isMobile: isMobile,
                     shouldShow: shouldShow
                   });
                 }
@@ -1250,9 +1261,14 @@ export default function SeatFinder() {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   gap: 'clamp(8px, 2vw, 12px)',
-                  flexWrap: 'wrap'
+                  flexWrap: isMobile ? 'wrap' : 'nowrap',
+                  flexDirection: isMobile ? 'column' : 'row'
                 }}>
-                  <div style={{ flex: 1, minWidth: '200px' }}>
+                  <div style={{ 
+                    flex: isMobile ? 'none' : 1, 
+                    minWidth: isMobile ? '100%' : '200px',
+                    width: isMobile ? '100%' : 'auto'
+                  }}>
                     <div style={{ fontSize: 'clamp(12px, 3vw, 13px)', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
                       Get notified when seat info is available
                     </div>
@@ -1286,7 +1302,12 @@ export default function SeatFinder() {
                       whiteSpace: 'nowrap',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '6px'
+                      justifyContent: 'center',
+                      gap: '6px',
+                      width: isMobile ? '100%' : 'auto',
+                      minWidth: isMobile ? '100%' : 'auto',
+                      touchAction: 'manipulation',
+                      WebkitTapHighlightColor: 'transparent'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.opacity = '0.8';
