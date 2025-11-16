@@ -830,89 +830,131 @@ async function loadStudentData() {
     let loadMethod = 'unknown';
     
     try {
-      // STRATEGY 1: Try fetching from public URL FIRST (most reliable in Vercel)
-      // This works because Vercel serves files from /public directory
-      const possibleUrls = [];
+      // STRATEGY 1: Try file system FIRST (most reliable, no network needed)
+      console.log(`[loadStudentData] Attempting to load from file system...`);
+      const fs = await import('fs');
+      const path = await import('path');
       
-      // Get the correct base URL
-      const baseUrl = process.env.VERCEL_URL 
-        ? `https://${process.env.VERCEL_URL}`
-        : process.env.VERCEL 
-          ? 'https://gradex.vercel.app'
-          : 'https://gradex.vercel.app';
+      // Try multiple possible paths for Vercel serverless functions
+      const possiblePaths = [
+        path.join(process.cwd(), 'public', 'seat-data.json'),
+        path.join(process.cwd(), '..', 'public', 'seat-data.json'),
+        path.join(process.cwd(), 'seat-data.json'),
+      ];
       
-      possibleUrls.push(`${baseUrl}/seat-data.json`);
-      possibleUrls.push('https://gradex.vercel.app/seat-data.json');
+      // Try to get __dirname equivalent for ES modules
+      try {
+        const { fileURLToPath } = await import('url');
+        const currentFileUrl = import.meta.url;
+        const currentFilePath = fileURLToPath(currentFileUrl);
+        const currentDir = path.dirname(currentFilePath);
+        possiblePaths.unshift(path.join(currentDir, '..', 'public', 'seat-data.json'));
+      } catch (e) {
+        // __dirname not available, continue with other paths
+      }
       
-      // Try fetching from URLs first (most reliable in Vercel)
-      for (const url of possibleUrls) {
+      for (const tryPath of possiblePaths) {
         try {
-          console.log(`[loadStudentData] Attempting to fetch from URL: ${url}`);
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-          
-          const response = await fetch(url, {
-            headers: {
-              'Accept': 'application/json',
-              'User-Agent': 'GradeX-SeatFinder/1.0',
-            },
-            signal: controller.signal,
-          });
-          
-          clearTimeout(timeoutId);
-          
-          if (response.ok) {
-            fileContent = await response.text();
-            loadMethod = `URL: ${url}`;
-            console.log(`[loadStudentData] ✓ Successfully loaded from ${url} (${fileContent.length} bytes)`);
+          if (fs.existsSync(tryPath)) {
+            fileContent = fs.readFileSync(tryPath, 'utf-8');
+            loadMethod = `File: ${tryPath}`;
+            console.log(`[loadStudentData] ✓ Successfully loaded from file system: ${tryPath} (${fileContent.length} bytes)`);
             break;
-          } else {
-            console.log(`[loadStudentData] URL ${url} returned status ${response.status}`);
           }
-        } catch (fetchError) {
-          if (fetchError.name === 'AbortError') {
-            console.log(`[loadStudentData] Timeout fetching from ${url}`);
-          } else {
-            console.log(`[loadStudentData] Error fetching from ${url}: ${fetchError.message}`);
-          }
+        } catch (e) {
+          console.log(`[loadStudentData] File system error for ${tryPath}: ${e.message}`);
           continue;
         }
       }
       
-      // STRATEGY 2: Fallback to file system if URL fetch failed
+      // STRATEGY 2: Try API endpoint if file system failed
       if (!fileContent) {
-        console.log(`[loadStudentData] URL fetch failed, trying file system...`);
-        const fs = await import('fs');
-        const path = await import('path');
+        console.log(`[loadStudentData] File system failed, trying API endpoint...`);
+        const possibleUrls = [];
         
-        // Try multiple possible paths for Vercel serverless functions
-        const possiblePaths = [
-          path.join(process.cwd(), 'public', 'seat-data.json'),
-          path.join(process.cwd(), '..', 'public', 'seat-data.json'),
-          path.join(process.cwd(), 'seat-data.json'),
+        // Get the correct base URL
+        const baseUrl = process.env.VERCEL_URL 
+          ? `https://${process.env.VERCEL_URL}`
+          : process.env.VERCEL 
+            ? 'https://gradex.vercel.app'
+            : 'https://gradex.vercel.app';
+        
+        possibleUrls.push(`${baseUrl}/api/student-data`);
+        possibleUrls.push('https://gradex.vercel.app/api/student-data');
+        
+        // Try fetching from API endpoint
+        for (const url of possibleUrls) {
+          try {
+            console.log(`[loadStudentData] Attempting to fetch from API: ${url}`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+            
+            const response = await fetch(url, {
+              headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'GradeX-SeatFinder/1.0',
+              },
+              signal: controller.signal,
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (response.ok) {
+              fileContent = JSON.stringify(await response.json());
+              loadMethod = `API: ${url}`;
+              console.log(`[loadStudentData] ✓ Successfully loaded from API ${url} (${fileContent.length} bytes)`);
+              break;
+            } else {
+              console.log(`[loadStudentData] API ${url} returned status ${response.status}`);
+            }
+          } catch (fetchError) {
+            if (fetchError.name === 'AbortError') {
+              console.log(`[loadStudentData] Timeout fetching from ${url}`);
+            } else {
+              console.log(`[loadStudentData] Error fetching from ${url}: ${fetchError.message}`);
+            }
+            continue;
+          }
+        }
+      }
+      
+      // STRATEGY 3: Last resort - try public URL
+      if (!fileContent) {
+        console.log(`[loadStudentData] API failed, trying public URL as last resort...`);
+        const possibleUrls = [
+          'https://gradex.vercel.app/seat-data.json',
         ];
         
-        // Try to get __dirname equivalent for ES modules
-        try {
-          const { fileURLToPath } = await import('url');
-          const currentFileUrl = import.meta.url;
-          const currentFilePath = fileURLToPath(currentFileUrl);
-          const currentDir = path.dirname(currentFilePath);
-          possiblePaths.unshift(path.join(currentDir, '..', 'public', 'seat-data.json'));
-        } catch (e) {
-          // __dirname not available, continue with other paths
-        }
-        
-        for (const tryPath of possiblePaths) {
+        for (const url of possibleUrls) {
           try {
-            if (fs.existsSync(tryPath)) {
-              fileContent = fs.readFileSync(tryPath, 'utf-8');
-              loadMethod = `File: ${tryPath}`;
-              console.log(`[loadStudentData] ✓ Successfully loaded from file system: ${tryPath} (${fileContent.length} bytes)`);
+            console.log(`[loadStudentData] Attempting to fetch from public URL: ${url}`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+            
+            const response = await fetch(url, {
+              headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'GradeX-SeatFinder/1.0',
+              },
+              signal: controller.signal,
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (response.ok) {
+              fileContent = await response.text();
+              loadMethod = `Public URL: ${url}`;
+              console.log(`[loadStudentData] ✓ Successfully loaded from public URL ${url} (${fileContent.length} bytes)`);
               break;
+            } else {
+              console.log(`[loadStudentData] Public URL ${url} returned status ${response.status}`);
             }
-          } catch (e) {
-            console.log(`[loadStudentData] File system error for ${tryPath}: ${e.message}`);
+          } catch (fetchError) {
+            if (fetchError.name === 'AbortError') {
+              console.log(`[loadStudentData] Timeout fetching from ${url}`);
+            } else {
+              console.log(`[loadStudentData] Error fetching from ${url}: ${fetchError.message}`);
+            }
             continue;
           }
         }
