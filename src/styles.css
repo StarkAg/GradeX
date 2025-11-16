@@ -889,3 +889,8 @@ body {
 }
 
 
+
+/* SeatFinder RA Input - Keep placeholder lowercase */
+.seatfinder-ra-input::placeholder {
+  text-transform: none !important;
+}
