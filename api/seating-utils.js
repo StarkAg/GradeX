@@ -664,6 +664,23 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
     let html = '';
     let fetchUrl = campusConfig.fetchData;
     
+    // For Tech Park 2, also try report.php as an additional source (not just fallback)
+    if (campusName === 'Tech Park 2' && campusConfig.report) {
+      try {
+        const reportHtml = await fetchPage(campusConfig.report, 12000, 1);
+        const hasRAPattern = /(?:>|"|'|\b)(RA\d{2,})/i.test(reportHtml);
+        const hasTargetRA = ra ? new RegExp(ra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(reportHtml) : true;
+        
+        if (reportHtml.length > 5000 && (hasRAPattern || hasTargetRA)) {
+          html = reportHtml;
+          fetchUrl = campusConfig.report;
+          console.log(`[DEBUG ${campusName}] Using HTML from report.php, length: ${html.length}, hasTargetRA: ${hasTargetRA}`);
+        }
+      } catch (e) {
+        console.log(`[${campusName}] Could not fetch from report.php:`, e.message);
+      }
+    }
+    
     // Try POST request to fetch_data.php with date and session (room-wise data only)
     if (dateVariants && dateVariants.length > 0) {
       const dateParam = dateVariants[0];
