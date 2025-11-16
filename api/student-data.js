@@ -39,14 +39,29 @@ export default async function handler(req, res) {
     console.log(`[student-data] __dirname: ${__dirname}`);
     
     // Try multiple possible paths for Vercel
-    const possiblePaths = [
+    // NOTE: api/data/seat-data.json will be included in the serverless function bundle
+    const possiblePaths = [];
+    
+    // Add paths relative to current file location (most reliable)
+    possiblePaths.push(path.join(__dirname, 'data', 'seat-data.json')); // api/data/seat-data.json
+    possiblePaths.push(path.join(__dirname, '..', 'public', 'seat-data.json'));
+    
+    // Add paths relative to process.cwd()
+    possiblePaths.push(
+      path.join(process.cwd(), 'api', 'data', 'seat-data.json'),
+      path.join(process.cwd(), 'data', 'seat-data.json'),
       path.join(process.cwd(), 'public', 'seat-data.json'),
       path.join(process.cwd(), '..', 'public', 'seat-data.json'),
-      path.join(__dirname, '..', 'public', 'seat-data.json'),
-      path.join(process.cwd(), 'seat-data.json'),
+      path.join(process.cwd(), 'seat-data.json')
+    );
+    
+    // Add absolute paths for Vercel
+    possiblePaths.push(
+      '/var/task/api/data/seat-data.json',
+      '/var/task/data/seat-data.json',
       '/var/task/public/seat-data.json',
-      '/var/task/seat-data.json',
-    ];
+      '/var/task/seat-data.json'
+    );
     
     let fileContent = null;
     let filePath = null;
