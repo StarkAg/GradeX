@@ -2,7 +2,11 @@
 
 A modern, tech-inspired grade planning tool for tracking semester courses, calculating SGPA, and determining required semester exam scores to achieve target grades. Built with a sleek dark theme and Iron Man-inspired aesthetics.
 
-🌐 **Live Demo**: [https://gradex.vercel.app](https://gradex.vercel.app) | [Production URL](https://gradex-4ijnz0rsg-starkags-projects.vercel.app)
+🌐 **Live Demo**: [https://gradex.bond](https://gradex.bond) | [https://gradex.vercel.app](https://gradex.vercel.app)
+
+[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black)](https://vercel.com)
+[![React](https://img.shields.io/badge/React-18-blue)](https://reactjs.org)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green)](https://supabase.com)
 
 ![GradeX Screenshot](screenshot.png)
 *Note: Add a screenshot of the application to showcase the UI*
@@ -26,11 +30,13 @@ A modern, tech-inspired grade planning tool for tracking semester courses, calcu
 - 🏫 **Multi-Campus Support**: Searches across Main Campus, Tech Park, Biotech & Architecture, and University Building
 - ⚡ **Auto-Refresh**: Automatically updates seat information every 3 minutes
 - 💾 **Smart Caching**: 5-minute cache reduces API calls by 80% for better performance
+- 🗄️ **Supabase Integration**: PostgreSQL database with 6,177+ student records for fast, reliable name lookups
 - 📋 **Complete Information**: Displays Name, Seat No., Room/Venue, Floor, Department, Subject Code, and Session
 - 🎨 **Room Formatting**: Automatically formats room names (TPTP→TP, TPVPT→VPT)
-- 🏢 **Floor Detection**: Smart extraction of floor numbers from room names
-- 📸 **Venue Images**: Aesthetic venue maps for UB, TP, and TP2
-- 📱 **Mobile Optimized**: Fully responsive with touch-friendly interface
+- 🏢 **Floor Detection**: Smart extraction of floor numbers from room names (e.g., TP-401 → 4th floor, H301F → 3rd floor)
+- 📸 **Venue Images**: Aesthetic venue maps for UB, TP, TP2, and VPT buildings with hover effects
+- ✅ **RA Validation**: Real-time validation ensures complete RA numbers before searching
+- 📱 **Mobile Optimized**: Fully responsive with touch-friendly interface and optimized date navigation
 - 🖥️ **Desktop Animation**: Smooth slide animation when seat info is found
 - 📧 **Support Contact**: Easy access to support email for inquiries
 
@@ -88,19 +94,20 @@ npm run preview
 8. **Help Guide**: Click the "?" button for quick usage guide
 
 ### SRMIST Seat Finder
-1. **Enter Details**: Input your Register Number (RA number) and exam date
-2. **Quick Selection**: Use "Today" or "Tomorrow" buttons, or enter custom date (DD/MM/YYYY)
-3. **Find Seat**: Click "Find My Seat" to search across all 4 campuses
-4. **View Results**: See complete seat information including:
-   - Student Name and Department
+1. **Enter Details**: Input your complete Register Number (RA number) and exam date
+2. **Date Navigation**: Use arrow buttons to navigate between dates, or enter custom date (DD/MM/YYYY)
+3. **RA Validation**: Real-time validation ensures you enter a complete RA number (minimum 12 characters)
+4. **Find Seat**: Click "Find My Seat" to search across all 4 campuses
+5. **View Results**: See complete seat information including:
+   - Student Name (from Supabase database)
    - Seat Number
-   - Room/Venue with building name
-   - Floor number
-   - Subject Code
+   - Room/Venue with building name (formatted automatically)
+   - Floor number (extracted from room name)
+   - Department and Subject Code
    - Session (Forenoon/Afternoon)
-5. **Auto-Refresh**: Seat information automatically updates every 3 minutes
-6. **Venue Maps**: View venue layout images for UB, TP, and TP2 buildings
-7. **Support**: Contact ha1487@srmist.edu.in for any problems or inquiries
+6. **Auto-Refresh**: Seat information automatically updates every 3 minutes
+7. **Venue Maps**: View venue layout images for UB, TP, TP2, and VPT buildings
+8. **Support**: Contact ha1487@srmist.edu.in for any problems or inquiries
 
 ## 📊 Grade Scale
 
@@ -129,9 +136,13 @@ npm run preview
 - **Node.js**: Serverless functions
 - **Vercel Functions**: API endpoints
 - **Supabase**: PostgreSQL database for student data (6,177+ records)
+  - Fast indexed queries for student name lookups
+  - Reliable data access in serverless environment
+  - Admin tools for data management
 - **HTML Scraping**: Real-time data extraction from SRM exam cell
 - **In-Memory Caching**: 5-minute TTL for optimal performance
 - **Multi-Campus Support**: Parallel fetching from 4 campus endpoints
+- **Error Handling**: Comprehensive error handling and retry logic
 
 ## 🎨 Design
 
@@ -144,15 +155,17 @@ npm run preview
 
 ## 📱 Responsive Design
 
-- **Desktop**: 3-4 column grid layout
+- **Desktop**: 3-4 column grid layout with smooth animations
 - **Tablet**: 2 column grid layout
-- **Mobile**: Single column layout
-- **Touch Optimized**: Larger touch targets for mobile devices
+- **Mobile**: Single column layout with optimized touch targets
+- **Touch Optimized**: Larger touch targets, swipe-friendly date navigation
+- **Adaptive Typography**: Fluid typography using `clamp()` for all screen sizes
 
 ## 🎁 Easter Eggs
 
-- Hidden play button next to Arc Reactor icon
+- Hidden play button next to Arc Reactor icon (plays Iron Man theme)
 - "Welcome EWW" message for specific grade patterns
+- Arc Reactor pulsing animation on splash screen
 
 ## 👨‍💻 Creator
 
@@ -160,6 +173,35 @@ npm run preview
 
 - GitHub: [@StarkAg](https://github.com/StarkAg)
 - LinkedIn: [harshxagarwal](https://in.linkedin.com/in/harshxagarwal)
+
+## 🔧 Development
+
+### Environment Variables
+
+For local development, create a `.env.local` file:
+
+```env
+SUPABASE_URL=https://phlggcheaajkupppozho.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key  # For admin operations only
+```
+
+### Admin Tools
+
+Manage Supabase data using the admin tool:
+
+```bash
+# View stats
+node supabase-admin.js stats
+
+# Find student
+node supabase-admin.js find RA2311003012124
+
+# Upload data
+node supabase-admin.js upload public/seat-data.json
+```
+
+See `supabase-admin.js --help` for all commands.
 
 ## 📝 License
 
