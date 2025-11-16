@@ -97,6 +97,46 @@ export default function SeatFinder() {
     setSeatInfo(null);
   };
 
+  // Navigate to previous day
+  const handlePreviousDay = () => {
+    const currentDate = getSelectedDate();
+    if (!currentDate) {
+      setDateInput(formatDate(today));
+      setExamDate('custom');
+      return;
+    }
+    
+    const [day, month, year] = currentDate.split('/');
+    const date = new Date(year, month - 1, day);
+    date.setDate(date.getDate() - 1);
+    
+    const newDateStr = formatDate(date);
+    setDateInput(newDateStr);
+    setExamDate('custom');
+    setError(null);
+    setSeatInfo(null);
+  };
+
+  // Navigate to next day
+  const handleNextDay = () => {
+    const currentDate = getSelectedDate();
+    if (!currentDate) {
+      setDateInput(formatDate(tomorrow));
+      setExamDate('custom');
+      return;
+    }
+    
+    const [day, month, year] = currentDate.split('/');
+    const date = new Date(year, month - 1, day);
+    date.setDate(date.getDate() + 1);
+    
+    const newDateStr = formatDate(date);
+    setDateInput(newDateStr);
+    setExamDate('custom');
+    setError(null);
+    setSeatInfo(null);
+  };
+
   const handleRegisterNumberChange = (e) => {
     // Convert to uppercase for consistency, but allow any case input
     const value = e.target.value.toUpperCase();
@@ -534,17 +574,18 @@ export default function SeatFinder() {
             }}>
               Exam Date
             </label>
+            {/* Quick Date Buttons */}
             <div style={{
               display: 'flex',
               gap: 'clamp(6px, 2vw, 8px)',
-              marginBottom: 'clamp(10px, 2.5vw, 12px)',
+              marginBottom: 'clamp(12px, 3vw, 16px)',
               flexWrap: 'wrap'
             }}>
               <button
                 onClick={() => handleDateChange('today')}
                 style={{
-                  padding: 'clamp(10px, 2.5vw, 12px) clamp(16px, 4vw, 20px)',
-                  fontSize: 'clamp(13px, 3.5vw, 14px)',
+                  padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px)',
+                  fontSize: 'clamp(12px, 3vw, 13px)',
                   fontWeight: 500,
                   border: '1px solid var(--border-color)',
                   background: examDate === 'today' ? 'var(--text-primary)' : 'var(--card-bg)',
@@ -552,9 +593,7 @@ export default function SeatFinder() {
                   borderRadius: '8px',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  minHeight: '44px',
-                  flex: '1 1 auto',
-                  minWidth: '100px'
+                  minHeight: '36px'
                 }}
               >
                 Today
@@ -562,8 +601,8 @@ export default function SeatFinder() {
               <button
                 onClick={() => handleDateChange('tomorrow')}
                 style={{
-                  padding: 'clamp(10px, 2.5vw, 12px) clamp(16px, 4vw, 20px)',
-                  fontSize: 'clamp(13px, 3.5vw, 14px)',
+                  padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px)',
+                  fontSize: 'clamp(12px, 3vw, 13px)',
                   fontWeight: 500,
                   border: '1px solid var(--border-color)',
                   background: examDate === 'tomorrow' ? 'var(--text-primary)' : 'var(--card-bg)',
@@ -571,39 +610,122 @@ export default function SeatFinder() {
                   borderRadius: '8px',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  minHeight: '44px',
-                  flex: '1 1 auto',
-                  minWidth: '100px'
+                  minHeight: '36px'
                 }}
               >
                 Tomorrow
               </button>
             </div>
-            <input
-              type="text"
-              value={examDate === 'today' ? formatDate(today) : examDate === 'tomorrow' ? formatDate(tomorrow) : dateInput}
-              onChange={handleDateInputChange}
-              placeholder="DD/MM/YYYY"
-              style={{
-                width: '100%',
-                padding: 'clamp(12px, 3vw, 14px) clamp(14px, 4vw, 16px)',
-                fontSize: 'clamp(14px, 3.5vw, 16px)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '8px',
-                background: 'var(--bg-primary)',
-                color: 'var(--text-primary)',
-                outline: 'none',
-                transition: 'all 0.2s ease',
-                boxSizing: 'border-box',
-                minHeight: '44px'
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = 'var(--text-primary)';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = 'var(--border-color)';
-              }}
-            />
+            
+            {/* Date Navigator with Arrows */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'clamp(8px, 2vw, 12px)',
+              width: '100%'
+            }}>
+              {/* Left Arrow */}
+              <button
+                onClick={handlePreviousDay}
+                style={{
+                  width: 'clamp(44px, 10vw, 48px)',
+                  height: 'clamp(44px, 10vw, 48px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '10px',
+                  background: 'var(--card-bg)',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  flexShrink: 0
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'var(--text-primary)';
+                  e.currentTarget.style.color = 'var(--bg-primary)';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'var(--card-bg)';
+                  e.currentTarget.style.color = 'var(--text-primary)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              
+              {/* Date Display/Input */}
+              <div style={{
+                flex: 1,
+                position: 'relative'
+              }}>
+                <input
+                  type="text"
+                  value={examDate === 'today' ? formatDate(today) : examDate === 'tomorrow' ? formatDate(tomorrow) : dateInput}
+                  onChange={handleDateInputChange}
+                  placeholder="DD/MM/YYYY"
+                  style={{
+                    width: '100%',
+                    padding: 'clamp(12px, 3vw, 14px) clamp(14px, 4vw, 16px)',
+                    fontSize: 'clamp(14px, 3.5vw, 16px)',
+                    fontWeight: 500,
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '10px',
+                    background: 'var(--bg-primary)',
+                    color: 'var(--text-primary)',
+                    outline: 'none',
+                    transition: 'all 0.2s ease',
+                    boxSizing: 'border-box',
+                    minHeight: 'clamp(44px, 10vw, 48px)',
+                    textAlign: 'center'
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--text-primary)';
+                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255, 255, 255, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--border-color)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+              
+              {/* Right Arrow */}
+              <button
+                onClick={handleNextDay}
+                style={{
+                  width: 'clamp(44px, 10vw, 48px)',
+                  height: 'clamp(44px, 10vw, 48px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '10px',
+                  background: 'var(--card-bg)',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  flexShrink: 0
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'var(--text-primary)';
+                  e.currentTarget.style.color = 'var(--bg-primary)';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'var(--card-bg)';
+                  e.currentTarget.style.color = 'var(--text-primary)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Register Number */}
