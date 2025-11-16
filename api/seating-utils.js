@@ -991,6 +991,31 @@ async function enhanceMatchesWithStudentInfo(matches, ra) {
 }
 
 /**
+ * Enhance matches with pre-loaded student information (from JSON)
+ * This is more efficient as it uses already-loaded student data
+ * @param {Array} matches - Array of match objects
+ * @param {Object} studentInfo - Pre-loaded student info {name, department}
+ * @returns {Array} - Enhanced matches with name and department
+ */
+function enhanceMatchesWithPreloadedStudentInfo(matches, studentInfo) {
+  if (!matches || matches.length === 0) {
+    return matches;
+  }
+  
+  if (!studentInfo) {
+    studentInfo = { name: null, department: null };
+  }
+  
+  // Add name and student department to each match (preserve exam department)
+  return matches.map(match => ({
+    ...match,
+    name: studentInfo.name,
+    studentDepartment: studentInfo.department, // Student's department from JSON
+    // Keep match.department as the exam department (e.g., "CSE" from "CSE/21MAB201T")
+  }));
+}
+
+/**
  * Main function to get seating information
  * @param {string} ra - Register number
  * @param {string} date - Date string (YYYY-MM-DD, DD-MM-YYYY, or DD/MM/YYYY)
@@ -1008,13 +1033,25 @@ export async function getSeatingInfo(ra, date) {
     };
   }
   
+  // STEP 1: Load student data from JSON FIRST (before API fetch)
+  // This ensures name and department are available even if API fails
+  console.log(`[getSeatingInfo] Pre-loading student data for RA: ${normalizedRA}`);
+  let studentInfo = { name: null, department: null };
+  try {
+    studentInfo = await lookupStudentInfo(normalizedRA);
+    console.log(`[getSeatingInfo] Student data loaded: Name=${studentInfo.name || 'N/A'}, Dept=${studentInfo.department || 'N/A'}`);
+  } catch (error) {
+    console.error(`[getSeatingInfo] Failed to load student data:`, error);
+    // Continue even if student data fails - we'll still fetch seating info
+  }
+  
   // Check cache first
   const cached = getCachedResult(normalizedRA, date);
   if (cached) {
-    // Enhance cached results with student information
+    // Enhance cached results with pre-loaded student information
     const enhancedCachedResults = {};
     for (const [campusName, matches] of Object.entries(cached.results || {})) {
-      enhancedCachedResults[campusName] = await enhanceMatchesWithStudentInfo(matches, normalizedRA);
+      enhancedCachedResults[campusName] = enhanceMatchesWithPreloadedStudentInfo(matches, studentInfo);
     }
     
     return {
@@ -1027,7 +1064,7 @@ export async function getSeatingInfo(ra, date) {
   // Generate date variants
   const dateVariants = date ? generateDateVariants(date) : [];
   
-  // Fetch from all campuses in parallel (with delays handled internally)
+  // STEP 2: Fetch from all campuses in parallel (with delays handled internally)
   const campusNames = Object.keys(CAMPUS_ENDPOINTS);
   const fetchPromises = campusNames.map(campusName =>
     fetchCampusSeating(campusName, normalizedRA, dateVariants)
@@ -1051,10 +1088,11 @@ export async function getSeatingInfo(ra, date) {
     }
   });
   
-  // Enhance all matches with student information (name and department)
+  // STEP 3: Enhance all matches with pre-loaded student information
+  // Use the student info we loaded at the start (from JSON)
   const enhancedResults = {};
   for (const [campusName, matches] of Object.entries(results)) {
-    enhancedResults[campusName] = await enhanceMatchesWithStudentInfo(matches, normalizedRA);
+    enhancedResults[campusName] = enhanceMatchesWithPreloadedStudentInfo(matches, studentInfo);
   }
   
   // Build response
