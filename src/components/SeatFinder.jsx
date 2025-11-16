@@ -1186,7 +1186,11 @@ export default function SeatFinder() {
                   flexDirection: hasImage ? (isMobile ? 'column' : 'row') : 'column'
                 }}>
                   {hasImage ? (() => {
-                    if (roomUpper.startsWith('TP2')) {
+                    // Check for VPT first (most specific)
+                    const hasTPVPT = seat.context && seat.context.toUpperCase().includes('TPVPT');
+                    const isVPT = hasTPVPT || roomUpper.includes('VPT') || roomUpper.includes('TPVPT');
+                    
+                    if (isVPT) {
                       return (
                         <div style={{
                           flexShrink: 0,
@@ -1197,8 +1201,8 @@ export default function SeatFinder() {
                           position: 'relative'
                         }}>
                           <img 
-                            src="/TP2.JPG" 
-                            alt="TP2 Venue Map" 
+                            src="/VPT.JPG" 
+                            alt="VPT Venue Map" 
                             style={{
                               width: '100%',
                               height: 'auto',
@@ -1227,7 +1231,7 @@ export default function SeatFinder() {
                           />
                         </div>
                       );
-                    } else if (hasTPVPT || roomUpper.includes('VPT') || roomUpper.includes('TPVPT')) {
+                    } else if (roomUpper.startsWith('TP2')) {
                       return (
                         <div style={{
                           flexShrink: 0,
@@ -1238,8 +1242,8 @@ export default function SeatFinder() {
                           position: 'relative'
                         }}>
                           <img 
-                            src="/VPT.JPG" 
-                            alt="VPT Venue Map" 
+                            src="/TP2.JPG" 
+                            alt="TP2 Venue Map" 
                             style={{
                               width: '100%',
                               height: 'auto',
