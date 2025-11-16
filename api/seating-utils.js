@@ -895,51 +895,52 @@ async function loadStudentData() {
         } catch (e) {
           console.log(`[loadStudentData] Could not get __dirname: ${e.message}`);
         }
-      
-      // Try multiple possible paths for Vercel serverless functions
-      // NOTE: api/data/seat-data.json will be included in the serverless function bundle
-      const possiblePaths = [];
-      
-      // Add paths relative to current file location (most reliable)
-      if (currentDir) {
-        possiblePaths.push(path.join(currentDir, 'data', 'seat-data.json')); // api/data/seat-data.json
-        possiblePaths.push(path.join(currentDir, '..', 'public', 'seat-data.json'));
-      }
-      
-      // Add paths relative to process.cwd()
-      possiblePaths.push(
-        path.join(process.cwd(), 'api', 'data', 'seat-data.json'),
-        path.join(process.cwd(), 'data', 'seat-data.json'),
-        path.join(process.cwd(), 'public', 'seat-data.json'),
-        path.join(process.cwd(), '..', 'public', 'seat-data.json'),
-        path.join(process.cwd(), 'seat-data.json')
-      );
-      
-      // Add absolute paths for Vercel
-      possiblePaths.push(
-        '/var/task/api/data/seat-data.json',
-        '/var/task/data/seat-data.json',
-        '/var/task/public/seat-data.json',
-        '/var/task/seat-data.json'
-      );
-      
-      console.log(`[loadStudentData] Trying paths:`, possiblePaths);
-      
-      for (const tryPath of possiblePaths) {
-        try {
-          console.log(`[loadStudentData] Checking: ${tryPath}`);
-          if (fs.existsSync(tryPath)) {
-            console.log(`[loadStudentData] ✓ Found file at: ${tryPath}`);
-            fileContent = fs.readFileSync(tryPath, 'utf-8');
-            loadMethod = `File: ${tryPath}`;
-            console.log(`[loadStudentData] ✓ Successfully loaded from file system: ${tryPath} (${fileContent.length} bytes)`);
-            break;
-          } else {
-            console.log(`[loadStudentData] ✗ File does not exist: ${tryPath}`);
+        
+        // Try multiple possible paths for Vercel serverless functions
+        // NOTE: api/data/seat-data.json will be included in the serverless function bundle
+        const possiblePaths = [];
+        
+        // Add paths relative to current file location (most reliable)
+        if (currentDir) {
+          possiblePaths.push(path.join(currentDir, 'data', 'seat-data.json')); // api/data/seat-data.json
+          possiblePaths.push(path.join(currentDir, '..', 'public', 'seat-data.json'));
+        }
+        
+        // Add paths relative to process.cwd()
+        possiblePaths.push(
+          path.join(process.cwd(), 'api', 'data', 'seat-data.json'),
+          path.join(process.cwd(), 'data', 'seat-data.json'),
+          path.join(process.cwd(), 'public', 'seat-data.json'),
+          path.join(process.cwd(), '..', 'public', 'seat-data.json'),
+          path.join(process.cwd(), 'seat-data.json')
+        );
+        
+        // Add absolute paths for Vercel
+        possiblePaths.push(
+          '/var/task/api/data/seat-data.json',
+          '/var/task/data/seat-data.json',
+          '/var/task/public/seat-data.json',
+          '/var/task/seat-data.json'
+        );
+        
+        console.log(`[loadStudentData] Trying paths:`, possiblePaths);
+        
+        for (const tryPath of possiblePaths) {
+          try {
+            console.log(`[loadStudentData] Checking: ${tryPath}`);
+            if (fs.existsSync(tryPath)) {
+              console.log(`[loadStudentData] ✓ Found file at: ${tryPath}`);
+              fileContent = fs.readFileSync(tryPath, 'utf-8');
+              loadMethod = `File: ${tryPath}`;
+              console.log(`[loadStudentData] ✓ Successfully loaded from file system: ${tryPath} (${fileContent.length} bytes)`);
+              break;
+            } else {
+              console.log(`[loadStudentData] ✗ File does not exist: ${tryPath}`);
+            }
+          } catch (e) {
+            console.log(`[loadStudentData] ✗ File system error for ${tryPath}: ${e.message}`);
+            continue;
           }
-        } catch (e) {
-          console.log(`[loadStudentData] ✗ File system error for ${tryPath}: ${e.message}`);
-          continue;
         }
       }
       
