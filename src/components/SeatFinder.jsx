@@ -129,10 +129,12 @@ export default function SeatFinder() {
         const campusResults = data.results[campusName] || [];
         campusResults.forEach(result => {
           if (result.matched) {
-            // Format room name: TPTP-401 -> TP-401
+            // Format room name: TPTP-401 -> TP-401, TPVPT-301 -> VPT-301
             let formattedRoom = result.hall || '-';
             if (formattedRoom.startsWith('TPTP-')) {
               formattedRoom = formattedRoom.replace('TPTP-', 'TP-');
+            } else if (formattedRoom.startsWith('TPVPT-')) {
+              formattedRoom = formattedRoom.replace('TPVPT-', 'VPT-');
             }
             
             // Extract floor number from room name (e.g., TP-401 -> 4th, H301F -> 3rd)
@@ -142,12 +144,12 @@ export default function SeatFinder() {
               const floorMatch = formattedRoom.match(/(\d+)/);
               if (floorMatch) {
                 const numStr = floorMatch[1];
-                // Check if room starts with letter(s) followed by number (e.g., H301F, S45, UB604)
-                const letterNumberPattern = /^[A-Z]+(\d+)/;
+                // Check if room starts with letter(s) followed by number (e.g., H301F, S45, UB604, VPT-301)
+                const letterNumberPattern = /^[A-Z]+[-]?(\d+)/;
                 const letterMatch = formattedRoom.match(letterNumberPattern);
                 
-                if (letterMatch) {
-                  // For H301F, S45, UB604 - first digit after letter is floor
+                if (letterMatch || formattedRoom.startsWith('VPT-')) {
+                  // For H301F, S45, UB604, VPT-301 - first digit after letter is floor
                   const firstDigit = parseInt(numStr.charAt(0));
                   floorNumber = `${firstDigit}th`;
                 } else if (formattedRoom.startsWith('TP-')) {
@@ -239,23 +241,25 @@ export default function SeatFinder() {
         return { formattedRoom: '-', floorNumber: '-' };
       }
       
-      // Format room name: TPTP-401 -> TP-401
+      // Format room name: TPTP-401 -> TP-401, TPVPT-301 -> VPT-301
       let formattedRoom = room;
       if (formattedRoom.startsWith('TPTP-')) {
         formattedRoom = formattedRoom.replace('TPTP-', 'TP-');
+      } else if (formattedRoom.startsWith('TPVPT-')) {
+        formattedRoom = formattedRoom.replace('TPVPT-', 'VPT-');
       }
       
-      // Extract floor number from room name (e.g., TP-401 -> 4th, H301F -> 3rd)
+      // Extract floor number from room name (e.g., TP-401 -> 4th, H301F -> 3rd, VPT-301 -> 3rd)
       let floorNumber = '-';
       const floorMatch = formattedRoom.match(/(\d+)/);
       if (floorMatch) {
         const numStr = floorMatch[1];
-        // Check if room starts with letter(s) followed by number (e.g., H301F, S45, UB604)
-        const letterNumberPattern = /^[A-Z]+(\d+)/;
+        // Check if room starts with letter(s) followed by number (e.g., H301F, S45, UB604, VPT-301)
+        const letterNumberPattern = /^[A-Z]+[-]?(\d+)/;
         const letterMatch = formattedRoom.match(letterNumberPattern);
         
-        if (letterMatch) {
-          // For H301F, S45, UB604 - first digit after letter is floor
+        if (letterMatch || formattedRoom.startsWith('VPT-')) {
+          // For H301F, S45, UB604, VPT-301 - first digit after letter is floor
           const firstDigit = parseInt(numStr.charAt(0));
           floorNumber = `${firstDigit}th`;
         } else if (formattedRoom.startsWith('TP-')) {
