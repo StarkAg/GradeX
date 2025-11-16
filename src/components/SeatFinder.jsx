@@ -696,7 +696,7 @@ export default function SeatFinder() {
               type="text"
               value={registerNumber}
               onChange={handleRegisterNumberChange}
-              placeholder="Enter your Full RA Number"
+              placeholder="Enter your full RA number"
               style={{
                 width: '100%',
                 padding: 'clamp(12px, 3vw, 14px) clamp(14px, 4vw, 16px)',
