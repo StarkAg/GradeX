@@ -572,38 +572,56 @@ export default function SeatFinder() {
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 'clamp(8px, 2vw, 12px)',
+              gap: 'clamp(8px, 2.5vw, 12px)',
               width: '100%'
             }}>
               {/* Left Arrow */}
               <button
                 onClick={handlePreviousDay}
                 style={{
-                  width: 'clamp(44px, 10vw, 48px)',
-                  height: 'clamp(44px, 10vw, 48px)',
+                  width: 'clamp(48px, 12vw, 52px)',
+                  height: 'clamp(48px, 12vw, 52px)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   border: '1px solid var(--border-color)',
-                  borderRadius: '10px',
+                  borderRadius: 'clamp(8px, 2vw, 10px)',
                   background: 'var(--card-bg)',
                   color: 'var(--text-primary)',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  flexShrink: 0
+                  flexShrink: 0,
+                  touchAction: 'manipulation',
+                  WebkitTapHighlightColor: 'transparent'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'var(--text-primary)';
-                  e.currentTarget.style.color = 'var(--bg-primary)';
-                  e.currentTarget.style.transform = 'scale(1.05)';
+                  if (!isMobile) {
+                    e.currentTarget.style.background = 'var(--text-primary)';
+                    e.currentTarget.style.color = 'var(--bg-primary)';
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'var(--card-bg)';
-                  e.currentTarget.style.color = 'var(--text-primary)';
-                  e.currentTarget.style.transform = 'scale(1)';
+                  if (!isMobile) {
+                    e.currentTarget.style.background = 'var(--card-bg)';
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }
+                }}
+                onTouchStart={(e) => {
+                  e.currentTarget.style.background = 'var(--text-primary)';
+                  e.currentTarget.style.color = 'var(--bg-primary)';
+                  e.currentTarget.style.opacity = '0.9';
+                }}
+                onTouchEnd={(e) => {
+                  setTimeout(() => {
+                    e.currentTarget.style.background = 'var(--card-bg)';
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                    e.currentTarget.style.opacity = '1';
+                  }, 150);
                 }}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="clamp(18px, 4.5vw, 20px)" height="clamp(18px, 4.5vw, 20px)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
               </button>
@@ -611,7 +629,8 @@ export default function SeatFinder() {
               {/* Date Display/Input */}
               <div style={{
                 flex: 1,
-                position: 'relative'
+                position: 'relative',
+                minWidth: 0
               }}>
                 <input
                   type="text"
@@ -620,18 +639,19 @@ export default function SeatFinder() {
                   placeholder="DD/MM/YYYY"
                   style={{
                     width: '100%',
-                    padding: 'clamp(12px, 3vw, 14px) clamp(14px, 4vw, 16px)',
-                    fontSize: 'clamp(14px, 3.5vw, 16px)',
+                    padding: 'clamp(12px, 3.5vw, 14px) clamp(10px, 2.5vw, 16px)',
+                    fontSize: 'clamp(14px, 4vw, 16px)',
                     fontWeight: 500,
                     border: '1px solid var(--border-color)',
-                    borderRadius: '10px',
+                    borderRadius: 'clamp(8px, 2vw, 10px)',
                     background: 'var(--bg-primary)',
                     color: 'var(--text-primary)',
                     outline: 'none',
                     transition: 'all 0.2s ease',
                     boxSizing: 'border-box',
-                    minHeight: 'clamp(44px, 10vw, 48px)',
-                    textAlign: 'center'
+                    minHeight: 'clamp(48px, 12vw, 52px)',
+                    textAlign: 'center',
+                    touchAction: 'manipulation'
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = 'var(--text-primary)';
@@ -648,31 +668,49 @@ export default function SeatFinder() {
               <button
                 onClick={handleNextDay}
                 style={{
-                  width: 'clamp(44px, 10vw, 48px)',
-                  height: 'clamp(44px, 10vw, 48px)',
+                  width: 'clamp(48px, 12vw, 52px)',
+                  height: 'clamp(48px, 12vw, 52px)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   border: '1px solid var(--border-color)',
-                  borderRadius: '10px',
+                  borderRadius: 'clamp(8px, 2vw, 10px)',
                   background: 'var(--card-bg)',
                   color: 'var(--text-primary)',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  flexShrink: 0
+                  flexShrink: 0,
+                  touchAction: 'manipulation',
+                  WebkitTapHighlightColor: 'transparent'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'var(--text-primary)';
-                  e.currentTarget.style.color = 'var(--bg-primary)';
-                  e.currentTarget.style.transform = 'scale(1.05)';
+                  if (!isMobile) {
+                    e.currentTarget.style.background = 'var(--text-primary)';
+                    e.currentTarget.style.color = 'var(--bg-primary)';
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'var(--card-bg)';
-                  e.currentTarget.style.color = 'var(--text-primary)';
-                  e.currentTarget.style.transform = 'scale(1)';
+                  if (!isMobile) {
+                    e.currentTarget.style.background = 'var(--card-bg)';
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }
+                }}
+                onTouchStart={(e) => {
+                  e.currentTarget.style.background = 'var(--text-primary)';
+                  e.currentTarget.style.color = 'var(--bg-primary)';
+                  e.currentTarget.style.opacity = '0.9';
+                }}
+                onTouchEnd={(e) => {
+                  setTimeout(() => {
+                    e.currentTarget.style.background = 'var(--card-bg)';
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                    e.currentTarget.style.opacity = '1';
+                  }, 150);
                 }}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="clamp(18px, 4.5vw, 20px)" height="clamp(18px, 4.5vw, 20px)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="9 18 15 12 9 6"></polyline>
                 </svg>
               </button>
