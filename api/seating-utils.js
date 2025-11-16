@@ -864,12 +864,54 @@ async function loadStudentData() {
         }
       }
       
+      // If file system access failed, try fetching from public URL (Vercel)
       if (!fileContent) {
+        try {
+          // Try multiple URL strategies for Vercel
+          const possibleUrls = [];
+          
+          // Strategy 1: Use VERCEL_URL if available
+          if (process.env.VERCEL_URL) {
+            possibleUrls.push(`https://${process.env.VERCEL_URL}/seat-data.json`);
+          }
+          
+          // Strategy 2: Use production URL
+          possibleUrls.push('https://gradex.vercel.app/seat-data.json');
+          
+          // Strategy 3: Try with www subdomain
+          possibleUrls.push('https://www.gradex.vercel.app/seat-data.json');
+          
+          for (const url of possibleUrls) {
+            try {
+              console.log(`[loadStudentData] Trying to fetch from URL: ${url}`);
+              const response = await fetch(url, {
+                headers: {
+                  'Accept': 'application/json',
+                },
+              });
+              if (response.ok) {
+                fileContent = await response.text();
+                console.log(`[loadStudentData] Successfully fetched from URL: ${url}`);
+                break;
+              }
+            } catch (fetchError) {
+              console.error(`[loadStudentData] Fetch error for ${url}:`, fetchError.message);
+              continue;
+            }
+          }
+        } catch (fetchError) {
+          console.error('[loadStudentData] All fetch attempts failed:', fetchError);
+        }
+      }
+      
+      if (!fileContent) {
+        console.error(`[loadStudentData] Could not find seat-data.json in any of the expected paths: ${possiblePaths.join(', ')}`);
         throw new Error(`Could not find seat-data.json in any of the expected paths: ${possiblePaths.join(', ')}`);
       }
       
       // Read and parse the JSON file
       const seatData = JSON.parse(fileContent);
+      console.log(`[loadStudentData] Loaded ${seatData.length} entries from seat-data.json`);
       
       // Create a lookup map: RA -> {name, department}
       const lookup = new Map();
@@ -910,12 +952,15 @@ async function loadStudentData() {
 async function lookupStudentInfo(ra) {
   const normalizedRA = normalizeRA(ra);
   if (!normalizedRA) {
+    console.log(`[lookupStudentInfo] Invalid RA: ${ra}`);
     return { name: null, department: null };
   }
   
   try {
     const studentData = await loadStudentData();
-    return studentData.get(normalizedRA) || { name: null, department: null };
+    const result = studentData.get(normalizedRA) || { name: null, department: null };
+    console.log(`[lookupStudentInfo] RA: ${normalizedRA}, Found: ${result.name ? 'YES' : 'NO'}, Name: ${result.name || 'N/A'}, Dept: ${result.department || 'N/A'}`);
+    return result;
   } catch (error) {
     console.error('Error looking up student info:', error);
     return { name: null, department: null };
