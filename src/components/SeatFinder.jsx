@@ -26,16 +26,44 @@ export default function SeatFinder() {
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  // Load seat data on component mount
+  // Load seat data on component mount (from multiple sources)
   useEffect(() => {
-    fetch('/seat-data.json')
-      .then(res => res.json())
-      .then(data => {
-        setSeatData(data);
-      })
-      .catch(err => {
+    const loadAllSeatData = async () => {
+      try {
+        // Load main seat data
+        const mainRes = await fetch('/seat-data.json');
+        const mainData = await mainRes.json();
+        
+        // Load PDF-extracted data from multiple sources
+        const pdfSources = [
+          '/17-nov-fn-seating.json',
+          '/17-11-25-fn-seating.json'
+        ];
+        
+        let allPdfData = [];
+        for (const pdfSource of pdfSources) {
+          try {
+            const pdfRes = await fetch(pdfSource);
+            if (pdfRes.ok) {
+              const pdfData = await pdfRes.json();
+              allPdfData = [...allPdfData, ...pdfData];
+              console.log(`✓ Loaded ${pdfData.length} records from ${pdfSource}`);
+            }
+          } catch (pdfErr) {
+            console.warn(`Could not load ${pdfSource}:`, pdfErr);
+          }
+        }
+        
+        // Merge all datasets (PDF data takes priority for duplicates)
+        const mergedData = [...mainData, ...allPdfData];
+        setSeatData(mergedData);
+        console.log(`✓ Total seat data loaded: ${mergedData.length} records (${mainData.length} main + ${allPdfData.length} PDF)`);
+      } catch (err) {
         console.error('Error loading seat data:', err);
-      });
+      }
+    };
+    
+    loadAllSeatData();
   }, []);
 
   // Get today's and tomorrow's dates

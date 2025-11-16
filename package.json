@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.0",
+    "pdfjs-dist": "^5.4.394",
     "vite": "^5.0.0",
     "xlsx": "^0.18.5"
   }
