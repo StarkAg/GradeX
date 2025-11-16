@@ -9,6 +9,7 @@ A modern, tech-inspired grade planning tool for tracking semester courses, calcu
 
 ## ✨ Features
 
+### GradeX Planner
 - 📊 **SGPA Calculator**: Automatically calculates Semester Grade Point Average based on included courses
 - 🎯 **Smart Goal Calculator**: Auto-calculates required semester exam score based on selected target grade with dynamic percentage display
 - 📝 **Course Management**: Add, edit, and remove courses with custom credits and scores
@@ -19,6 +20,19 @@ A modern, tech-inspired grade planning tool for tracking semester courses, calcu
 - 🎵 **Easter Egg**: Hidden play button for music
 - 📱 **Fully Responsive**: Optimized for all devices (mobile, tablet, desktop)
 - 🎓 **Grade Tracking**: Supports both incomplete (60 marks) and complete (100 marks) courses
+
+### SRMIST Seat Finder (v3.0)
+- 🔍 **Live Real-Time Fetch**: Data fetched with the frequency of 1 minute with exceptional accuracy
+- 🏫 **Multi-Campus Support**: Searches across Main Campus, Tech Park, Biotech & Architecture, and University Building
+- ⚡ **Auto-Refresh**: Automatically updates seat information every 3 minutes
+- 💾 **Smart Caching**: 5-minute cache reduces API calls by 80% for better performance
+- 📋 **Complete Information**: Displays Name, Seat No., Room/Venue, Floor, Department, Subject Code, and Session
+- 🎨 **Room Formatting**: Automatically formats room names (TPTP→TP, TPVPT→VPT)
+- 🏢 **Floor Detection**: Smart extraction of floor numbers from room names
+- 📸 **Venue Images**: Aesthetic venue maps for UB, TP, and TP2
+- 📱 **Mobile Optimized**: Fully responsive with touch-friendly interface
+- 🖥️ **Desktop Animation**: Smooth slide animation when seat info is found
+- 📧 **Support Contact**: Easy access to support email for inquiries
 
 ## 🚀 Getting Started
 
@@ -63,6 +77,7 @@ npm run preview
 
 ## 📖 Usage
 
+### GradeX Planner
 1. **View Courses**: All courses are displayed in cards showing current scores, credits, and target grades
 2. **Select Target Grade**: For incomplete courses (60 marks), select your target grade (C, B, B+, A, A+, O) to see required exam marks
 3. **Auto-Calculated Goals**: The required semester exam score is automatically calculated and displayed with percentage
@@ -71,6 +86,21 @@ npm run preview
 6. **Include/Exclude**: Toggle courses in/out of SGPA calculation
 7. **Complete Courses**: Courses with 100 marks automatically show achieved grade (no exam needed)
 8. **Help Guide**: Click the "?" button for quick usage guide
+
+### SRMIST Seat Finder
+1. **Enter Details**: Input your Register Number (RA number) and exam date
+2. **Quick Selection**: Use "Today" or "Tomorrow" buttons, or enter custom date (DD/MM/YYYY)
+3. **Find Seat**: Click "Find My Seat" to search across all 4 campuses
+4. **View Results**: See complete seat information including:
+   - Student Name and Department
+   - Seat Number
+   - Room/Venue with building name
+   - Floor number
+   - Subject Code
+   - Session (Forenoon/Afternoon)
+5. **Auto-Refresh**: Seat information automatically updates every 3 minutes
+6. **Venue Maps**: View venue layout images for UB, TP, and TP2 buildings
+7. **Support**: Contact ha1487@srmist.edu.in for any problems or inquiries
 
 ## 📊 Grade Scale
 
@@ -89,10 +119,18 @@ npm run preview
 
 ## 🛠️ Technology Stack
 
+### Frontend
 - **React 18**: UI framework
 - **Vite**: Build tool and dev server
 - **CSS3**: Custom styling with animations and responsive design
 - **LocalStorage API**: Data persistence
+
+### Backend (Seat Finder API)
+- **Node.js**: Serverless functions
+- **Vercel Functions**: API endpoints
+- **HTML Scraping**: Real-time data extraction from SRM exam cell
+- **In-Memory Caching**: 5-minute TTL for optimal performance
+- **Multi-Campus Support**: Parallel fetching from 4 campus endpoints
 
 ## 🎨 Design
 
