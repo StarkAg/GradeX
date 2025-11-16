@@ -27,9 +27,12 @@ const data = xlsx.utils.sheet_to_json(worksheet);
 console.log(`Total rows: ${data.length}`);
 console.log(`Sample row:`, data[0]);
 
-// Determine column names (they might vary)
-const firstRow = data[0];
-const columns = Object.keys(firstRow);
+// Determine column names (check all rows to find all possible columns)
+const allColumns = new Set();
+data.forEach(row => {
+  Object.keys(row).forEach(key => allColumns.add(key));
+});
+const columns = Array.from(allColumns);
 console.log(`Columns found: ${columns.join(', ')}`);
 
 // Find the column names (case-insensitive)
