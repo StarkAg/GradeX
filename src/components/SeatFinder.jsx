@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 export default function SeatFinder() {
+  const RA_PREFIX = 'RA';
   const [examDate, setExamDate] = useState('today');
   const [dateInput, setDateInput] = useState('');
-  const [registerNumber, setRegisterNumber] = useState('RA');
-  const [raPrefix, setRaPrefix] = useState('RA');
+  const [registerNumber, setRegisterNumber] = useState(RA_PREFIX);
   const [raDigits, setRaDigits] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -16,7 +16,6 @@ export default function SeatFinder() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [useLiveAPI, setUseLiveAPI] = useState(true); // Toggle between live API and static data
   const autoRefreshIntervalRef = useRef(null);
-  const prefixInputRef = useRef(null);
   const digitsInputRef = useRef(null);
 
   // Check if desktop/mobile on mount and resize
@@ -233,16 +232,16 @@ export default function SeatFinder() {
     return { valid: true, error: null };
   };
 
-  const updateRegisterNumber = (value) => {
-    const valueUpper = value.toUpperCase();
-    setRegisterNumber(valueUpper);
+  const updateRegisterNumber = (digitsValue = '') => {
+    const combinedValue = `${RA_PREFIX}${digitsValue}`.toUpperCase();
+    setRegisterNumber(combinedValue);
 
     // Clear previous errors and seat info
     setSeatInfo(null);
 
-    if (valueUpper.trim().length > 0) {
-      const validation = validateRA(valueUpper);
-      if (!validation.valid && valueUpper.trim().length >= 3) {
+    if (combinedValue.trim().length > 0) {
+      const validation = validateRA(combinedValue);
+      if (!validation.valid && combinedValue.trim().length >= 3) {
         setError(validation.error);
       } else {
         setError(null);
@@ -254,40 +253,14 @@ export default function SeatFinder() {
 
   const handleCompositePaste = (text) => {
     const cleaned = text.replace(/\s+/g, '').toUpperCase();
-    const letterPart = (cleaned.match(/^[A-Z]{1,2}/) || [''])[0];
-    const numberPart = (cleaned.slice(letterPart.length).match(/\d+/) || [''])[0];
-    const newPrefix = letterPart.slice(0, 2);
-    const newDigits = numberPart;
+    const digitsOnly = cleaned.replace(/^[A-Z]+/, '').replace(/[^0-9]/g, '');
 
-    setRaPrefix(newPrefix);
-    setRaDigits(newDigits);
-    updateRegisterNumber(`${newPrefix}${newDigits}`);
+    setRaDigits(digitsOnly);
+    updateRegisterNumber(digitsOnly);
 
-    if (newPrefix.length >= 2) {
-      requestAnimationFrame(() => {
-        digitsInputRef.current?.focus();
-      });
-    }
-  };
-
-  const handleRegisterNumberChange = (e) => {
-    const value = e.target.value.toUpperCase();
-    setRegisterNumber(value);
-    
-    // Clear previous errors and seat info
-    setSeatInfo(null);
-    
-    // Real-time validation feedback (only show error if user has typed something and it's incomplete)
-    if (value.trim().length > 0) {
-      const validation = validateRA(value);
-      if (!validation.valid && value.trim().length >= 3) { // Only show error if they've typed at least "RA" + 1 char
-        setError(validation.error);
-      } else {
-        setError(null);
-      }
-    } else {
-      setError(null);
-    }
+    requestAnimationFrame(() => {
+      digitsInputRef.current?.focus();
+    });
   };
 
   // Fetch from live API
@@ -1114,56 +1087,31 @@ export default function SeatFinder() {
             <div
               style={{
                 display: 'flex',
-                gap: '0',
                 width: '100%',
                 border: error && registerNumber.trim().length >= 3
                   ? '1px solid #ef4444'
                   : '1px solid var(--border-color)',
-                borderRadius: '8px',
+                borderRadius: '999px',
                 overflow: 'hidden',
-                background: 'var(--bg-primary)'
+                background: 'var(--card-bg)'
               }}
             >
-              <input
-                ref={prefixInputRef}
-                type="text"
-                value={raPrefix}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[^A-Za-z]/g, '').toUpperCase().slice(0, 2);
-                  setRaPrefix(val);
-                  updateRegisterNumber(`${val}${raDigits}`);
-                  if (val.length >= 2) {
-                    requestAnimationFrame(() => {
-                      digitsInputRef.current?.focus();
-                    });
-                  }
-                }}
-                placeholder="RA"
-                inputMode="text"
-                autoComplete="off"
+              <div
                 style={{
-                  width: 'clamp(60px, 18vw, 80px)',
-                  padding: 'clamp(12px, 3vw, 14px) clamp(10px, 3vw, 12px)',
+                  minWidth: '72px',
+                  padding: 'clamp(12px, 3vw, 14px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   fontSize: isMobile ? '16px' : 'clamp(14px, 3.5vw, 16px)',
-                  border: 'none',
-                  borderRight: '1px solid var(--border-color)',
-                  background: 'transparent',
+                  fontWeight: 600,
+                  letterSpacing: '0.15em',
                   color: 'var(--text-primary)',
-                  outline: 'none',
                   textTransform: 'uppercase'
                 }}
-                onFocus={(e) => {
-                  e.currentTarget.style.background = 'var(--bg-secondary)';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                }}
-                onPaste={(ev) => {
-                  ev.preventDefault();
-                  const text = (ev.clipboardData || window.clipboardData).getData('text');
-                  handleCompositePaste(text);
-                }}
-              />
+              >
+                {RA_PREFIX}
+              </div>
               <input
                 ref={digitsInputRef}
                 type="text"
@@ -1171,30 +1119,21 @@ export default function SeatFinder() {
                 onChange={(e) => {
                   const val = e.target.value.replace(/[^0-9]/g, '');
                   setRaDigits(val);
-                  updateRegisterNumber(`${raPrefix}${val}`);
+                  updateRegisterNumber(val);
                 }}
                 placeholder="2311003012246"
                 inputMode="numeric"
                 autoComplete="off"
                 style={{
                   flex: 1,
-                  padding: 'clamp(12px, 3vw, 14px) clamp(14px, 4vw, 16px)',
+                  padding: 'clamp(12px, 3vw, 14px) clamp(18px, 4vw, 20px)',
                   fontSize: isMobile ? '16px' : 'clamp(14px, 3.5vw, 16px)',
                   border: 'none',
                   background: 'transparent',
                   color: 'var(--text-primary)',
                   outline: 'none',
-                  textTransform: 'uppercase'
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Backspace' && raDigits.length === 0) {
-                    e.preventDefault();
-                    prefixInputRef.current?.focus();
-                    requestAnimationFrame(() => {
-                      const len = prefixInputRef.current?.value.length || 0;
-                      prefixInputRef.current?.setSelectionRange(len, len);
-                    });
-                  }
+                  textAlign: 'center',
+                  letterSpacing: '0.08em'
                 }}
                 onFocus={(e) => {
                   e.currentTarget.style.background = 'var(--bg-secondary)';
