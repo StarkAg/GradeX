@@ -1621,13 +1621,13 @@ export default function SeatFinder() {
                   <div style={{
                     background: 'rgba(59, 130, 246, 0.1)',
                     borderRadius: '10px',
-                    padding: isMobile ? '18px 14px' : 'clamp(10px, 2.5vw, 12px)',
+                    padding: isMobile ? '16px 12px' : 'clamp(10px, 2.5vw, 12px)',
                     marginBottom: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)',
                     border: '1px solid rgba(59, 130, 246, 0.2)',
                     textAlign: 'center'
                   }}>
-                    <div style={{ color: 'var(--text-secondary)', marginBottom: '6px', fontSize: isMobile ? '13px' : 'clamp(10px, 2.5vw, 12px)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Name</div>
-                    <div style={{ color: '#3b82f6', fontWeight: 700, fontSize: isMobile ? '22px' : 'clamp(14px, 3.5vw, 16px)', letterSpacing: isMobile ? '0.02em' : '0' }}>
+                    <div style={{ color: 'var(--text-secondary)', marginBottom: '6px', fontSize: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Name</div>
+                    <div style={{ color: '#3b82f6', fontWeight: 700, fontSize: isMobile ? '20px' : 'clamp(14px, 3.5vw, 16px)', letterSpacing: isMobile ? '0.01em' : '0' }}>
                       {(() => {
                         const displayName = seat.name && seat.name !== '-' ? seat.name : 'N/A';
                         // Debug for specific RA
@@ -1646,7 +1646,7 @@ export default function SeatFinder() {
                   <div style={{
                     display: 'grid',
                     gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(2, 1fr)',
-                    gap: isMobile ? '16px' : 'clamp(10px, 2.5vw, 16px)',
+                    gap: isMobile ? '14px' : 'clamp(10px, 2.5vw, 16px)',
                     fontSize: 'clamp(12px, 3vw, 14px)',
                     width: '100%',
                     overflow: 'hidden',
@@ -1655,25 +1655,25 @@ export default function SeatFinder() {
                     <div style={{
                       background: seat.room && seat.room !== '-' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(251, 191, 36, 0.1)',
                       borderRadius: '10px',
-                      padding: isMobile ? '16px 12px' : 'clamp(10px, 2.5vw, 12px)',
+                      padding: isMobile ? '14px 12px' : 'clamp(10px, 2.5vw, 12px)',
                       border: seat.room && seat.room !== '-' ? '1px solid rgba(34, 197, 94, 0.2)' : '1px solid rgba(251, 191, 36, 0.3)',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      minHeight: isMobile ? '130px' : '110px'
+                      minHeight: isMobile ? '120px' : '110px'
                     }}>
-                      <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: isMobile ? '13px' : 'clamp(10px, 2.5vw, 12px)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Room/Venue</div>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Room/Venue</div>
                       <div style={{ 
                         color: seat.room && seat.room !== '-' ? '#22c55e' : '#fbbf24', 
                         fontWeight: 700, 
-                        fontSize: isMobile ? '22px' : 'clamp(14px, 3.5vw, 18px)',
+                        fontSize: isMobile ? '20px' : 'clamp(14px, 3.5vw, 18px)',
                         fontStyle: seat.room === '-' ? 'italic' : 'normal'
                       }}>{seat.room || '-'}</div>
                       {seat.building && seat.building !== '-' && (
                         <div style={{ 
                           color: 'var(--text-secondary)', 
-                          fontSize: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)', 
+                          fontSize: isMobile ? '11px' : 'clamp(10px, 2.5vw, 12px)', 
                           marginTop: 'clamp(3px, 1vw, 4px)',
                           fontWeight: 500
                         }}>{seat.building}</div>
@@ -1682,51 +1682,51 @@ export default function SeatFinder() {
                     <div style={{
                       background: 'rgba(251, 191, 36, 0.1)',
                       borderRadius: '10px',
-                      padding: isMobile ? '16px 12px' : 'clamp(10px, 2.5vw, 12px)',
+                      padding: isMobile ? '14px 12px' : 'clamp(10px, 2.5vw, 12px)',
                       border: '1px solid rgba(251, 191, 36, 0.3)',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      minHeight: isMobile ? '130px' : '110px'
+                      minHeight: isMobile ? '120px' : '110px'
                     }}>
-                      <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: isMobile ? '13px' : 'clamp(10px, 2.5vw, 12px)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Floor</div>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Floor</div>
                       <div style={{ 
                         color: '#fbbf24', 
                         fontWeight: 700, 
-                        fontSize: isMobile ? '22px' : 'clamp(14px, 3.5vw, 18px)'
+                        fontSize: isMobile ? '20px' : 'clamp(14px, 3.5vw, 18px)'
                       }}>{seat.floor && seat.floor !== '-' ? seat.floor : 'N/A'}</div>
                     </div>
                     <div style={{
                       background: 'rgba(139, 92, 246, 0.1)',
                       borderRadius: '10px',
-                      padding: isMobile ? '16px 12px' : 'clamp(10px, 2.5vw, 12px)',
+                      padding: isMobile ? '14px 12px' : 'clamp(10px, 2.5vw, 12px)',
                       border: '1px solid rgba(139, 92, 246, 0.2)',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      minHeight: isMobile ? '130px' : '110px'
+                      minHeight: isMobile ? '120px' : '110px'
                     }}>
-                      <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: isMobile ? '13px' : 'clamp(10px, 2.5vw, 12px)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Seat No.</div>
-                      <div style={{ color: '#8b5cf6', fontWeight: 700, fontSize: isMobile ? '22px' : 'clamp(14px, 3.5vw, 18px)' }}>{seat.bench && seat.bench !== '-' ? seat.bench : 'N/A'}</div>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Seat No.</div>
+                      <div style={{ color: '#8b5cf6', fontWeight: 700, fontSize: isMobile ? '20px' : 'clamp(14px, 3.5vw, 18px)' }}>{seat.bench && seat.bench !== '-' ? seat.bench : 'N/A'}</div>
                     </div>
                     <div style={{
                       background: 'rgba(255, 255, 255, 0.03)',
                       borderRadius: '10px',
-                      padding: isMobile ? '16px 12px' : 'clamp(10px, 2.5vw, 12px)',
+                      padding: isMobile ? '14px 12px' : 'clamp(10px, 2.5vw, 12px)',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      minHeight: isMobile ? '130px' : '110px'
+                      minHeight: isMobile ? '120px' : '110px'
                     }}>
-                    <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: isMobile ? '13px' : 'clamp(10px, 2.5vw, 12px)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Subject</div>
-                    <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: isMobile ? '20px' : 'clamp(13px, 3vw, 15px)' }}>
+                    <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Subject</div>
+                    <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: isMobile ? '18px' : 'clamp(13px, 3vw, 15px)' }}>
                       {seat.subcode || '-'}
                       {seat.subcode && subjectNames[seat.subcode.toUpperCase()] && (
-                        <span style={{ display: 'block', marginTop: '6px', fontSize: isMobile ? '13px' : 'clamp(11px, 2.5vw, 13px)', fontWeight: 500, color: 'var(--text-secondary)' }}>
+                        <span style={{ display: 'block', marginTop: '6px', fontSize: isMobile ? '12px' : 'clamp(11px, 2.5vw, 13px)', fontWeight: 500, color: 'var(--text-secondary)' }}>
                           {subjectNames[seat.subcode.toUpperCase()]}
                         </span>
                       )}
@@ -1735,34 +1735,34 @@ export default function SeatFinder() {
                     <div style={{
                       background: 'rgba(34, 197, 94, 0.1)',
                       borderRadius: '10px',
-                      padding: isMobile ? '16px 12px' : 'clamp(10px, 2.5vw, 12px)',
+                      padding: isMobile ? '14px 12px' : 'clamp(10px, 2.5vw, 12px)',
                       border: '1px solid rgba(34, 197, 94, 0.2)',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      minHeight: isMobile ? '130px' : '110px'
+                      minHeight: isMobile ? '120px' : '110px'
                     }}>
-                      <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: isMobile ? '13px' : 'clamp(10px, 2.5vw, 12px)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Department</div>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Department</div>
                       <div style={{ 
                         color: '#22c55e', 
                         fontWeight: 700, 
-                        fontSize: isMobile ? '22px' : 'clamp(14px, 3.5vw, 18px)'
+                        fontSize: isMobile ? '20px' : 'clamp(14px, 3.5vw, 18px)'
                       }}>{seat.department && seat.department !== '-' ? seat.department : 'N/A'}</div>
                     </div>
                     <div style={{
                       background: 'rgba(255, 255, 255, 0.03)',
                       borderRadius: '10px',
-                      padding: isMobile ? '16px 12px' : 'clamp(10px, 2.5vw, 12px)',
+                      padding: isMobile ? '14px 12px' : 'clamp(10px, 2.5vw, 12px)',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      minHeight: isMobile ? '130px' : '110px'
+                      minHeight: isMobile ? '120px' : '110px'
                     }}>
-                      <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: isMobile ? '13px' : 'clamp(10px, 2.5vw, 12px)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Session</div>
-                      <div style={{ color: '#60a5fa', fontWeight: 700, fontSize: isMobile ? '22px' : 'clamp(14px, 3.5vw, 18px)' }}>{seat.session || '-'}</div>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Session</div>
+                      <div style={{ color: '#60a5fa', fontWeight: 700, fontSize: isMobile ? '20px' : 'clamp(14px, 3.5vw, 18px)' }}>{seat.session || '-'}</div>
                     </div>
                   </div>
                   </div>
