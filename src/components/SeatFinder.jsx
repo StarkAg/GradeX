@@ -1655,7 +1655,7 @@ export default function SeatFinder() {
                     <div style={{
                       background: seat.room && seat.room !== '-' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(251, 191, 36, 0.1)',
                       borderRadius: '10px',
-                      padding: isMobile ? '14px 12px' : 'clamp(10px, 2.5vw, 12px)',
+                      padding: isMobile ? '15px 11px' : 'clamp(10px, 2.5vw, 12px)',
                       border: seat.room && seat.room !== '-' ? '1px solid rgba(34, 197, 94, 0.2)' : '1px solid rgba(251, 191, 36, 0.3)',
                       display: 'flex',
                       flexDirection: 'column',
@@ -1682,7 +1682,7 @@ export default function SeatFinder() {
                     <div style={{
                       background: 'rgba(251, 191, 36, 0.1)',
                       borderRadius: '10px',
-                      padding: isMobile ? '14px 12px' : 'clamp(10px, 2.5vw, 12px)',
+                      padding: isMobile ? '15px 11px' : 'clamp(10px, 2.5vw, 12px)',
                       border: '1px solid rgba(251, 191, 36, 0.3)',
                       display: 'flex',
                       flexDirection: 'column',
@@ -1700,7 +1700,7 @@ export default function SeatFinder() {
                     <div style={{
                       background: 'rgba(139, 92, 246, 0.1)',
                       borderRadius: '10px',
-                      padding: isMobile ? '14px 12px' : 'clamp(10px, 2.5vw, 12px)',
+                      padding: isMobile ? '15px 11px' : 'clamp(10px, 2.5vw, 12px)',
                       border: '1px solid rgba(139, 92, 246, 0.2)',
                       display: 'flex',
                       flexDirection: 'column',
@@ -1714,7 +1714,7 @@ export default function SeatFinder() {
                     <div style={{
                       background: 'rgba(255, 255, 255, 0.03)',
                       borderRadius: '10px',
-                      padding: isMobile ? '14px 12px' : 'clamp(10px, 2.5vw, 12px)',
+                      padding: isMobile ? '15px 11px' : 'clamp(10px, 2.5vw, 12px)',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
                       display: 'flex',
                       flexDirection: 'column',
@@ -1735,7 +1735,7 @@ export default function SeatFinder() {
                     <div style={{
                       background: 'rgba(34, 197, 94, 0.1)',
                       borderRadius: '10px',
-                      padding: isMobile ? '14px 12px' : 'clamp(10px, 2.5vw, 12px)',
+                      padding: isMobile ? '15px 11px' : 'clamp(10px, 2.5vw, 12px)',
                       border: '1px solid rgba(34, 197, 94, 0.2)',
                       display: 'flex',
                       flexDirection: 'column',
@@ -1753,7 +1753,7 @@ export default function SeatFinder() {
                     <div style={{
                       background: 'rgba(255, 255, 255, 0.03)',
                       borderRadius: '10px',
-                      padding: isMobile ? '14px 12px' : 'clamp(10px, 2.5vw, 12px)',
+                      padding: isMobile ? '15px 11px' : 'clamp(10px, 2.5vw, 12px)',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
                       display: 'flex',
                       flexDirection: 'column',
