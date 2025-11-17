@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 
 export default function SeatFinder() {
   const RA_PREFIX = 'RA';
-  const VPT_BUILDING_NAME = 'Valliammai Polytechnic (VPT Campus)';
+  const VPT_BUILDING_NAME = 'Valliammai Block Behind TP';
   const [examDate, setExamDate] = useState('today');
   const [dateInput, setDateInput] = useState('');
   const [registerNumber, setRegisterNumber] = useState(RA_PREFIX);
