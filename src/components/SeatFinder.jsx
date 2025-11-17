@@ -259,7 +259,11 @@ export default function SeatFinder() {
     updateRegisterNumber(digitsOnly);
 
     requestAnimationFrame(() => {
-      digitsInputRef.current?.focus();
+      const input = digitsInputRef.current;
+      if (input) {
+        const caretPos = RA_PREFIX.length + digitsOnly.length;
+        input.setSelectionRange(caretPos, caretPos);
+      }
     });
   };
 
@@ -1086,60 +1090,75 @@ export default function SeatFinder() {
             </label>
             <div
               style={{
-                display: 'flex',
                 width: '100%',
                 border: error && registerNumber.trim().length >= 3
                   ? '1px solid #ef4444'
                   : '1px solid var(--border-color)',
                 borderRadius: '999px',
-                overflow: 'hidden',
                 background: 'var(--card-bg)'
               }}
             >
-              <div
-                style={{
-                  minWidth: '72px',
-                  padding: 'clamp(12px, 3vw, 14px)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: isMobile ? '16px' : 'clamp(14px, 3.5vw, 16px)',
-                  fontWeight: 600,
-                  letterSpacing: '0.15em',
-                  color: 'var(--text-primary)',
-                  textTransform: 'uppercase'
-                }}
-              >
-                {RA_PREFIX}
-              </div>
               <input
                 ref={digitsInputRef}
                 type="text"
-                value={raDigits}
+                value={`${RA_PREFIX}${raDigits}`}
                 onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9]/g, '');
-                  setRaDigits(val);
-                  updateRegisterNumber(val);
+                  const rawValue = e.target.value.toUpperCase();
+                  let digitsPortion = rawValue.startsWith(RA_PREFIX)
+                    ? rawValue.slice(RA_PREFIX.length)
+                    : rawValue.replace(/[^0-9]/g, '');
+                  digitsPortion = digitsPortion.replace(/[^0-9]/g, '');
+                  setRaDigits(digitsPortion);
+                  updateRegisterNumber(digitsPortion);
+
+                  const caretTarget = Math.max(
+                    RA_PREFIX.length,
+                    (e.target.selectionStart ?? (RA_PREFIX.length + digitsPortion.length))
+                  );
+                  requestAnimationFrame(() => {
+                    const input = digitsInputRef.current;
+                    if (input) {
+                      const pos = Math.max(RA_PREFIX.length, caretTarget);
+                      input.setSelectionRange(pos, pos);
+                    }
+                  });
                 }}
-                placeholder="2311003012246"
                 inputMode="numeric"
                 autoComplete="off"
+                spellCheck={false}
+                onFocus={(e) => {
+                  requestAnimationFrame(() => {
+                    const input = e.currentTarget;
+                    const caretPos = Math.max(RA_PREFIX.length, input.value.length);
+                    input.setSelectionRange(caretPos, caretPos);
+                  });
+                }}
+                onKeyDown={(e) => {
+                  const input = e.currentTarget;
+                  const caret = input.selectionStart ?? 0;
+                  const isBackspace =
+                    e.key === 'Backspace' || e.key === 'Delete';
+                  if (isBackspace && caret <= RA_PREFIX.length) {
+                    e.preventDefault();
+                    requestAnimationFrame(() => {
+                      input.setSelectionRange(RA_PREFIX.length, RA_PREFIX.length);
+                    });
+                  }
+                  if (e.key === 'ArrowLeft' && caret <= RA_PREFIX.length) {
+                    e.preventDefault();
+                    input.setSelectionRange(RA_PREFIX.length, RA_PREFIX.length);
+                  }
+                }}
+                placeholder={`${RA_PREFIX}2311003012246`}
                 style={{
-                  flex: 1,
+                  width: '100%',
                   padding: 'clamp(12px, 3vw, 14px) clamp(18px, 4vw, 20px)',
                   fontSize: isMobile ? '16px' : 'clamp(14px, 3.5vw, 16px)',
                   border: 'none',
                   background: 'transparent',
                   color: 'var(--text-primary)',
                   outline: 'none',
-                  textAlign: 'center',
                   letterSpacing: '0.08em'
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.background = 'var(--bg-secondary)';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.background = 'transparent';
                 }}
                 onPaste={(ev) => {
                   ev.preventDefault();
