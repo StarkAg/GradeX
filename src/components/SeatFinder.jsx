@@ -1846,7 +1846,9 @@ export default function SeatFinder() {
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
                   display: 'flex',
                   gap: '20px',
-                  flexDirection: hasImage ? 'row' : 'column'
+                  flexDirection: hasImage ? 'row' : 'column',
+                  alignItems: 'center',
+                  textAlign: 'center'
                 }}>
                   {hasImage ? (() => {
                     if (roomUpper.startsWith('TP2') || hasCLSorLSorLH) {
@@ -1992,7 +1994,7 @@ export default function SeatFinder() {
                     }
                     return null;
                   })() : null}
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ flex: 1, minWidth: 0, textAlign: 'center' }}>
                   {/* Name Box */}
                   <div style={{
                     background: 'rgba(59, 130, 246, 0.15)',
@@ -2000,7 +2002,10 @@ export default function SeatFinder() {
                     padding: '14px',
                     marginBottom: '16px',
                     border: '1.5px solid rgba(59, 130, 246, 0.3)',
-                    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)'
+                    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center'
                   }}>
                     <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Name</div>
                     <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: '18px' }}>
@@ -2025,14 +2030,19 @@ export default function SeatFinder() {
                     gap: '14px',
                     fontSize: '14px',
                     width: '100%',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    textAlign: 'center'
                   }}>
                     <div style={{
                       background: seat.room && seat.room !== '-' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(251, 191, 36, 0.15)',
                       borderRadius: '12px',
                       padding: '14px',
                       border: seat.room && seat.room !== '-' ? '1.5px solid rgba(34, 197, 94, 0.3)' : '1.5px solid rgba(251, 191, 36, 0.3)',
-                      boxShadow: seat.room && seat.room !== '-' ? '0 2px 8px rgba(34, 197, 94, 0.15)' : '0 2px 8px rgba(251, 191, 36, 0.15)'
+                      boxShadow: seat.room && seat.room !== '-' ? '0 2px 8px rgba(34, 197, 94, 0.15)' : '0 2px 8px rgba(251, 191, 36, 0.15)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Room/Venue</div>
                       <div style={{ 
@@ -2056,7 +2066,11 @@ export default function SeatFinder() {
                       borderRadius: '12px',
                       padding: '14px',
                       border: '1.5px solid rgba(251, 191, 36, 0.3)',
-                      boxShadow: '0 2px 8px rgba(251, 191, 36, 0.15)'
+                      boxShadow: '0 2px 8px rgba(251, 191, 36, 0.15)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Floor</div>
                       <div style={{ 
@@ -2071,7 +2085,11 @@ export default function SeatFinder() {
                       borderRadius: '12px',
                       padding: '14px',
                       border: '1.5px solid rgba(139, 92, 246, 0.3)',
-                      boxShadow: '0 2px 8px rgba(139, 92, 246, 0.15)'
+                      boxShadow: '0 2px 8px rgba(139, 92, 246, 0.15)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Seat No.</div>
                       <div style={{ color: '#8b5cf6', fontWeight: 700, fontSize: '20px', letterSpacing: '-0.02em' }}>{seat.bench && seat.bench !== '-' ? seat.bench : 'N/A'}</div>
@@ -2080,7 +2098,11 @@ export default function SeatFinder() {
                       background: 'rgba(255, 255, 255, 0.05)',
                       borderRadius: '12px',
                       padding: '14px',
-                      border: '1px solid rgba(255, 255, 255, 0.15)'
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Subject</div>
                       <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '16px' }}>
@@ -2097,7 +2119,11 @@ export default function SeatFinder() {
                       borderRadius: '12px',
                       padding: '14px',
                       border: '1.5px solid rgba(59, 130, 246, 0.3)',
-                      boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)'
+                      boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Department</div>
                       <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: '16px' }}>{seat.department && seat.department !== '-' ? seat.department : 'N/A'}</div>
@@ -2106,7 +2132,11 @@ export default function SeatFinder() {
                       background: 'rgba(255, 255, 255, 0.05)',
                       borderRadius: '12px',
                       padding: '14px',
-                      border: '1px solid rgba(255, 255, 255, 0.15)'
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Session</div>
                       <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '16px' }}>{seat.session || '-'}</div>
