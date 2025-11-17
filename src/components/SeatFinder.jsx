@@ -3,7 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 export default function SeatFinder() {
   const [examDate, setExamDate] = useState('today');
   const [dateInput, setDateInput] = useState('');
-  const [registerNumber, setRegisterNumber] = useState('');
+  const [registerNumber, setRegisterNumber] = useState('RA');
+  const [raPrefix, setRaPrefix] = useState('RA');
+  const [raDigits, setRaDigits] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [seatInfo, setSeatInfo] = useState(null);
@@ -14,6 +16,8 @@ export default function SeatFinder() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [useLiveAPI, setUseLiveAPI] = useState(true); // Toggle between live API and static data
   const autoRefreshIntervalRef = useRef(null);
+  const prefixInputRef = useRef(null);
+  const digitsInputRef = useRef(null);
 
   // Check if desktop/mobile on mount and resize
   useEffect(() => {
@@ -229,8 +233,44 @@ export default function SeatFinder() {
     return { valid: true, error: null };
   };
 
+  const updateRegisterNumber = (value) => {
+    const valueUpper = value.toUpperCase();
+    setRegisterNumber(valueUpper);
+
+    // Clear previous errors and seat info
+    setSeatInfo(null);
+
+    if (valueUpper.trim().length > 0) {
+      const validation = validateRA(valueUpper);
+      if (!validation.valid && valueUpper.trim().length >= 3) {
+        setError(validation.error);
+      } else {
+        setError(null);
+      }
+    } else {
+      setError(null);
+    }
+  };
+
+  const handleCompositePaste = (text) => {
+    const cleaned = text.replace(/\s+/g, '').toUpperCase();
+    const letterPart = (cleaned.match(/^[A-Z]{1,2}/) || [''])[0];
+    const numberPart = (cleaned.slice(letterPart.length).match(/\d+/) || [''])[0];
+    const newPrefix = letterPart.slice(0, 2);
+    const newDigits = numberPart;
+
+    setRaPrefix(newPrefix);
+    setRaDigits(newDigits);
+    updateRegisterNumber(`${newPrefix}${newDigits}`);
+
+    if (newPrefix.length >= 2) {
+      requestAnimationFrame(() => {
+        digitsInputRef.current?.focus();
+      });
+    }
+  };
+
   const handleRegisterNumberChange = (e) => {
-    // Convert to uppercase for consistency, but allow any case input
     const value = e.target.value.toUpperCase();
     setRegisterNumber(value);
     
@@ -1071,48 +1111,104 @@ export default function SeatFinder() {
             }}>
               Register Number
             </label>
-            <input
-              type="text"
-              value={registerNumber}
-              onChange={handleRegisterNumberChange}
-              placeholder="Enter your full RA number"
-              className="seatfinder-ra-input"
+            <div
               style={{
+                display: 'flex',
+                gap: '0',
                 width: '100%',
-                padding: 'clamp(12px, 3vw, 14px) clamp(14px, 4vw, 16px)',
-                fontSize: isMobile ? '16px' : 'clamp(14px, 3.5vw, 16px)',
-                border: error && registerNumber.trim().length >= 3 
-                  ? '1px solid #ef4444' 
+                border: error && registerNumber.trim().length >= 3
+                  ? '1px solid #ef4444'
                   : '1px solid var(--border-color)',
                 borderRadius: '8px',
-                background: 'var(--bg-primary)',
-                color: 'var(--text-primary)',
-                outline: 'none',
-                transition: 'all 0.2s ease',
-                boxSizing: 'border-box',
-                textTransform: 'uppercase',
-                minHeight: isMobile ? '52px' : '44px',
-                touchAction: 'manipulation',
-                WebkitAppearance: 'none',
-                WebkitTapHighlightColor: 'transparent'
+                overflow: 'hidden',
+                background: 'var(--bg-primary)'
               }}
-              onFocus={(e) => {
-                const validation = validateRA(registerNumber);
-                if (!validation.valid && registerNumber.trim().length >= 3) {
-                  e.currentTarget.style.borderColor = '#ef4444';
-                } else {
-                  e.currentTarget.style.borderColor = 'var(--text-primary)';
-                }
-              }}
-              onBlur={(e) => {
-                const validation = validateRA(registerNumber);
-                if (!validation.valid && registerNumber.trim().length >= 3) {
-                  e.currentTarget.style.borderColor = '#ef4444';
-                } else {
-                  e.currentTarget.style.borderColor = 'var(--border-color)';
-                }
-              }}
-            />
+            >
+              <input
+                ref={prefixInputRef}
+                type="text"
+                value={raPrefix}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^A-Za-z]/g, '').toUpperCase().slice(0, 2);
+                  setRaPrefix(val);
+                  updateRegisterNumber(`${val}${raDigits}`);
+                  if (val.length >= 2) {
+                    requestAnimationFrame(() => {
+                      digitsInputRef.current?.focus();
+                    });
+                  }
+                }}
+                placeholder="RA"
+                inputMode="text"
+                autoComplete="off"
+                style={{
+                  width: 'clamp(60px, 18vw, 80px)',
+                  padding: 'clamp(12px, 3vw, 14px) clamp(10px, 3vw, 12px)',
+                  fontSize: isMobile ? '16px' : 'clamp(14px, 3.5vw, 16px)',
+                  border: 'none',
+                  borderRight: '1px solid var(--border-color)',
+                  background: 'transparent',
+                  color: 'var(--text-primary)',
+                  outline: 'none',
+                  textTransform: 'uppercase'
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.background = 'var(--bg-secondary)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                }}
+                onPaste={(ev) => {
+                  ev.preventDefault();
+                  const text = (ev.clipboardData || window.clipboardData).getData('text');
+                  handleCompositePaste(text);
+                }}
+              />
+              <input
+                ref={digitsInputRef}
+                type="text"
+                value={raDigits}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, '');
+                  setRaDigits(val);
+                  updateRegisterNumber(`${raPrefix}${val}`);
+                }}
+                placeholder="2311003012246"
+                inputMode="numeric"
+                autoComplete="off"
+                style={{
+                  flex: 1,
+                  padding: 'clamp(12px, 3vw, 14px) clamp(14px, 4vw, 16px)',
+                  fontSize: isMobile ? '16px' : 'clamp(14px, 3.5vw, 16px)',
+                  border: 'none',
+                  background: 'transparent',
+                  color: 'var(--text-primary)',
+                  outline: 'none',
+                  textTransform: 'uppercase'
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Backspace' && raDigits.length === 0) {
+                    e.preventDefault();
+                    prefixInputRef.current?.focus();
+                    requestAnimationFrame(() => {
+                      const len = prefixInputRef.current?.value.length || 0;
+                      prefixInputRef.current?.setSelectionRange(len, len);
+                    });
+                  }
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.background = 'var(--bg-secondary)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                }}
+                onPaste={(ev) => {
+                  ev.preventDefault();
+                  const text = (ev.clipboardData || window.clipboardData).getData('text');
+                  handleCompositePaste(text);
+                }}
+              />
+            </div>
           </div>
 
           {/* Submit Button */}
