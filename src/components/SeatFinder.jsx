@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 
 export default function SeatFinder() {
   const RA_PREFIX = 'RA';
+  const VPT_BUILDING_NAME = 'Valliammai Polytechnic (VPT Campus)';
   const [examDate, setExamDate] = useState('today');
   const [dateInput, setDateInput] = useState('');
   const [registerNumber, setRegisterNumber] = useState(RA_PREFIX);
@@ -385,12 +386,15 @@ export default function SeatFinder() {
             
             if (formattedRoom === 'TPVPT-028') {
               formattedRoom = 'VPT-028';
-              buildingName = 'Valliammai Block Behind TP';
+              buildingName = VPT_BUILDING_NAME;
               floorNumber = 'Ground Floor';
             } else if (formattedRoom.startsWith('TPTP-')) {
               formattedRoom = formattedRoom.replace('TPTP-', 'TP-');
             } else if (formattedRoom.startsWith('TPVPT-')) {
               formattedRoom = formattedRoom.replace('TPVPT-', 'VPT-');
+              buildingName = VPT_BUILDING_NAME;
+            } else if (formattedRoom.startsWith('VPT-')) {
+              buildingName = VPT_BUILDING_NAME;
             }
             
             // CLS, LS, and LH rooms are in Tech Park 2
@@ -566,12 +570,15 @@ export default function SeatFinder() {
       
       if (formattedRoom === 'TPVPT-028') {
         formattedRoom = 'VPT-028';
-        buildingName = 'Valliammai Block Behind TP';
+        buildingName = VPT_BUILDING_NAME;
         floorNumber = 'Ground Floor';
       } else if (formattedRoom.startsWith('TPTP-')) {
         formattedRoom = formattedRoom.replace('TPTP-', 'TP-');
       } else if (formattedRoom.startsWith('TPVPT-')) {
         formattedRoom = formattedRoom.replace('TPVPT-', 'VPT-');
+        buildingName = VPT_BUILDING_NAME;
+      } else if (formattedRoom.startsWith('VPT-')) {
+        buildingName = VPT_BUILDING_NAME;
       }
       
       // CLS, LS, and LH rooms are in Tech Park 2
@@ -1616,7 +1623,8 @@ export default function SeatFinder() {
                     borderRadius: '10px',
                     padding: 'clamp(10px, 2.5vw, 12px)',
                     marginBottom: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)',
-                    border: '1px solid rgba(59, 130, 246, 0.2)'
+                    border: '1px solid rgba(59, 130, 246, 0.2)',
+                    textAlign: 'center'
                   }}>
                     <div style={{ color: 'var(--text-secondary)', marginBottom: '6px', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</div>
                     <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: 'clamp(14px, 3.5vw, 16px)' }}>
@@ -1641,13 +1649,19 @@ export default function SeatFinder() {
                     gap: 'clamp(10px, 2.5vw, 16px)',
                     fontSize: 'clamp(12px, 3vw, 14px)',
                     width: '100%',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    textAlign: 'center'
                   }}>
                     <div style={{
                       background: seat.room && seat.room !== '-' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(251, 191, 36, 0.1)',
                       borderRadius: '10px',
                       padding: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)',
-                      border: seat.room && seat.room !== '-' ? '1px solid rgba(34, 197, 94, 0.2)' : '1px solid rgba(251, 191, 36, 0.3)'
+                      border: seat.room && seat.room !== '-' ? '1px solid rgba(34, 197, 94, 0.2)' : '1px solid rgba(251, 191, 36, 0.3)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minHeight: '110px'
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Room/Venue</div>
                       <div style={{ 
@@ -1669,7 +1683,12 @@ export default function SeatFinder() {
                       background: 'rgba(251, 191, 36, 0.1)',
                       borderRadius: '10px',
                       padding: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)',
-                      border: '1px solid rgba(251, 191, 36, 0.3)'
+                      border: '1px solid rgba(251, 191, 36, 0.3)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minHeight: '110px'
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Floor</div>
                       <div style={{ 
@@ -1682,7 +1701,12 @@ export default function SeatFinder() {
                       background: 'rgba(139, 92, 246, 0.1)',
                       borderRadius: '10px',
                       padding: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)',
-                      border: '1px solid rgba(139, 92, 246, 0.2)'
+                      border: '1px solid rgba(139, 92, 246, 0.2)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minHeight: '110px'
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Seat No.</div>
                       <div style={{ color: '#8b5cf6', fontWeight: 700, fontSize: 'clamp(14px, 3.5vw, 18px)' }}>{seat.bench && seat.bench !== '-' ? seat.bench : 'N/A'}</div>
@@ -1691,7 +1715,12 @@ export default function SeatFinder() {
                       background: 'rgba(255, 255, 255, 0.03)',
                       borderRadius: '10px',
                       padding: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minHeight: '110px'
                     }}>
                     <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Subject</div>
                     <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: 'clamp(13px, 3vw, 15px)' }}>
@@ -1704,22 +1733,36 @@ export default function SeatFinder() {
                     </div>
                     </div>
                     <div style={{
-                      background: 'rgba(59, 130, 246, 0.1)',
+                      background: 'rgba(34, 197, 94, 0.1)',
                       borderRadius: '10px',
                       padding: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)',
-                      border: '1px solid rgba(59, 130, 246, 0.2)'
+                      border: '1px solid rgba(34, 197, 94, 0.2)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minHeight: '110px'
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Department</div>
-                      <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: 'clamp(13px, 3vw, 15px)' }}>{seat.department && seat.department !== '-' ? seat.department : 'N/A'}</div>
+                      <div style={{ 
+                        color: '#22c55e', 
+                        fontWeight: 700, 
+                        fontSize: 'clamp(14px, 3.5vw, 18px)'
+                      }}>{seat.department && seat.department !== '-' ? seat.department : 'N/A'}</div>
                     </div>
                     <div style={{
                       background: 'rgba(255, 255, 255, 0.03)',
                       borderRadius: '10px',
                       padding: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minHeight: '110px'
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Session</div>
-                      <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: 'clamp(13px, 3vw, 15px)' }}>{seat.session || '-'}</div>
+                      <div style={{ color: '#60a5fa', fontWeight: 700, fontSize: 'clamp(14px, 3.5vw, 18px)' }}>{seat.session || '-'}</div>
                     </div>
                   </div>
                   </div>
