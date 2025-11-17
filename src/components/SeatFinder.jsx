@@ -511,7 +511,11 @@ export default function SeatFinder() {
   };
 
   // Fetch from static JSON data (fallback)
-  const fetchFromStaticData = async (ra, date) => {
+  const fetchFromStaticData = async (ra, date, options = {}) => {
+    const {
+      allowSetState = true,
+      allowFallback = true
+    } = options;
     const regNoUpper = ra.trim().toUpperCase();
     const normalizeDate = (dateStr) => {
       if (!dateStr) return '';
@@ -624,8 +628,10 @@ export default function SeatFinder() {
         session: '-',
         date: date
       }];
-      updateSeatInfoWithSubjects(fallbackSeat);
-      return fallbackSeat;
+      if (allowFallback && allowSetState) {
+        updateSeatInfoWithSubjects(fallbackSeat);
+      }
+      return allowFallback ? fallbackSeat : [];
     } else {
       const mergedSeats = foundSeats.map(seat => {
         const { formattedRoom, floorNumber, buildingName } = formatRoomAndFloor(seat.room, seat.building);
@@ -638,7 +644,9 @@ export default function SeatFinder() {
           building: buildingName
         };
       });
-      updateSeatInfoWithSubjects(mergedSeats);
+      if (allowSetState) {
+        updateSeatInfoWithSubjects(mergedSeats);
+      }
       return mergedSeats; // Return seats array
     }
   };
@@ -677,9 +685,12 @@ export default function SeatFinder() {
         console.log('🔍 Checking static data for additional results...');
         let staticSeats = [];
         try {
-          // Call fetchFromStaticData but capture return value
-          // Note: fetchFromStaticData will set seatInfo internally, but we'll override it with merged results
-          staticSeats = await fetchFromStaticData(registerNumber.trim(), selectedDate);
+          // Call fetchFromStaticData but capture return value without triggering fallback/setState
+          staticSeats = await fetchFromStaticData(
+            registerNumber.trim(),
+            selectedDate,
+            { allowSetState: false, allowFallback: false }
+          );
           console.log(`✅ Found ${staticSeats.length} seat(s) from static data:`, staticSeats.map(s => `${s.room} (${s.session})`));
           
           // Merge results from both sources
