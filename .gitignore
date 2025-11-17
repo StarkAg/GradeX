@@ -36,3 +36,6 @@ build
 .vercel/
 
 .vercel
+
+# Large subject curriculum PDFs (local only)
+public/Subjects/

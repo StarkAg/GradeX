@@ -9,6 +9,7 @@ export default function SeatFinder() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [seatInfo, setSeatInfo] = useState(null);
+  const [subjectNames, setSubjectNames] = useState({});
   const [seatData, setSeatData] = useState([]);
   const [isDesktop, setIsDesktop] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -251,6 +252,52 @@ export default function SeatFinder() {
     }
   };
 
+  const fetchSubjectNamesForSeats = async (seats) => {
+    if (!Array.isArray(seats) || seats.length === 0) return;
+
+    const codes = Array.from(new Set(
+      seats
+        .map((seat) => {
+          const code = seat?.subcode || seat?.subjectCode;
+          return typeof code === 'string' ? code.toUpperCase().trim() : '';
+        })
+        .filter((code) => code && code !== '-')
+    ));
+
+    const missingCodes = codes.filter((code) => !subjectNames[code]);
+    if (missingCodes.length === 0) return;
+
+    try {
+      const params = new URLSearchParams();
+      params.set('codes', missingCodes.join(','));
+      const response = await fetch(`/api/subjects?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch subjects');
+      }
+      const data = await response.json();
+      if (data?.subjects?.length) {
+        setSubjectNames((prev) => {
+          const next = { ...prev };
+          data.subjects.forEach((subject) => {
+            if (subject.code && subject.name) {
+              next[subject.code.toUpperCase()] = subject.name;
+            }
+          });
+          return next;
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to load subject names:', err.message);
+    }
+  };
+
+  const updateSeatInfoWithSubjects = (seats) => {
+    setSeatInfo(seats);
+    if (Array.isArray(seats) && seats.length > 0) {
+      fetchSubjectNamesForSeats(seats);
+    }
+  };
+
   const handleCompositePaste = (text) => {
     const cleaned = text.replace(/\s+/g, '').toUpperCase();
     const digitsOnly = cleaned.replace(/^[A-Z]+/, '').replace(/[^0-9]/g, '');
@@ -447,7 +494,7 @@ export default function SeatFinder() {
             console.error('❌ CRITICAL: Name is still "-" in final array!', seat);
           }
         });
-        setSeatInfo(transformedSeats);
+        updateSeatInfoWithSubjects(transformedSeats);
         setError(null);
         return { found: true, seats: transformedSeats }; // Return seats array
       } else {
@@ -566,7 +613,7 @@ export default function SeatFinder() {
     };
     
     if (foundSeats.length === 0) {
-      setSeatInfo([{
+      const fallbackSeat = [{
         registerNumber: regNoUpper,
         name: permanentData.name,
         department: permanentData.department,
@@ -576,7 +623,9 @@ export default function SeatFinder() {
         subcode: '-',
         session: '-',
         date: date
-      }]);
+      }];
+      updateSeatInfoWithSubjects(fallbackSeat);
+      return fallbackSeat;
     } else {
       const mergedSeats = foundSeats.map(seat => {
         const { formattedRoom, floorNumber, buildingName } = formatRoomAndFloor(seat.room, seat.building);
@@ -589,7 +638,7 @@ export default function SeatFinder() {
           building: buildingName
         };
       });
-      setSeatInfo(mergedSeats);
+      updateSeatInfoWithSubjects(mergedSeats);
       return mergedSeats; // Return seats array
     }
   };
@@ -652,7 +701,7 @@ export default function SeatFinder() {
           
           if (allSeats.length > 0) {
             console.log(`✅ Total seats found: ${allSeats.length} (${liveApiSeats.length} live + ${staticSeats.length} static)`);
-            setSeatInfo(allSeats);
+            updateSeatInfoWithSubjects(allSeats);
             setError(null);
           } else if (liveApiSeats.length === 0 && staticSeats.length === 0) {
             setSeatInfo(null);
@@ -662,7 +711,7 @@ export default function SeatFinder() {
           console.warn('Static data fetch failed:', staticErr);
           // If we have live API results, use those
           if (liveApiSeats.length > 0) {
-            setSeatInfo(liveApiSeats);
+            updateSeatInfoWithSubjects(liveApiSeats);
             setError(null);
           }
         }
@@ -995,7 +1044,7 @@ export default function SeatFinder() {
                   style={{
                     width: '100%',
                     padding: 'clamp(12px, 3.5vw, 14px) clamp(10px, 2.5vw, 16px)',
-                    fontSize: 'clamp(14px, 4vw, 16px)',
+                    fontSize: isMobile ? '16px' : 'clamp(14px, 4vw, 16px)',
                     fontWeight: 500,
                     border: '1px solid var(--border-color)',
                     borderRadius: 'clamp(8px, 2vw, 10px)',
@@ -1008,8 +1057,7 @@ export default function SeatFinder() {
                     textAlign: 'center',
                     touchAction: 'manipulation',
                     WebkitAppearance: 'none',
-                    WebkitTapHighlightColor: 'transparent',
-                    fontSize: isMobile ? '16px' : 'clamp(14px, 4vw, 16px)' // Prevent zoom on iOS
+                    WebkitTapHighlightColor: 'transparent'
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = 'var(--text-primary)';
@@ -1634,8 +1682,15 @@ export default function SeatFinder() {
                       padding: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)',
                       border: '1px solid rgba(255, 255, 255, 0.1)'
                     }}>
-                      <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Subject Code</div>
-                      <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: 'clamp(13px, 3vw, 15px)' }}>{seat.subcode || '-'}</div>
+                    <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Subject</div>
+                    <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: 'clamp(13px, 3vw, 15px)' }}>
+                      {seat.subcode || '-'}
+                      {seat.subcode && subjectNames[seat.subcode.toUpperCase()] && (
+                        <span style={{ display: 'block', marginTop: '4px', fontSize: 'clamp(11px, 2.5vw, 13px)', fontWeight: 500, color: 'var(--text-secondary)' }}>
+                          {subjectNames[seat.subcode.toUpperCase()]}
+                        </span>
+                      )}
+                    </div>
                     </div>
                     <div style={{
                       background: 'rgba(59, 130, 246, 0.1)',
@@ -1973,8 +2028,15 @@ export default function SeatFinder() {
                       padding: '14px',
                       border: '1px solid rgba(255, 255, 255, 0.15)'
                     }}>
-                      <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Subject Code</div>
-                      <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '16px' }}>{seat.subcode || '-'}</div>
+                      <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Subject</div>
+                      <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '16px' }}>
+                        {seat.subcode || '-'}
+                        {seat.subcode && subjectNames[seat.subcode.toUpperCase()] && (
+                          <span style={{ display: 'block', marginTop: '4px', fontSize: '13px', fontWeight: 500, color: 'var(--text-secondary)' }}>
+                            {subjectNames[seat.subcode.toUpperCase()]}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div style={{
                       background: 'rgba(59, 130, 246, 0.15)',
