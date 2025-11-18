@@ -31,45 +31,52 @@ export default function SeatFinder() {
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  // Load seat data on component mount (from multiple sources)
-  useEffect(() => {
-    const loadAllSeatData = async () => {
-      try {
-        // Load main seat data
-        const mainRes = await fetch('/seat-data.json');
-        const mainData = await mainRes.json();
-        
-        // Load PDF-extracted data from multiple sources
-        const pdfSources = [
-          '/17-nov-fn-seating.json',
-          '/17-11-25-fn-seating.json'
-        ];
-        
-        let allPdfData = [];
-        for (const pdfSource of pdfSources) {
-          try {
-            const pdfRes = await fetch(pdfSource);
-            if (pdfRes.ok) {
-              const pdfData = await pdfRes.json();
-              allPdfData = [...allPdfData, ...pdfData];
-              console.log(`✓ Loaded ${pdfData.length} records from ${pdfSource}`);
-            }
-          } catch (pdfErr) {
-            console.warn(`Could not load ${pdfSource}:`, pdfErr);
+  // Load seat data ONLY when needed (lazy loading)
+  // This reduces initial page load from 1.2MB+ to near zero
+  // With Supabase, most users won't need this data at all
+  // Data is loaded on-demand when user searches with static mode OR when live API uses it as fallback
+  const loadSeatDataIfNeeded = async () => {
+    // If already loaded, don't reload
+    if (seatData.length > 0) {
+      return;
+    }
+
+    // Lazy load: only fetch when actually needed (not on page load)
+    // This way, the default Supabase flow doesn't waste bandwidth
+    console.log('📦 Loading static seat data (lazy load)...');
+    try {
+      // Load main seat data
+      const mainRes = await fetch('/seat-data.json');
+      const mainData = await mainRes.json();
+      
+      // Load PDF-extracted data from multiple sources
+      const pdfSources = [
+        '/17-nov-fn-seating.json',
+        '/17-11-25-fn-seating.json'
+      ];
+      
+      let allPdfData = [];
+      for (const pdfSource of pdfSources) {
+        try {
+          const pdfRes = await fetch(pdfSource);
+          if (pdfRes.ok) {
+            const pdfData = await pdfRes.json();
+            allPdfData = [...allPdfData, ...pdfData];
+            console.log(`✓ Loaded ${pdfData.length} records from ${pdfSource}`);
           }
+        } catch (pdfErr) {
+          console.warn(`Could not load ${pdfSource}:`, pdfErr);
         }
-        
-        // Merge all datasets (PDF data takes priority for duplicates)
-        const mergedData = [...mainData, ...allPdfData];
-        setSeatData(mergedData);
-        console.log(`✓ Total seat data loaded: ${mergedData.length} records (${mainData.length} main + ${allPdfData.length} PDF)`);
-      } catch (err) {
-        console.error('Error loading seat data:', err);
       }
-    };
-    
-    loadAllSeatData();
-  }, []);
+      
+      // Merge all datasets (PDF data takes priority for duplicates)
+      const mergedData = [...mainData, ...allPdfData];
+      setSeatData(mergedData);
+      console.log(`✓ Total seat data loaded: ${mergedData.length} records (${mainData.length} main + ${allPdfData.length} PDF)`);
+    } catch (err) {
+      console.error('Error loading seat data:', err);
+    }
+  };
 
   // Get today's and tomorrow's dates
   const today = new Date();
@@ -520,6 +527,12 @@ export default function SeatFinder() {
       allowSetState = true,
       allowFallback = true
     } = options;
+    
+    // Load static data if not already loaded
+    if (seatData.length === 0) {
+      await loadSeatDataIfNeeded();
+    }
+    
     const regNoUpper = ra.trim().toUpperCase();
     const normalizeDate = (dateStr) => {
       if (!dateStr) return '';
