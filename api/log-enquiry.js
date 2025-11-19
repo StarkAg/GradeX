@@ -30,6 +30,7 @@ export default async function handler(req, res) {
   
   try {
     if (!isSupabaseConfigured() || !supabase) {
+      console.error('[log-enquiry] Supabase not configured');
       res.status(500).json({
         status: 'error',
         error: 'Supabase not configured',
@@ -47,6 +48,15 @@ export default async function handler(req, res) {
       use_live_api = true,
       error_message = null,
     } = req.body;
+    
+    console.log('[log-enquiry] Received enquiry:', {
+      register_number,
+      search_date,
+      results_found,
+      result_count,
+      campuses,
+      use_live_api,
+    });
     
     // Validate required fields
     if (!register_number || typeof register_number !== 'string' || register_number.trim().length === 0) {
@@ -84,14 +94,18 @@ export default async function handler(req, res) {
       .single();
     
     if (error) {
-      console.error('Supabase insert error:', error);
+      console.error('[log-enquiry] Supabase insert error:', error);
+      console.error('[log-enquiry] Error details:', JSON.stringify(error, null, 2));
       res.status(500).json({
         status: 'error',
         error: 'Failed to log enquiry',
         message: error.message,
+        details: error,
       });
       return;
     }
+    
+    console.log('[log-enquiry] ✅ Successfully logged enquiry:', data.id);
     
     // Return success
     res.status(200).json({

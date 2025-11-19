@@ -328,13 +328,23 @@ export default function SeatFinder() {
       });
       
       if (response.ok) {
-        console.log('✅ Enquiry logged successfully');
+        const result = await response.json();
+        console.log('✅ Enquiry logged successfully:', result);
       } else {
-        console.warn('⚠️ Failed to log enquiry (non-blocking):', await response.text());
+        const errorText = await response.text();
+        console.error('❌ Failed to log enquiry:', response.status, errorText);
+        // Log to console for debugging
+        try {
+          const errorData = JSON.parse(errorText);
+          console.error('Error details:', errorData);
+        } catch (e) {
+          console.error('Error response:', errorText);
+        }
       }
     } catch (err) {
-      // Silently fail - don't interrupt user experience
-      console.warn('⚠️ Failed to log enquiry (non-blocking):', err.message);
+      // Log error but don't interrupt user experience
+      console.error('❌ Failed to log enquiry (non-blocking):', err.message);
+      console.error('Error details:', err);
     }
   };
 
