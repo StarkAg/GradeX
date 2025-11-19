@@ -131,6 +131,24 @@ This will:
 - Check if `logEnquiry` function is being called (search for "Log successful enquiry" in code)
 - Check browser console for JavaScript errors
 
+## Fix RLS Policy Issue
+
+If you see error: `"new row violates row-level security policy"`:
+
+1. Go to Supabase → **SQL Editor**
+2. Copy and run the SQL from `fix-enquiries-rls.sql`
+3. This will fix the RLS policies to allow public inserts
+
+**Or manually run:**
+```sql
+-- Drop and recreate the insert policy
+DROP POLICY IF EXISTS "Allow public insert access" ON enquiries;
+CREATE POLICY "Allow public insert access" ON enquiries
+  FOR INSERT
+  TO anon, authenticated, public
+  WITH CHECK (true);
+```
+
 ## Quick Verification Query
 
 Run this in Supabase SQL Editor to check recent enquiries:

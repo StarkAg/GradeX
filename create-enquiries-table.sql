@@ -22,16 +22,23 @@ CREATE INDEX IF NOT EXISTS idx_enquiries_results_found ON enquiries(results_foun
 -- Enable Row Level Security
 ALTER TABLE enquiries ENABLE ROW LEVEL SECURITY;
 
--- Create policy to allow inserts from anyone (for logging)
--- But only allow reads with service role key (admin only)
+-- Drop existing policies if they exist
 DROP POLICY IF EXISTS "Allow public insert access" ON enquiries;
+DROP POLICY IF EXISTS "Allow admin read access" ON enquiries;
+DROP POLICY IF EXISTS "Enable insert for all users" ON enquiries;
+DROP POLICY IF EXISTS "Enable insert for anonymous users" ON enquiries;
+
+-- Create policy to allow inserts from anyone (including anonymous users)
+-- This is needed for the API endpoint to log enquiries
 CREATE POLICY "Allow public insert access" ON enquiries
   FOR INSERT
+  TO anon, authenticated, public
   WITH CHECK (true);
 
--- Only allow select with service role (admin queries)
-DROP POLICY IF EXISTS "Allow admin read access" ON enquiries;
+-- Allow reads only with service role key (admin queries via service role)
+-- Anonymous users cannot read (for privacy)
 CREATE POLICY "Allow admin read access" ON enquiries
   FOR SELECT
-  USING (false); -- This prevents anonymous reads, only service role can read
+  TO service_role
+  USING (true);
 
