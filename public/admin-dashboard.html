@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GradeX Enquiries Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #020202;
+            color: #fff;
+            padding: 10px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #333;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0ea5e9;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn:hover {
+            background: #0284c7;
+        }
+
+        .btn:disabled {
+            background: #444;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+
+        .error {
+            background: #7f1d1d;
+            color: #fca5a5;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .enquiries-table {
+            overflow-x: auto;
+            background: #1a1a1a;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #0ea5e9;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #333;
+            font-size: 13px;
+        }
+
+        tr:hover {
+            background: #252525;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #065f46;
+            color: #6ee7b7;
+        }
+
+        .badge-fail {
+            background: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        .badge-campus {
+            background: #1e3a8a;
+            color: #93c5fd;
+            margin: 2px;
+            font-size: 10px;
+        }
+
+        .timestamp {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+
+        @media (max-width: 768px) {
+            th, td {
+                font-size: 11px;
+                padding: 8px 4px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .stat-card .value {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 GradeX Enquiries</h1>
+            <p style="color: #888; font-size: 14px;">Student Search Analytics</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <div class="label">Total Searches</div>
+                <div class="value" id="total-searches">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Successful</div>
+                <div class="value" id="successful">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Failed</div>
+                <div class="value" id="failed">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Success Rate</div>
+                <div class="value" id="success-rate">-</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="loadEnquiries()">🔄 Refresh</button>
+            <button class="btn" onclick="exportCSV()">📥 Export CSV</button>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            Loading enquiries...
+        </div>
+
+        <div id="enquiries-container"></div>
+    </div>
+
+    <script>
+        let enquiriesData = [];
+
+        async function loadEnquiries() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+
+            try {
+                // Use API endpoint (uses service role key server-side)
+                const response = await fetch('/api/admin-enquiries?limit=500');
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch enquiries: ' + response.statusText);
+                }
+
+                const result = await response.json();
+                
+                if (result.status !== 'success') {
+                    throw new Error(result.error || 'Failed to load data');
+                }
+
+                enquiriesData = result.data || [];
+                updateStats(enquiriesData);
+                displayEnquiries(enquiriesData);
+
+            } catch (error) {
+                showError('Error loading enquiries: ' + error.message);
+                console.error(error);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function updateStats(data) {
+            const total = data.length;
+            const successful = data.filter(e => e.results_found).length;
+            const failed = total - successful;
+            const successRate = total > 0 ? ((successful / total) * 100).toFixed(1) : 0;
+
+            document.getElementById('total-searches').textContent = total;
+            document.getElementById('successful').textContent = successful;
+            document.getElementById('failed').textContent = failed;
+            document.getElementById('success-rate').textContent = successRate + '%';
+        }
+
+        function displayEnquiries(data) {
+            const container = document.getElementById('enquiries-container');
+            
+            if (data.length === 0) {
+                container.innerHTML = '<div class="no-data">No enquiries found</div>';
+                return;
+            }
+
+            // Convert UTC to IST (UTC+5:30)
+            function toIST(utcString) {
+                if (!utcString) return '-';
+                const date = new Date(utcString);
+                const istDate = new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
+                return istDate.toLocaleString('en-IN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                });
+            }
+
+            let html = `
+                <div class="enquiries-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>RA Number</th>
+                                <th>Name</th>
+                                <th>Search Date</th>
+                                <th>Time (IST)</th>
+                                <th>Status</th>
+                                <th>Results</th>
+                                <th>Campuses</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            data.forEach(enquiry => {
+                const campuses = (enquiry.campuses || []).map(c => 
+                    `<span class="badge badge-campus">${c}</span>`
+                ).join('');
+
+                html += `
+                    <tr>
+                        <td>${enquiry.id}</td>
+                        <td style="font-family: monospace; font-size: 11px;">${enquiry.register_number}</td>
+                        <td>${enquiry.student_name || '-'}</td>
+                        <td>${enquiry.search_date || '-'}</td>
+                        <td class="timestamp">${toIST(enquiry.searched_at)}</td>
+                        <td>
+                            <span class="badge ${enquiry.results_found ? 'badge-success' : 'badge-fail'}">
+                                ${enquiry.results_found ? '✓ Found' : '✗ Not Found'}
+                            </span>
+                        </td>
+                        <td>${enquiry.result_count || 0}</td>
+                        <td>${campuses || '-'}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function exportCSV() {
+            if (enquiriesData.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            function toIST(utcString) {
+                if (!utcString) return '';
+                const date = new Date(utcString);
+                const istDate = new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
+                return istDate.toLocaleString('en-IN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                });
+            }
+
+            const headers = ['ID', 'RA Number', 'Student Name', 'Search Date', 'Time (IST)', 'Status', 'Results', 'Campuses'];
+            const rows = enquiriesData.map(e => [
+                e.id,
+                e.register_number,
+                e.student_name || '',
+                e.search_date || '',
+                toIST(e.searched_at),
+                e.results_found ? 'Found' : 'Not Found',
+                e.result_count || 0,
+                (e.campuses || []).join(', ')
+            ]);
+
+            const csv = [headers, ...rows].map(row => 
+                row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+            ).join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `enquiries-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        // Load on page load
+        if (supabase) {
+            loadEnquiries();
+        }
+    </script>
+</body>
+</html>
+
