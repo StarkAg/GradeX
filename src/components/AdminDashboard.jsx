@@ -294,23 +294,26 @@ export default function AdminDashboard() {
                   </td>
                   <td style={{ padding: '12px 8px' }}>{enquiry.result_count || 0}</td>
                   <td style={{ padding: '12px 8px' }}>
-                    {(enquiry.campuses || []).map((campus, idx) => (
-                      <span
-                        key={idx}
-                        style={{
-                          display: 'inline-block',
-                          padding: '2px 6px',
-                          margin: '2px',
-                          borderRadius: '4px',
-                          fontSize: '10px',
-                          background: '#1e3a8a',
-                          color: '#93c5fd',
-                        }}
-                      >
-                        {campus}
-                      </span>
-                    ))}
-                    {(!enquiry.campuses || enquiry.campuses.length === 0) && '-'}
+                    {enquiry.campuses && enquiry.campuses.length > 0 ? (
+                      (enquiry.campuses || []).map((campus, idx) => (
+                        <span
+                          key={idx}
+                          style={{
+                            display: 'inline-block',
+                            padding: '2px 6px',
+                            margin: '2px',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            background: '#1e3a8a',
+                            color: '#93c5fd',
+                          }}
+                        >
+                          {campus}
+                        </span>
+                      ))
+                    ) : (
+                      '-'
+                    )}
                   </td>
                 </tr>
               ))}
