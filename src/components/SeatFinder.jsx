@@ -19,6 +19,7 @@ export default function SeatFinder() {
   const [useLiveAPI, setUseLiveAPI] = useState(true); // Toggle between live API and static data
   const autoRefreshIntervalRef = useRef(null);
   const digitsInputRef = useRef(null);
+  const shouldLogEnquiryRef = useRef(null); // Track if we should log enquiry after state update
 
   // Check if desktop/mobile on mount and resize
   useEffect(() => {
@@ -303,6 +304,37 @@ export default function SeatFinder() {
     setSeatInfo(seats);
     if (Array.isArray(seats) && seats.length > 0) {
       fetchSubjectNamesForSeats(seats);
+    }
+  };
+
+  // Log user enquiry to Supabase for analytics
+  const logEnquiry = async (registerNumber, searchDate, resultsFound, resultCount, campuses, errorMessage = null) => {
+    try {
+      // Don't block the UI - log in background
+      const response = await fetch('/api/log-enquiry', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          register_number: registerNumber,
+          search_date: searchDate,
+          results_found: resultsFound,
+          result_count: resultCount,
+          campuses: campuses,
+          use_live_api: useLiveAPI,
+          error_message: errorMessage,
+        }),
+      });
+      
+      if (response.ok) {
+        console.log('✅ Enquiry logged successfully');
+      } else {
+        console.warn('⚠️ Failed to log enquiry (non-blocking):', await response.text());
+      }
+    } catch (err) {
+      // Silently fail - don't interrupt user experience
+      console.warn('⚠️ Failed to log enquiry (non-blocking):', err.message);
     }
   };
 
@@ -734,9 +766,29 @@ export default function SeatFinder() {
             console.log(`✅ Total seats found: ${allSeats.length} (${liveApiSeats.length} live + ${staticSeats.length} static)`);
             updateSeatInfoWithSubjects(allSeats);
             setError(null);
+            
+            // Log successful enquiry
+            const campuses = Array.from(new Set(allSeats.map(seat => seat.campus || seat.building).filter(Boolean)));
+            logEnquiry(
+              registerNumber.trim(),
+              selectedDate,
+              true,
+              allSeats.length,
+              campuses
+            );
           } else if (liveApiSeats.length === 0 && staticSeats.length === 0) {
             setSeatInfo(null);
             setError('No seating information found for this register number and date.');
+            
+            // Log unsuccessful enquiry
+            logEnquiry(
+              registerNumber.trim(),
+              selectedDate,
+              false,
+              0,
+              [],
+              'No seating information found'
+            );
           }
         } catch (staticErr) {
           console.warn('Static data fetch failed:', staticErr);
@@ -744,20 +796,98 @@ export default function SeatFinder() {
           if (liveApiSeats.length > 0) {
             updateSeatInfoWithSubjects(liveApiSeats);
             setError(null);
+            
+            // Log successful enquiry with live API results only
+            const campuses = Array.from(new Set(liveApiSeats.map(seat => seat.campus || seat.building).filter(Boolean)));
+            logEnquiry(
+              registerNumber.trim(),
+              selectedDate,
+              true,
+              liveApiSeats.length,
+              campuses
+            );
+          } else {
+            // Log failed enquiry
+            logEnquiry(
+              registerNumber.trim(),
+              selectedDate,
+              false,
+              0,
+              [],
+              staticErr.message || 'Static data fetch failed'
+            );
           }
         }
       } else {
-        await fetchFromStaticData(registerNumber.trim(), selectedDate);
+        // Static mode - fetch and log results
+        try {
+          // Set flag to log after state updates
+          shouldLogEnquiryRef.current = {
+            registerNumber: registerNumber.trim(),
+            searchDate: selectedDate,
+          };
+          
+          // Fetch with allowSetState=true so it sets state
+          await fetchFromStaticData(registerNumber.trim(), selectedDate);
+          
+          // Logging will happen in useEffect when state updates
+        } catch (staticErr) {
+          // Clear flag since we're handling error here
+          shouldLogEnquiryRef.current = null;
+          
+          // Log failed enquiry
+          logEnquiry(
+            registerNumber.trim(),
+            selectedDate,
+            false,
+            0,
+            [],
+            staticErr.message || 'Static data fetch failed'
+          );
+        }
       }
     } catch (err) {
       console.error('Error in handleFindSeat:', err);
       setError(err.message || 'Failed to fetch seat information. Please try again.');
       setSeatInfo(null);
+      
+      // Log error enquiry
+      logEnquiry(
+        registerNumber.trim(),
+        selectedDate,
+        false,
+        0,
+        [],
+        err.message || 'Unexpected error'
+      );
     } finally {
       // Always clear loading state, even on error
       setLoading(false);
     }
   };
+
+  // Log enquiry after static mode fetch (when state updates)
+  useEffect(() => {
+    if (shouldLogEnquiryRef.current && !useLiveAPI) {
+      const { registerNumber: ra, searchDate } = shouldLogEnquiryRef.current;
+      const hasResults = seatInfo && seatInfo.length > 0 && !error;
+      const campuses = hasResults 
+        ? Array.from(new Set(seatInfo.map(seat => seat.campus || seat.building).filter(Boolean)))
+        : [];
+      
+      logEnquiry(
+        ra,
+        searchDate,
+        hasResults,
+        seatInfo ? seatInfo.length : 0,
+        campuses,
+        error || (!hasResults ? 'No results found in static data' : null)
+      );
+      
+      // Clear flag
+      shouldLogEnquiryRef.current = null;
+    }
+  }, [seatInfo, error, useLiveAPI]);
 
   // Auto-refresh every 3 minutes if seat info exists (ideal balance)
   useEffect(() => {
