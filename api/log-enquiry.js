@@ -78,32 +78,11 @@ export default async function handler(req, res) {
     
     const user_agent = req.headers['user-agent'] || null;
     
-    // Get current time and format as IST (Asia/Kolkata timezone)
-    // Create date in IST timezone for proper timestamp storage
+    // Get current UTC time - PostgreSQL TIMESTAMPTZ stores in UTC internally
+    // The timezone is just for display/interpretation
+    // When you query with timezone set to Asia/Kolkata, it will show IST
     const now = new Date();
-    // Format: Convert to IST timezone string (UTC+5:30)
-    // Use Intl.DateTimeFormat to get IST time
-    const istTimeString = new Intl.DateTimeFormat('en-IN', {
-      timeZone: 'Asia/Kolkata',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    }).formatToParts(now);
-    
-    // Build ISO string in IST timezone
-    const year = istTimeString.find(p => p.type === 'year').value;
-    const month = istTimeString.find(p => p.type === 'month').value;
-    const day = istTimeString.find(p => p.type === 'day').value;
-    const hour = istTimeString.find(p => p.type === 'hour').value;
-    const minute = istTimeString.find(p => p.type === 'minute').value;
-    const second = istTimeString.find(p => p.type === 'second').value;
-    
-    // Format as ISO string with IST timezone (+05:30)
-    const searchedAtIST = `${year}-${month}-${day}T${hour}:${minute}:${second}+05:30`;
+    const searchedAtUTC = now.toISOString(); // Store in UTC (standard practice)
     
     // Use admin client if available (bypasses RLS), otherwise use regular client
     // Admin client is safer and will always work
@@ -123,7 +102,7 @@ export default async function handler(req, res) {
       .insert({
         register_number: register_number.trim().toUpperCase(),
         search_date: search_date || null,
-        searched_at: searchedAtIST, // Explicit IST timestamp
+        searched_at: searchedAtUTC, // Store in UTC (will display as IST when timezone is set)
         results_found: results_found === true,
         result_count: result_count || 0,
         campuses: Array.isArray(campuses) ? campuses : [],
@@ -132,7 +111,7 @@ export default async function handler(req, res) {
         student_name: student_name || null,
         ip_address: ip_address || null,
         user_agent: user_agent || null,
-        created_at: searchedAtIST, // Also set created_at to IST
+        created_at: searchedAtUTC, // Store in UTC
       })
       .select()
       .single();
