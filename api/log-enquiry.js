@@ -5,7 +5,7 @@
  * Logs user search queries for analytics and tracking
  */
 
-import { supabase, isSupabaseConfigured } from './supabase-client.js';
+import { supabase, isSupabaseConfigured, supabaseAdmin } from './supabase-client.js';
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -76,8 +76,20 @@ export default async function handler(req, res) {
     
     const user_agent = req.headers['user-agent'] || null;
     
+    // Use admin client if available (bypasses RLS), otherwise use regular client
+    // Admin client is safer and will always work
+    const clientToUse = supabaseAdmin || supabase;
+    
+    if (!clientToUse) {
+      res.status(500).json({
+        status: 'error',
+        error: 'Supabase client not available',
+      });
+      return;
+    }
+    
     // Insert into enquiries table
-    const { data, error } = await supabase
+    const { data, error } = await clientToUse
       .from('enquiries')
       .insert({
         register_number: register_number.trim().toUpperCase(),
