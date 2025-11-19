@@ -47,6 +47,7 @@ export default async function handler(req, res) {
       campuses = [],
       use_live_api = true,
       error_message = null,
+      student_name = null,
     } = req.body;
     
     console.log('[log-enquiry] Received enquiry:', {
@@ -56,6 +57,7 @@ export default async function handler(req, res) {
       result_count,
       campuses,
       use_live_api,
+      student_name,
     });
     
     // Validate required fields
@@ -99,6 +101,7 @@ export default async function handler(req, res) {
         campuses: Array.isArray(campuses) ? campuses : [],
         use_live_api: use_live_api === true,
         error_message: error_message || null,
+        student_name: student_name || null,
         ip_address: ip_address || null,
         user_agent: user_agent || null,
       })

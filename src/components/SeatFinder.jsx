@@ -308,7 +308,7 @@ export default function SeatFinder() {
   };
 
   // Log user enquiry to Supabase for analytics
-  const logEnquiry = async (registerNumber, searchDate, resultsFound, resultCount, campuses, errorMessage = null) => {
+  const logEnquiry = async (registerNumber, searchDate, resultsFound, resultCount, campuses, errorMessage = null, studentName = null) => {
     try {
       // Don't block the UI - log in background
       const response = await fetch('/api/log-enquiry', {
@@ -324,6 +324,7 @@ export default function SeatFinder() {
           campuses: campuses,
           use_live_api: useLiveAPI,
           error_message: errorMessage,
+          student_name: studentName,
         }),
       });
       
@@ -779,25 +780,29 @@ export default function SeatFinder() {
             
             // Log successful enquiry
             const campuses = Array.from(new Set(allSeats.map(seat => seat.campus || seat.building).filter(Boolean)));
+            const studentName = allSeats[0]?.name || null; // Get name from first seat
             logEnquiry(
               registerNumber.trim(),
               selectedDate,
               true,
               allSeats.length,
-              campuses
+              campuses,
+              null, // errorMessage
+              studentName
             );
           } else if (liveApiSeats.length === 0 && staticSeats.length === 0) {
             setSeatInfo(null);
             setError('No seating information found for this register number and date.');
             
-            // Log unsuccessful enquiry
+            // Log unsuccessful enquiry (no name available since no results)
             logEnquiry(
               registerNumber.trim(),
               selectedDate,
               false,
               0,
               [],
-              'No seating information found'
+              'No seating information found',
+              null // studentName not available
             );
           }
         } catch (staticErr) {
@@ -809,22 +814,26 @@ export default function SeatFinder() {
             
             // Log successful enquiry with live API results only
             const campuses = Array.from(new Set(liveApiSeats.map(seat => seat.campus || seat.building).filter(Boolean)));
+            const studentName = liveApiSeats[0]?.name || null; // Get name from first seat
             logEnquiry(
               registerNumber.trim(),
               selectedDate,
               true,
               liveApiSeats.length,
-              campuses
+              campuses,
+              null, // errorMessage
+              studentName
             );
           } else {
-            // Log failed enquiry
+            // Log failed enquiry (no name available)
             logEnquiry(
               registerNumber.trim(),
               selectedDate,
               false,
               0,
               [],
-              staticErr.message || 'Static data fetch failed'
+              staticErr.message || 'Static data fetch failed',
+              null // studentName not available
             );
           }
         }
@@ -845,14 +854,15 @@ export default function SeatFinder() {
           // Clear flag since we're handling error here
           shouldLogEnquiryRef.current = null;
           
-          // Log failed enquiry
+          // Log failed enquiry (no name available)
           logEnquiry(
             registerNumber.trim(),
             selectedDate,
             false,
             0,
             [],
-            staticErr.message || 'Static data fetch failed'
+            staticErr.message || 'Static data fetch failed',
+            null // studentName not available
           );
         }
       }
@@ -861,14 +871,15 @@ export default function SeatFinder() {
       setError(err.message || 'Failed to fetch seat information. Please try again.');
       setSeatInfo(null);
       
-      // Log error enquiry
+      // Log error enquiry (no name available)
       logEnquiry(
         registerNumber.trim(),
         selectedDate,
         false,
         0,
         [],
-        err.message || 'Unexpected error'
+        err.message || 'Unexpected error',
+        null // studentName not available
       );
     } finally {
       // Always clear loading state, even on error
@@ -885,13 +896,15 @@ export default function SeatFinder() {
         ? Array.from(new Set(seatInfo.map(seat => seat.campus || seat.building).filter(Boolean)))
         : [];
       
+      const studentName = seatInfo && seatInfo.length > 0 ? seatInfo[0]?.name || null : null;
       logEnquiry(
         ra,
         searchDate,
         hasResults,
         seatInfo ? seatInfo.length : 0,
         campuses,
-        error || (!hasResults ? 'No results found in static data' : null)
+        error || (!hasResults ? 'No results found in static data' : null),
+        studentName
       );
       
       // Clear flag
