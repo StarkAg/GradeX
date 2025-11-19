@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import GradeX from './components/GradeX';
 import SeatFinder from './components/SeatFinder';
-import AdminDashboard from './components/AdminDashboard';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('seatfinder');
@@ -304,7 +303,7 @@ export default function App() {
             )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {currentPage !== 'seatfinder' && (
+            {currentPage === 'gradex' ? (
               <button
                 onClick={() => setCurrentPage('seatfinder')}
                 style={{
@@ -331,8 +330,7 @@ export default function App() {
               >
                 Seat Finder
               </button>
-            )}
-            {currentPage !== 'gradex' && currentPage !== 'admin' && (
+            ) : (
               <button
                 onClick={() => setCurrentPage('gradex')}
                 style={{
@@ -358,34 +356,6 @@ export default function App() {
                 }}
               >
                 GradeX
-              </button>
-            )}
-            {currentPage !== 'admin' && (
-              <button
-                onClick={() => setCurrentPage('admin')}
-                style={{
-                  padding: '6px 12px',
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  border: '1px solid var(--border-color)',
-                  background: 'var(--card-bg)',
-                  color: 'var(--text-primary)',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--border-hover)';
-                  e.currentTarget.style.background = 'var(--hover-bg)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--border-color)';
-                  e.currentTarget.style.background = 'var(--card-bg)';
-                }}
-              >
-                Admin
               </button>
             )}
             <button
@@ -494,9 +464,7 @@ export default function App() {
           </div>
       </header>
       <main className="app-main single">
-        {currentPage === 'seatfinder' ? <SeatFinder /> : 
-         currentPage === 'admin' ? <AdminDashboard /> : 
-         <GradeX />}
+        {currentPage === 'seatfinder' ? <SeatFinder /> : <GradeX />}
       </main>
       <audio
         ref={audioRef}
