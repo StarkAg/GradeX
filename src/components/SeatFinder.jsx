@@ -754,6 +754,19 @@ export default function SeatFinder() {
                 }}>
                   v3.0
                 </span>
+                <span style={{
+                  fontSize: 'clamp(9px, 2.2vw, 11px)',
+                  fontWeight: 700,
+                  padding: 'clamp(3px, 1vw, 4px) clamp(6px, 2vw, 8px)',
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                  color: '#ffffff',
+                  borderRadius: '4px',
+                  letterSpacing: '0.05em',
+                  boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
+                  animation: 'pulseGlow 2s ease-in-out infinite'
+                }}>
+                  ⚡ ULTRAFAST NOW
+                </span>
               </div>
               {/* Live Real-Time Tagline */}
               <div style={{
