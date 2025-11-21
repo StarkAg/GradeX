@@ -2,6 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import GradeX from './components/GradeX';
 import SeatFinder from './components/SeatFinder';
+import FeedFill from './components/FeedFill';
+
+const NAV_ITEMS = [
+  { id: 'seatfinder', label: 'Seat Finder' },
+  { id: 'feedfill', label: 'FeedFill', badge: 'NEW' },
+  { id: 'gradex', label: 'GradeX' },
+];
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('seatfinder');
@@ -301,63 +308,53 @@ export default function App() {
                 PS — came into existence on 12th Nov :) since ClassPro and Etc. were unreliable manytimes :(
               </p>
             )}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {currentPage === 'gradex' ? (
-              <button
-                onClick={() => setCurrentPage('seatfinder')}
-                style={{
-                  padding: '6px 12px',
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  border: '1px solid var(--border-color)',
-                  background: 'var(--card-bg)',
-                  color: 'var(--text-primary)',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--border-hover)';
-                  e.currentTarget.style.background = 'var(--hover-bg)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--border-color)';
-                  e.currentTarget.style.background = 'var(--card-bg)';
-                }}
-              >
-                Seat Finder
-              </button>
-            ) : (
-              <button
-                onClick={() => setCurrentPage('gradex')}
-                style={{
-                  padding: '6px 12px',
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  border: '1px solid var(--border-color)',
-                  background: 'var(--card-bg)',
-                  color: 'var(--text-primary)',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--border-hover)';
-                  e.currentTarget.style.background = 'var(--hover-bg)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--border-color)';
-                  e.currentTarget.style.background = 'var(--card-bg)';
-                }}
-              >
-                GradeX
-              </button>
+            {currentPage === 'feedfill' && (
+              <p style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-secondary)', letterSpacing: '0.02em' }}>
+                Need to blitz through SRM Academia feedback? Use the FeedFill helper below to install the one-click form filler responsibly.
+              </p>
             )}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {NAV_ITEMS.map((item) => {
+                const isActive = currentPage === item.id;
+                const isFeedFill = item.id === 'feedfill';
+                return (
+                  <button
+                    key={item.id}
+                    className={`nav-button${isFeedFill ? ' feedfill-nav-button' : ''}${isActive ? ' is-active' : ''}`}
+                    onClick={() => setCurrentPage(item.id)}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      border: '1px solid ' + (isActive ? 'var(--border-hover)' : 'var(--border-color)'),
+                      background: isActive ? 'var(--hover-bg)' : 'var(--card-bg)',
+                      color: 'var(--text-primary)',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      boxShadow: isFeedFill && !isActive ? '0 0 18px rgba(59, 130, 246, 0.4)' : 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--border-hover)';
+                      e.currentTarget.style.background = 'var(--hover-bg)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = isActive ? 'var(--border-hover)' : 'var(--border-color)';
+                      e.currentTarget.style.background = isActive ? 'var(--hover-bg)' : 'var(--card-bg)';
+                    }}
+                  >
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className="nav-button-badge">{item.badge}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
             <button
               onClick={toggleTheme}
               style={{
@@ -464,7 +461,9 @@ export default function App() {
           </div>
       </header>
       <main className="app-main single">
-        {currentPage === 'seatfinder' ? <SeatFinder /> : <GradeX />}
+        {currentPage === 'seatfinder' && <SeatFinder />}
+        {currentPage === 'gradex' && <GradeX />}
+        {currentPage === 'feedfill' && <FeedFill />}
       </main>
       <audio
         ref={audioRef}
