@@ -295,6 +295,12 @@ export default function SeatFinder() {
         const result = await response.json();
         console.log('✅ Enquiry logged successfully:', result);
       } else {
+        // Silently handle rate limiting for logging (non-blocking operation)
+        if (response.status === 429) {
+          // Rate limit hit - silently skip logging, don't show error to user
+          console.warn('⚠️ Logging rate limited (non-blocking)');
+          return;
+        }
         const errorText = await response.text();
         console.error('❌ Failed to log enquiry:', response.status, errorText);
         // Log to console for debugging
@@ -332,50 +338,61 @@ export default function SeatFinder() {
   // Returns: { found: boolean, seats: array }
   const fetchFromLiveAPI = async (ra, date) => {
     try {
-      // STEP 1: Get name from Supabase using last digits approach
-      // Extract last 4 digits for search (more flexible)
-      const lastDigits = ra.slice(-4); // Get last 4 digits (e.g., "0014" from "RA2311033010014")
+      // ULTRA-FAST: Fetch name and seating info IN PARALLEL
+      const lastDigits = ra.slice(-4);
       let studentName = '-';
       
-      try {
-        // Pass both lastDigits and full RA for accurate matching
-        const nameResponse = await fetch(`/api/get-name-by-last-digits?lastDigits=${lastDigits}&fullRA=${encodeURIComponent(ra)}`);
-        if (nameResponse.ok) {
-          const nameData = await nameResponse.json();
+      // STEP 1 & 2: Fetch both name and seating in parallel for maximum speed
+      const [nameResponse, seatingResponse] = await Promise.allSettled([
+        // Name fetch (non-blocking)
+        fetch(`/api/get-name-by-last-digits?lastDigits=${lastDigits}&fullRA=${encodeURIComponent(ra)}`).catch(() => null),
+        // Seating fetch (critical path)
+        (async () => {
+          const apiDate = formatDateForAPI(date);
+          const params = new URLSearchParams({ ra });
+          if (apiDate) params.append('date', apiDate);
+          return fetch(`/api/seating?${params.toString()}`);
+        })()
+      ]);
+      
+      // Process name result (non-blocking, don't wait)
+      if (nameResponse.status === 'fulfilled' && nameResponse.value?.ok) {
+        try {
+          const nameData = await nameResponse.value.json();
           if (nameData.success) {
-            // Handle single match - verify RA matches
             if (nameData.name && nameData.registerNumber) {
               if (nameData.registerNumber.toUpperCase() === ra.toUpperCase()) {
                 studentName = nameData.name;
-                console.log('✅ Name from Supabase:', studentName);
-              } else {
-                console.warn('⚠️ RA mismatch, trying multiple matches...');
               }
             }
-            // Handle multiple matches - find exact RA match
             if (studentName === '-' && nameData.matches && Array.isArray(nameData.matches)) {
               const exactMatch = nameData.matches.find(m => 
                 m.registerNumber && m.registerNumber.toUpperCase() === ra.toUpperCase()
               );
               if (exactMatch && exactMatch.name) {
                 studentName = exactMatch.name;
-                console.log('✅ Name from Supabase (multiple matches):', studentName);
               }
             }
           }
+        } catch (e) {
+          // Silently fail, name is not critical
         }
-      } catch (nameError) {
-        console.warn('⚠️ Could not fetch name from Supabase:', nameError);
       }
       
-      // STEP 2: Get venue details from seating API
-      const apiDate = formatDateForAPI(date);
-      const params = new URLSearchParams({ ra });
-      if (apiDate) params.append('date', apiDate);
-      
-      const response = await fetch(`/api/seating?${params.toString()}`);
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+      // Process seating result (critical)
+      const response = seatingResponse.status === 'fulfilled' ? seatingResponse.value : null;
+      if (!response || !response.ok) {
+        // Handle rate limiting (429) with user-friendly message
+        if (response?.status === 429) {
+          try {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'You are making requests too quickly. Please wait a few minutes before trying again.');
+          } catch (parseError) {
+            throw new Error('You are making requests too quickly. Please wait a few minutes before trying again.');
+          }
+        }
+        // Other errors
+        throw new Error(`Unable to fetch seat information. Please try again.`);
       }
       
       const data = await response.json();

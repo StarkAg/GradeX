@@ -3,6 +3,9 @@
  * Fetches exam seating details from SRM exam cell endpoints
  */
 
+// Configuration: Set to false to disable report.php fetching (for testing)
+const ENABLE_REPORT_PHP = true; // Set to false to disable report.php for Tech Park 2
+
 // Campus endpoints configuration
 // Each campus has a base URL and a fetch_data.php endpoint for POST requests
 const CAMPUS_ENDPOINTS = {
@@ -111,7 +114,7 @@ export function generateDateVariants(date) {
  * @param {Object} options - Additional options (method, body, headers)
  * @returns {Promise<string>} - HTML content
  */
-export async function fetchPage(url, timeout = 12000, retries = 1, options = {}) {
+export async function fetchPage(url, timeout = 8000, retries = 1, options = {}) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
   
@@ -734,9 +737,8 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
   if (!campusConfig) return [];
   
   try {
-    // Polite delay between campus fetches (300-700ms)
-    const delay = 300 + Math.random() * 400;
-    await new Promise(resolve => setTimeout(resolve, delay));
+    // Ultra-fast: No delay between campus fetches (parallel execution)
+    // Removed delay for maximum speed
     
     let html = '';
     let fetchUrl = campusConfig.fetchData;
@@ -748,28 +750,29 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
     if (dateVariants && dateVariants.length > 0) {
       const dateParam = dateVariants[0];
       
-      // Try both Forenoon and Afternoon sessions
+      // Try both Forenoon and Afternoon sessions IN PARALLEL for ultra-fast fetching
       const sessions = ['FN', 'AN'];
       
-      for (const session of sessions) {
+      // Format date for POST (usually DD/MM/YYYY or DD-MM-YYYY)
+      // Convert to DD/MM/YYYY format which is common for date pickers
+      let formattedDate = dateParam;
+      if (dateParam.includes('-')) {
+        formattedDate = dateParam.replace(/-/g, '/');
+      }
+      
+      // Fetch both sessions in parallel for maximum speed
+      const sessionPromises = sessions.map(async (session) => {
         try {
-          // Format date for POST (usually DD/MM/YYYY or DD-MM-YYYY)
-          // Convert to DD/MM/YYYY format which is common for date pickers
-          let formattedDate = dateParam;
-          if (dateParam.includes('-')) {
-            formattedDate = dateParam.replace(/-/g, '/');
-          }
-          
           // Create form data
           const formData = new URLSearchParams();
           formData.append('dated', formattedDate);
           formData.append('session', session);
           formData.append('submit', 'Submit');
           
-          // Fetch room-wise data from fetch_data.php
+          // Fetch room-wise data from fetch_data.php with reduced timeout
           const postHtml = await fetchPage(
             campusConfig.fetchData,
-            12000,
+            8000, // Reduced from 12000 for faster failure
             1,
             {
               method: 'POST',
@@ -784,30 +787,73 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
           const hasTargetRA = ra ? new RegExp(ra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(postHtml) : true;
           
           if (postHtml.length > 5000 && (hasRAPattern || hasTargetRA)) {
-            allHtmlSources.push(postHtml);
-            fetchUrl = `${campusConfig.fetchData}?dated=${encodeURIComponent(formattedDate)}&session=${session}`;
-            console.log(`[DEBUG ${campusName}] Found HTML from ${session} session, length: ${postHtml.length}, hasTargetRA: ${hasTargetRA}`);
+            return { html: postHtml, session, url: `${campusConfig.fetchData}?dated=${encodeURIComponent(formattedDate)}&session=${session}` };
           }
+          return null;
         } catch (e) {
           console.error(`Error POSTing to ${campusName} (${session}):`, e.message);
-          continue;
+          return null;
+        }
+      });
+      
+      // For Tech Park 2, also fetch report.php in TRUE PARALLEL with sessions
+      // This means: Forenoon session, Afternoon session, AND report.php all fetch simultaneously
+      // NOTE: Can be disabled via ENABLE_REPORT_PHP flag if not contributing
+      const reportPromise = (ENABLE_REPORT_PHP && campusName === 'Tech Park 2' && campusConfig.report) ? (async () => {
+        try {
+          const reportHtml = await fetchPage(campusConfig.report, 8000, 1);
+          const hasRAPattern = /(?:>|"|'|\b)(RA\d{2,})/i.test(reportHtml);
+          const hasTargetRA = ra ? new RegExp(ra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(reportHtml) : true;
+          
+          console.log(`[DEBUG ${campusName}] report.php check - HTML length: ${reportHtml.length}, hasRAPattern: ${hasRAPattern}, hasTargetRA: ${hasTargetRA}, targetRA: ${ra}`);
+          
+          if (reportHtml.length > 5000 && (hasRAPattern || hasTargetRA)) {
+            console.log(`[DEBUG ${campusName}] report.php VALID - will include in merge`);
+            return reportHtml;
+          } else {
+            console.log(`[DEBUG ${campusName}] report.php INVALID - skipping (length: ${reportHtml.length}, hasRAPattern: ${hasRAPattern}, hasTargetRA: ${hasTargetRA})`);
+          }
+          return null;
+        } catch (e) {
+          console.log(`[${campusName}] Could not fetch from report.php:`, e.message);
+          return null;
+        }
+      })() : Promise.resolve(null);
+      
+      // Wait for ALL requests (sessions + report) in parallel - they all run simultaneously
+      const [sessionResults, reportHtml] = await Promise.all([
+        Promise.allSettled(sessionPromises),
+        reportPromise
+      ]);
+      
+      // Process session results
+      let sessionMatchesCount = 0;
+      sessionResults.forEach((result, index) => {
+        if (result.status === 'fulfilled' && result.value) {
+          allHtmlSources.push(result.value.html);
+          fetchUrl = result.value.url;
+          // Test if this session HTML has the target RA
+          const hasTargetRA = ra ? new RegExp(ra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(result.value.html) : false;
+          if (hasTargetRA) sessionMatchesCount++;
+          console.log(`[DEBUG ${campusName}] Found HTML from ${sessions[index]} session, length: ${result.value.html.length}, hasTargetRA: ${hasTargetRA}`);
+        }
+      });
+      
+      // Process report result (Tech Park 2 only) - TEST if it contributes
+      let reportHasTargetRA = false;
+      if (reportHtml) {
+        reportHasTargetRA = ra ? new RegExp(ra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(reportHtml) : false;
+        if (reportHasTargetRA) {
+          allHtmlSources.push(reportHtml);
+          console.log(`[DEBUG ${campusName}] ✅ report.php INCLUDED - has target RA ${ra}, length: ${reportHtml.length}`);
+        } else {
+          console.log(`[DEBUG ${campusName}] ❌ report.php SKIPPED - does NOT have target RA ${ra}, length: ${reportHtml.length}`);
         }
       }
-    }
-    
-    // For Tech Park 2, also try report.php as an additional source to merge with fetch_data.php results
-    if (campusName === 'Tech Park 2' && campusConfig.report) {
-      try {
-        const reportHtml = await fetchPage(campusConfig.report, 12000, 1);
-        const hasRAPattern = /(?:>|"|'|\b)(RA\d{2,})/i.test(reportHtml);
-        const hasTargetRA = ra ? new RegExp(ra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(reportHtml) : true;
-        
-        if (reportHtml.length > 5000 && (hasRAPattern || hasTargetRA)) {
-          allHtmlSources.push(reportHtml);
-          console.log(`[DEBUG ${campusName}] Found HTML from report.php, length: ${reportHtml.length}, hasTargetRA: ${hasTargetRA}`);
-        }
-      } catch (e) {
-        console.log(`[${campusName}] Could not fetch from report.php:`, e.message);
+      
+      // Log summary
+      if (campusName === 'Tech Park 2') {
+        console.log(`[DEBUG ${campusName}] Source summary - Sessions with RA: ${sessionMatchesCount}/${sessions.length}, report.php with RA: ${reportHasTargetRA ? 'YES' : 'NO'}`);
       }
     }
     
@@ -823,7 +869,7 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
       try {
         // Use explicit report endpoint if available, otherwise construct from base
         const reportUrl = campusConfig.report || `${campusConfig.base}/report.php`;
-        html = await fetchPage(reportUrl, 12000, 1);
+        html = await fetchPage(reportUrl, 8000, 1); // Reduced timeout for faster failure
         fetchUrl = reportUrl;
       } catch (e) {
         // 404 errors are expected for some campuses - log as warning, not error
@@ -852,8 +898,12 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
     // Get matches from room-wise report only
     const matches = findMatchesInHTML(html, ra, dateVariants);
     
-    // Debug: Log match results
-    console.log(`[DEBUG ${campusName}] Found ${matches.length} matches for RA ${ra}`);
+    // Debug: Log match results and track if report.php contributed
+    const reportContributed = allHtmlSources.length > 0 && allHtmlSources.some((source, idx) => {
+      // Check if any source came from report.php (it's the last one if present)
+      return idx === allHtmlSources.length - 1 && source.includes('<!-- MERGED FROM MULTIPLE SOURCES -->') === false;
+    });
+    console.log(`[DEBUG ${campusName}] Found ${matches.length} matches for RA ${ra}, report.php included: ${reportHtml ? 'YES' : 'NO'}`);
     
     // Store debug info in matches for API response
     if (matches.length === 0 && debugInfo.hasTargetRA) {

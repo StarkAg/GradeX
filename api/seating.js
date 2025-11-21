@@ -37,11 +37,23 @@ export default async function handler(req, res) {
     const botCheck = checkBotProtection(req, ra);
     if (botCheck.blocked) {
       console.warn(`[Bot Protection] Blocked request from IP: ${botCheck.ip}, RA: ${ra}, Reason: ${botCheck.reason}`);
+      
+      // User-friendly error messages that indicate user behavior issue
+      let userMessage = 'You are making requests too quickly. Please slow down and try again in a few minutes.';
+      if (botCheck.reason?.includes('sequential')) {
+        userMessage = 'Automated scraping detected. Please use the website normally instead of automated tools.';
+      } else if (botCheck.reason?.includes('Rate limit')) {
+        userMessage = 'Too many requests detected. Please wait a few minutes before trying again.';
+      } else if (botCheck.reason?.includes('short time')) {
+        userMessage = 'You are clicking too fast. Please wait a moment between searches.';
+      }
+      
       res.status(429).json({
         status: 'error',
-        error: 'Request blocked',
-        message: botCheck.reason || 'Too many requests. Please try again later.',
+        error: 'Too many requests',
+        message: userMessage,
         retryAfter: botCheck.retryAfter || 60,
+        userError: true, // Flag to indicate this is a user behavior issue
       });
       return;
     }

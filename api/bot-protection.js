@@ -12,11 +12,11 @@
 // In-memory rate limit store (for serverless, consider Redis for production)
 const rateLimitStore = new Map();
 
-// Configuration
+// Configuration - Easy rate limits for legitimate users
 const RATE_LIMIT_CONFIG = {
   windowMs: 60 * 1000, // 1 minute window
-  maxRequests: 5, // Max 5 requests per minute per IP (stricter)
-  blockDurationMs: 30 * 60 * 1000, // Block for 30 minutes if exceeded
+  maxRequests: 30, // Max 30 requests per minute per IP (easy for normal users)
+  blockDurationMs: 5 * 60 * 1000, // Block for 5 minutes if exceeded (shorter block)
 };
 
 const BLOCKED_IPS = new Set(); // Track blocked IPs
@@ -171,8 +171,8 @@ function validateTiming(ip) {
     timestamp => now - timestamp < 10000
   );
   
-  // Check for too many requests in short time
-  if (timingData.requests.length >= 3) {
+  // Check for too many requests in short time (more lenient)
+  if (timingData.requests.length >= 10) {
     return {
       valid: false,
       reason: 'Too many requests in short time period',
@@ -217,8 +217,8 @@ function detectSequentialPattern(ip, ra) {
       if (Math.abs(currentNum - lastNum) === 1) {
         patternData.count++;
         
-        // If 3+ sequential requests, it's suspicious
-        if (patternData.count >= 3) {
+        // If 10+ sequential requests, it's suspicious (more lenient - was 3)
+        if (patternData.count >= 10) {
           sequentialPatternStore.set(ip, patternData);
           return {
             suspicious: true,
