@@ -3,9 +3,6 @@
  * Fetches exam seating details from SRM exam cell endpoints
  */
 
-// Configuration: Set to false to disable report.php fetching (for testing)
-const ENABLE_REPORT_PHP = true; // Set to false to disable report.php for Tech Park 2
-
 // Campus endpoints configuration
 // Each campus has a base URL and a fetch_data.php endpoint for POST requests
 const CAMPUS_ENDPOINTS = {
@@ -737,7 +734,7 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
   if (!campusConfig) return [];
   
   try {
-    // Polite delay between campus fetches (300-700ms) - restored from original
+    // Polite delay between campus fetches (300-700ms)
     const delay = 300 + Math.random() * 400;
     await new Promise(resolve => setTimeout(resolve, delay));
     
@@ -751,7 +748,7 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
     if (dateVariants && dateVariants.length > 0) {
       const dateParam = dateVariants[0];
       
-      // Try both Forenoon and Afternoon sessions SEQUENTIALLY (original approach)
+      // Try both Forenoon and Afternoon sessions
       const sessions = ['FN', 'AN'];
       
       for (const session of sessions) {
@@ -799,19 +796,15 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
     }
     
     // For Tech Park 2, also try report.php as an additional source to merge with fetch_data.php results
-    if (campusName === 'Tech Park 2' && campusConfig.report && ENABLE_REPORT_PHP) {
+    if (campusName === 'Tech Park 2' && campusConfig.report) {
       try {
         const reportHtml = await fetchPage(campusConfig.report, 12000, 1);
         const hasRAPattern = /(?:>|"|'|\b)(RA\d{2,})/i.test(reportHtml);
         const hasTargetRA = ra ? new RegExp(ra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(reportHtml) : true;
         
-        console.log(`[DEBUG ${campusName}] report.php check - HTML length: ${reportHtml.length}, hasRAPattern: ${hasRAPattern}, hasTargetRA: ${hasTargetRA}, targetRA: ${ra}`);
-        
         if (reportHtml.length > 5000 && (hasRAPattern || hasTargetRA)) {
           allHtmlSources.push(reportHtml);
-          console.log(`[DEBUG ${campusName}] ✅ report.php INCLUDED - has target RA ${ra}, length: ${reportHtml.length}`);
-        } else {
-          console.log(`[DEBUG ${campusName}] ❌ report.php SKIPPED - does NOT have target RA ${ra}, length: ${reportHtml.length}`);
+          console.log(`[DEBUG ${campusName}] Found HTML from report.php, length: ${reportHtml.length}, hasTargetRA: ${hasTargetRA}`);
         }
       } catch (e) {
         console.log(`[${campusName}] Could not fetch from report.php:`, e.message);
@@ -830,7 +823,7 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
       try {
         // Use explicit report endpoint if available, otherwise construct from base
         const reportUrl = campusConfig.report || `${campusConfig.base}/report.php`;
-        html = await fetchPage(reportUrl, 12000, 1); // Reasonable timeout for reliability
+        html = await fetchPage(reportUrl, 12000, 1);
         fetchUrl = reportUrl;
       } catch (e) {
         // 404 errors are expected for some campuses - log as warning, not error
@@ -859,12 +852,8 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
     // Get matches from room-wise report only
     const matches = findMatchesInHTML(html, ra, dateVariants);
     
-    // Debug: Log match results and track if report.php contributed
-    const reportContributed = allHtmlSources.length > 0 && allHtmlSources.some((source, idx) => {
-      // Check if any source came from report.php (it's the last one if present)
-      return idx === allHtmlSources.length - 1 && source.includes('<!-- MERGED FROM MULTIPLE SOURCES -->') === false;
-    });
-    console.log(`[DEBUG ${campusName}] Found ${matches.length} matches for RA ${ra}, report.php included: ${reportHtml ? 'YES' : 'NO'}`);
+    // Debug: Log match results
+    console.log(`[DEBUG ${campusName}] Found ${matches.length} matches for RA ${ra}`);
     
     // Store debug info in matches for API response
     if (matches.length === 0 && debugInfo.hasTargetRA) {
@@ -1556,7 +1545,7 @@ export async function getSeatingInfo(ra, date) {
   // Generate date variants
   const dateVariants = date ? generateDateVariants(date) : [];
   
-  // STEP 2: Fetch from all campuses in parallel (delays handled inside fetchCampusSeating)
+  // STEP 2: Fetch from all campuses in parallel (with delays handled internally)
   const campusNames = Object.keys(CAMPUS_ENDPOINTS);
   const fetchPromises = campusNames.map(campusName =>
     fetchCampusSeating(campusName, normalizedRA, dateVariants)
