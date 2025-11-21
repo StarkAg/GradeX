@@ -10,7 +10,6 @@ const NAV_ITEMS = [
   { id: 'seatfinder', label: 'Seat Finder', path: '/' },
   { id: 'feedfill', label: 'FeedFill', badge: 'NEW', path: '/feedfill' },
   { id: 'gradex', label: 'GradeX', path: '/gradex' },
-  { id: 'admin', label: 'Admin', path: '/admin' },
 ];
 
 export default function App() {
@@ -31,6 +30,7 @@ export default function App() {
     if (path === '/' || path === '/seatfinder' || path === '/seat-finder') return 'seatfinder';
     if (path === '/feedfill') return 'feedfill';
     if (path === '/gradex') return 'gradex';
+    if (path === '/admin') return 'admin';
     return 'seatfinder';
   }, [location.pathname]);
 
