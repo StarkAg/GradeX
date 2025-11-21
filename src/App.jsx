@@ -4,11 +4,13 @@ import { Analytics } from '@vercel/analytics/react';
 import GradeX from './components/GradeX';
 import SeatFinder from './components/SeatFinder';
 import FeedFill from './components/FeedFill';
+import AdminPortal from './components/AdminPortal';
 
 const NAV_ITEMS = [
   { id: 'seatfinder', label: 'Seat Finder', path: '/' },
   { id: 'feedfill', label: 'FeedFill', badge: 'NEW', path: '/feedfill' },
   { id: 'gradex', label: 'GradeX', path: '/gradex' },
+  { id: 'admin', label: 'Admin', path: '/admin' },
 ];
 
 export default function App() {
@@ -477,6 +479,7 @@ export default function App() {
           <Route path="/seat-finder" element={<SeatFinder />} />
           <Route path="/feedfill" element={<FeedFill />} />
           <Route path="/gradex" element={<GradeX />} />
+          <Route path="/admin" element={<AdminPortal />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

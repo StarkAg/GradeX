@@ -1153,6 +1153,39 @@ body {
   letter-spacing: 0.04em;
 }
 
+.admin-portal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-hero {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: clamp(16px, 3vw, 28px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-iframe-wrapper {
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.admin-iframe-wrapper iframe {
+  width: 100%;
+  min-height: 80vh;
+  border: none;
+  background: var(--bg-secondary);
+}
+
 @media (max-width: 640px) {
   .feedfill-hero {
     flex-direction: column;
