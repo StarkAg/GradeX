@@ -754,7 +754,7 @@ export default function SeatFinder() {
                   textAlign: 'center',
                   lineHeight: '1.4'
                 }}>
-                  Data fetched with the frequency of 1 minute with exceptional accuracy
+                  Data fetched with high frequency and utmost accuracy.
                 </span>
               </div>
             </div>

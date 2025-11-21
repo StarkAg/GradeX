@@ -158,8 +158,8 @@ export default function AdminPortal() {
           <div className="admin-stats">
             <div className="admin-stat-card">
               <p className="label">Total Searches</p>
-              <p className="value">{stats.total.toLocaleString()}</p>
-              <p className="hint">Latest {boundedCount.toLocaleString()} shown</p>
+              <p className="value">{boundedCount.toLocaleString()}</p>
+              <p className="hint">All time: {stats.total.toLocaleString()}</p>
             </div>
             <div className="admin-stat-card">
               <p className="label">Successful (page)</p>
@@ -170,7 +170,7 @@ export default function AdminPortal() {
               <p className="value danger">{stats.pageFailed}</p>
             </div>
             <div className="admin-stat-card">
-              <p className="label">Success Rate (page)</p>
+              <p className="label">Found Rate (page)</p>
               <p className="value accent">{stats.pageSuccessRate}%</p>
             </div>
           </div>
