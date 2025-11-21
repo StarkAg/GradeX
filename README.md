@@ -206,22 +206,22 @@ Access the admin dashboard at `https://www.gradex.bond/admin` (hidden from publi
 
 ## 📸 Screenshots
 
-![Seat Finder Mobile View](public/SS/Screenshot%202025-11-21%20at%209.38.17%20PM.png)
+![Seat Finder Mobile View](https://raw.githubusercontent.com/StarkAg/GradeX/main/public/SS/Screenshot%202025-11-21%20at%209.38.17%20PM.png)
 *Mobile-optimized Seat Finder interface*
 
-![Seat Finder Desktop View](public/SS/Screenshot%202025-11-21%20at%209.38.20%20PM.png)
+![Seat Finder Desktop View](https://raw.githubusercontent.com/StarkAg/GradeX/main/public/SS/Screenshot%202025-11-21%20at%209.38.20%20PM.png)
 *Desktop view with venue map images*
 
-![Admin Portal Dashboard](public/SS/Screenshot%202025-11-21%20at%209.38.24%20PM.png)
+![Admin Portal Dashboard](https://raw.githubusercontent.com/StarkAg/GradeX/main/public/SS/Screenshot%202025-11-21%20at%209.38.24%20PM.png)
 *Real-time admin dashboard with analytics*
 
-![FeedFill Feature](public/SS/Screenshot%202025-11-21%20at%209.38.52%20PM.png)
+![FeedFill Feature](https://raw.githubusercontent.com/StarkAg/GradeX/main/public/SS/Screenshot%202025-11-21%20at%209.38.52%20PM.png)
 *FeedFill Chrome extension integration*
 
-![GradeX Planner](public/SS/Screenshot%202025-11-21%20at%209.38.59%20PM.png)
+![GradeX Planner](https://raw.githubusercontent.com/StarkAg/GradeX/main/public/SS/Screenshot%202025-11-21%20at%209.38.59%20PM.png)
 *GradeX SGPA calculator interface*
 
-![Mobile Responsive Design](public/SS/Screenshot%202025-11-21%20at%209.39.06%20PM.png)
+![Mobile Responsive Design](https://raw.githubusercontent.com/StarkAg/GradeX/main/public/SS/Screenshot%202025-11-21%20at%209.39.06%20PM.png)
 *Fully responsive mobile experience*
 
 ## 👨‍💻 Creator
