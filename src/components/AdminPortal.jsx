@@ -12,10 +12,11 @@ export default function AdminPortal() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [boundedCount, setBoundedCount] = useState(0);
 
   const totalPages = useMemo(
-    () => Math.max(1, Math.ceil(Math.min(totalCount, MAX_ENTRIES) / PAGE_SIZE)),
-    [totalCount]
+    () => Math.max(1, Math.ceil(Math.max(1, boundedCount) / PAGE_SIZE)),
+    [boundedCount]
   );
 
   const fetchEnquiries = useCallback(async (showSpinner = false, nextPage) => {
@@ -28,7 +29,7 @@ export default function AdminPortal() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/admin-enquiries?page=${targetPage}&pageSize=${PAGE_SIZE}`, {
+        const response = await fetch(`/api/admin-enquiries?page=${targetPage}&pageSize=${PAGE_SIZE}`, {
         cache: 'no-store',
       });
 
@@ -41,9 +42,18 @@ export default function AdminPortal() {
         throw new Error(payload.error || 'Unexpected response from admin API');
       }
 
+      const fetchedTotal = payload.totalCount || 0;
+      const boundedTotal = Math.min(fetchedTotal, MAX_ENTRIES);
+
       setEnquiries(payload.data || []);
-      setTotalCount(Math.min(payload.totalCount || 0, MAX_ENTRIES));
-      setPage(payload.page || targetPage);
+      setTotalCount(fetchedTotal);
+      setBoundedCount(boundedTotal);
+
+      const safePage = Math.min(
+        Math.max(payload.page || targetPage, 1),
+        Math.max(1, Math.ceil(Math.max(1, boundedTotal) / PAGE_SIZE))
+      );
+      setPage(safePage);
       setLastUpdated(new Date());
     } catch (err) {
       setError(err.message || 'Unable to load enquiries');
@@ -63,12 +73,19 @@ export default function AdminPortal() {
   }, [fetchEnquiries, page]);
 
   const stats = useMemo(() => {
-    const total = enquiries.length;
-    const successful = enquiries.filter(e => e.results_found).length;
-    const failed = total - successful;
-    const successRate = total ? ((successful / total) * 100).toFixed(1) : '0.0';
-    return { total, successful, failed, successRate };
-  }, [enquiries]);
+    const pageSuccessful = enquiries.filter(e => e.results_found).length;
+    const pageFailed = enquiries.length - pageSuccessful;
+    const pageSuccessRate = enquiries.length
+      ? ((pageSuccessful / enquiries.length) * 100).toFixed(1)
+      : '0.0';
+
+    return {
+      total: totalCount,
+      pageSuccessful,
+      pageFailed,
+      pageSuccessRate,
+    };
+  }, [enquiries, totalCount]);
 
   const formatIST = useCallback((timestamp) => {
     if (!timestamp) return '-';
@@ -125,19 +142,20 @@ export default function AdminPortal() {
           <div className="admin-stats">
             <div className="admin-stat-card">
               <p className="label">Total Searches</p>
-              <p className="value">{stats.total}</p>
+              <p className="value">{stats.total.toLocaleString()}</p>
+              <p className="hint">Latest {boundedCount.toLocaleString()} shown</p>
             </div>
             <div className="admin-stat-card">
-              <p className="label">Successful</p>
-              <p className="value success">{stats.successful}</p>
+              <p className="label">Successful (page)</p>
+              <p className="value success">{stats.pageSuccessful}</p>
             </div>
             <div className="admin-stat-card">
-              <p className="label">Failed</p>
-              <p className="value danger">{stats.failed}</p>
+              <p className="label">Failed (page)</p>
+              <p className="value danger">{stats.pageFailed}</p>
             </div>
             <div className="admin-stat-card">
-              <p className="label">Success Rate</p>
-              <p className="value accent">{stats.successRate}%</p>
+              <p className="label">Success Rate (page)</p>
+              <p className="value accent">{stats.pageSuccessRate}%</p>
             </div>
           </div>
 
@@ -196,7 +214,7 @@ export default function AdminPortal() {
                 </button>
                 <span className="admin-page-info">
                   Page {page} of {totalPages} · Showing {(page - 1) * PAGE_SIZE + 1} –{' '}
-                  {Math.min(page * PAGE_SIZE, totalCount)} of {totalCount} records
+                  {Math.min(page * PAGE_SIZE, boundedCount)} of {boundedCount} records
                 </span>
                 <button
                   type="button"
