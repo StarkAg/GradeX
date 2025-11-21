@@ -1554,7 +1554,7 @@ export default function SeatFinder() {
                     textAlign: 'center'
                   }}>
                     <div style={{ color: 'var(--text-secondary)', marginBottom: '6px', fontSize: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Name</div>
-                    <div style={{ color: '#3b82f6', fontWeight: 700, fontSize: isMobile ? '20px' : 'clamp(14px, 3.5vw, 16px)', letterSpacing: isMobile ? '0.01em' : '0' }}>
+                    <div style={{ color: '#3b82f6', fontWeight: 700, fontSize: isMobile ? '16px' : 'clamp(14px, 3.5vw, 16px)', letterSpacing: isMobile ? '0.01em' : '0' }}>
                       {(() => {
                         const displayName = seat.name && seat.name !== '-' ? seat.name : 'N/A';
                         // Debug for specific RA
@@ -1594,7 +1594,7 @@ export default function SeatFinder() {
                       <div style={{ 
                         color: seat.room && seat.room !== '-' ? '#22c55e' : '#fbbf24', 
                         fontWeight: 700, 
-                        fontSize: isMobile ? '20px' : 'clamp(14px, 3.5vw, 18px)',
+                        fontSize: isMobile ? '16px' : 'clamp(14px, 3.5vw, 18px)',
                         fontStyle: seat.room === '-' ? 'italic' : 'normal'
                       }}>{seat.room || '-'}</div>
                       {seat.building && seat.building !== '-' && (
@@ -1621,7 +1621,7 @@ export default function SeatFinder() {
                       <div style={{ 
                         color: '#fbbf24', 
                         fontWeight: 700, 
-                        fontSize: isMobile ? '20px' : 'clamp(14px, 3.5vw, 18px)'
+                        fontSize: isMobile ? '16px' : 'clamp(14px, 3.5vw, 18px)'
                       }}>{seat.floor && seat.floor !== '-' ? seat.floor : 'N/A'}</div>
                     </div>
                     <div style={{
@@ -1636,7 +1636,7 @@ export default function SeatFinder() {
                       minHeight: isMobile ? '120px' : '110px'
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Seat No.</div>
-                      <div style={{ color: '#8b5cf6', fontWeight: 700, fontSize: isMobile ? '20px' : 'clamp(14px, 3.5vw, 18px)' }}>{seat.bench && seat.bench !== '-' ? seat.bench : 'N/A'}</div>
+                      <div style={{ color: '#8b5cf6', fontWeight: 700, fontSize: isMobile ? '16px' : 'clamp(14px, 3.5vw, 18px)' }}>{seat.bench && seat.bench !== '-' ? seat.bench : 'N/A'}</div>
                     </div>
                     <div style={{
                       background: 'rgba(255, 255, 255, 0.03)',
@@ -1650,10 +1650,10 @@ export default function SeatFinder() {
                       minHeight: isMobile ? '120px' : '110px'
                     }}>
                     <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Subject</div>
-                    <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: isMobile ? '18px' : 'clamp(13px, 3vw, 15px)' }}>
+                    <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: isMobile ? '16px' : 'clamp(13px, 3vw, 15px)' }}>
                       {seat.subcode || '-'}
                       {seat.subcode && subjectNames[seat.subcode.toUpperCase()] && (
-                        <span style={{ display: 'block', marginTop: '6px', fontSize: isMobile ? '12px' : 'clamp(11px, 2.5vw, 13px)', fontWeight: 500, color: 'var(--text-secondary)' }}>
+                        <span style={{ display: 'block', marginTop: '6px', fontSize: isMobile ? '11px' : 'clamp(11px, 2.5vw, 13px)', fontWeight: 500, color: 'var(--text-secondary)' }}>
                           {subjectNames[seat.subcode.toUpperCase()]}
                         </span>
                       )}
@@ -1674,7 +1674,7 @@ export default function SeatFinder() {
                       <div style={{ 
                         color: '#22c55e', 
                         fontWeight: 700, 
-                        fontSize: isMobile ? '20px' : 'clamp(14px, 3.5vw, 18px)'
+                        fontSize: isMobile ? '16px' : 'clamp(14px, 3.5vw, 18px)'
                       }}>{seat.department && seat.department !== '-' ? seat.department : 'N/A'}</div>
                     </div>
                     <div style={{
@@ -1689,7 +1689,7 @@ export default function SeatFinder() {
                       minHeight: isMobile ? '120px' : '110px'
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: 'clamp(4px, 1.5vw, 6px)', fontSize: isMobile ? '12px' : 'clamp(10px, 2.5vw, 12px)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Session</div>
-                      <div style={{ color: '#60a5fa', fontWeight: 700, fontSize: isMobile ? '20px' : 'clamp(14px, 3.5vw, 18px)' }}>{seat.session || '-'}</div>
+                      <div style={{ color: '#60a5fa', fontWeight: 700, fontSize: isMobile ? '16px' : 'clamp(14px, 3.5vw, 18px)' }}>{seat.session || '-'}</div>
                     </div>
                   </div>
                   </div>
