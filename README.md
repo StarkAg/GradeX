@@ -2,14 +2,11 @@
 
 A modern, tech-inspired grade planning tool for tracking semester courses, calculating SGPA, and determining required semester exam scores to achieve target grades. Built with a sleek dark theme and Iron Man-inspired aesthetics.
 
-🌐 **Live Demo**: [https://gradex.bond](https://gradex.bond) | [https://gradex.vercel.app](https://gradex.vercel.app)
+🌐 **Live Demo**: [https://www.gradex.bond](https://www.gradex.bond) | [https://gradex.vercel.app](https://gradex.vercel.app)
 
 [![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black)](https://vercel.com)
 [![React](https://img.shields.io/badge/React-18-blue)](https://reactjs.org)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green)](https://supabase.com)
-
-![GradeX Screenshot](screenshot.png)
-*Note: Add a screenshot of the application to showcase the UI*
 
 ## ✨ Features
 
@@ -25,20 +22,39 @@ A modern, tech-inspired grade planning tool for tracking semester courses, calcu
 - 📱 **Fully Responsive**: Optimized for all devices (mobile, tablet, desktop)
 - 🎓 **Grade Tracking**: Supports both incomplete (60 marks) and complete (100 marks) courses
 
-### SRMIST Seat Finder (v3.0)
-- 🔍 **Live Real-Time Fetch**: Data fetched with the frequency of 1 minute with exceptional accuracy
-- 🏫 **Multi-Campus Support**: Searches across Main Campus, Tech Park, Biotech & Architecture, and University Building
-- ⚡ **Auto-Refresh**: Automatically updates seat information every 3 minutes
-- 💾 **Smart Caching**: 5-minute cache reduces API calls by 80% for better performance
+### SRMIST Seat Finder (v3.1)
+- 🔍 **Live Real-Time Fetch**: Data fetched with high frequency and utmost accuracy
+- 🏫 **Multi-Campus Support**: Searches across Main Campus, Tech Park, Tech Park 2, Biotech & Architecture, and University Building
+- ⚡ **Performance Optimized**: 
+  - Session-scoped caching to eliminate duplicate requests
+  - Request deduplication prevents concurrent duplicate API calls
+  - Live API-first strategy for fastest results
 - 🗄️ **Supabase Integration**: PostgreSQL database with 6,177+ student records for fast, reliable name lookups
-- 📋 **Complete Information**: Displays Name, Seat No., Room/Venue, Floor, Department, Subject Code, and Session
-- 🎨 **Room Formatting**: Automatically formats room names (TPTP→TP, TPVPT→VPT)
+- 📋 **Complete Information**: Displays Name (proper case), Seat No., Room/Venue, Floor, Department, Subject Code, and Session
+- 🎨 **Smart Room Formatting**: 
+  - Automatically formats room names (TPTP→TP, TPVPT→VPT, TP-2LH→LH)
+  - Removes redundant prefixes for cleaner display
 - 🏢 **Floor Detection**: Smart extraction of floor numbers from room names (e.g., TP-401 → 4th floor, H301F → 3rd floor)
-- 📸 **Venue Images**: Aesthetic venue maps for UB, TP, TP2, and VPT buildings with hover effects
+- 📸 **Venue Images**: Aesthetic venue maps for Main Campus (MC), UB, TP, TP2, and VPT buildings with hover effects
 - ✅ **RA Validation**: Real-time validation ensures complete RA numbers before searching
-- 📱 **Mobile Optimized**: Fully responsive with touch-friendly interface and optimized date navigation
-- 🖥️ **Desktop Animation**: Smooth slide animation when seat info is found
+- 📱 **Mobile Optimized**: Fully responsive with touch-friendly interface, optimized font sizes, and horizontal table scrolling
+- 🖥️ **Desktop Optimized**: Compact font sizes ensure room names like "VPT-009" display on single line
 - 📧 **Support Contact**: Easy access to support email for inquiries
+
+### FeedFill (NEW)
+- 🔗 **Chrome Extension Integration**: Direct link to SRM Academia Course Feedback Filler extension
+- 📖 **Usage Guide**: Step-by-step instructions with visual screenshots
+- 🎯 **One-Click Access**: Quick links to Chrome Web Store and SRM Academia feedback page
+- 👨‍💻 **Creator Credits**: Links to extension creator's GitHub profile
+
+### Admin Portal
+- 📊 **Real-Time Dashboard**: Monitor live seat-search activity with automatic 15-second refresh
+- 📈 **Analytics**: View total searches, successful/failed counts, and found rate
+- 📋 **Pagination**: Browse latest 500 enquiries across multiple pages (50 per page)
+- 📱 **Mobile Responsive**: Horizontal scrolling table with sticky ID column
+- 🔄 **Auto-Refresh**: Data updates automatically every 15 seconds
+- 📥 **Export**: Download current page data as CSV
+- 🎯 **Accurate Metrics**: Latest ID tracking ensures accurate total search counts
 
 ## 🚀 Getting Started
 
@@ -97,17 +113,33 @@ npm run preview
 1. **Enter Details**: Input your complete Register Number (RA number) and exam date
 2. **Date Navigation**: Use arrow buttons to navigate between dates, or enter custom date (DD/MM/YYYY)
 3. **RA Validation**: Real-time validation ensures you enter a complete RA number (minimum 12 characters)
-4. **Find Seat**: Click "Find My Seat" to search across all 4 campuses
+4. **Find Seat**: Click "Find My Seat" to search across all campuses
 5. **View Results**: See complete seat information including:
-   - Student Name (from Supabase database)
+   - Student Name (proper case formatting from Supabase database)
    - Seat Number
-   - Room/Venue with building name (formatted automatically)
+   - Room/Venue with building name (automatically formatted)
    - Floor number (extracted from room name)
    - Department and Subject Code
    - Session (Forenoon/Afternoon)
 6. **Auto-Refresh**: Seat information automatically updates every 3 minutes
-7. **Venue Maps**: View venue layout images for UB, TP, TP2, and VPT buildings
+7. **Venue Maps**: View venue layout images for MC, UB, TP, TP2, and VPT buildings
 8. **Support**: Contact ha1487@srmist.edu.in for any problems or inquiries
+
+### FeedFill
+1. **Install Extension**: Click "Open Chrome Web Store" to install the SRM Academia Course Feedback Filler extension
+2. **Navigate to Academia**: Click "Open SRM Academia" to go to the course feedback page
+3. **Follow Guide**: Use the step-by-step usage guide with screenshots
+4. **Fill Feedback**: Use the extension to auto-fill rating and comment fields
+5. **Submit**: Review and submit the form manually
+
+### Admin Portal
+Access the admin dashboard at `https://www.gradex.bond/admin` (hidden from public navigation)
+
+1. **View Statistics**: See total searches, successful/failed counts, and found rate
+2. **Browse Enquiries**: Navigate through paginated results (50 per page)
+3. **Export Data**: Download current page as CSV
+4. **Auto-Refresh**: Data updates automatically every 15 seconds
+5. **Mobile Access**: Fully responsive with horizontal scrolling on mobile devices
 
 ## 📊 Grade Scale
 
@@ -127,10 +159,11 @@ npm run preview
 ## 🛠️ Technology Stack
 
 ### Frontend
-- **React 18**: UI framework
+- **React 18**: UI framework with React Router for client-side routing
 - **Vite**: Build tool and dev server
 - **CSS3**: Custom styling with animations and responsive design
 - **LocalStorage API**: Data persistence
+- **Vercel Analytics**: Performance and usage tracking
 
 ### Backend (Seat Finder API)
 - **Node.js**: Serverless functions
@@ -140,8 +173,11 @@ npm run preview
   - Reliable data access in serverless environment
   - Admin tools for data management
 - **HTML Scraping**: Real-time data extraction from SRM exam cell
-- **In-Memory Caching**: 5-minute TTL for optimal performance
-- **Multi-Campus Support**: Parallel fetching from 4 campus endpoints
+- **Performance Optimizations**:
+  - Session-scoped caching (Map-based)
+  - Request deduplication (prevents concurrent duplicates)
+  - Live API-first strategy
+- **Multi-Campus Support**: Parallel fetching from 5 campus endpoints
 - **Error Handling**: Comprehensive error handling and retry logic
 
 ## 🎨 Design
@@ -152,12 +188,13 @@ npm run preview
 - Brutalist aesthetic
 - Smooth animations and transitions
 - Fully responsive grid layouts
+- Proper case formatting for all text
 
 ## 📱 Responsive Design
 
-- **Desktop**: 3-4 column grid layout with smooth animations
+- **Desktop**: 3-4 column grid layout with smooth animations, optimized font sizes
 - **Tablet**: 2 column grid layout
-- **Mobile**: Single column layout with optimized touch targets
+- **Mobile**: Single column layout with optimized touch targets, horizontal scrolling tables
 - **Touch Optimized**: Larger touch targets, swipe-friendly date navigation
 - **Adaptive Typography**: Fluid typography using `clamp()` for all screen sizes
 
@@ -166,6 +203,26 @@ npm run preview
 - Hidden play button next to Arc Reactor icon (plays Iron Man theme)
 - "Welcome EWW" message for specific grade patterns
 - Arc Reactor pulsing animation on splash screen
+
+## 📸 Screenshots
+
+![Seat Finder Mobile View](public/SS/Screenshot%202025-11-21%20at%209.38.17%20PM.png)
+*Mobile-optimized Seat Finder interface*
+
+![Seat Finder Desktop View](public/SS/Screenshot%202025-11-21%20at%209.38.20%20PM.png)
+*Desktop view with venue map images*
+
+![Admin Portal Dashboard](public/SS/Screenshot%202025-11-21%20at%209.38.24%20PM.png)
+*Real-time admin dashboard with analytics*
+
+![FeedFill Feature](public/SS/Screenshot%202025-11-21%20at%209.38.52%20PM.png)
+*FeedFill Chrome extension integration*
+
+![GradeX Planner](public/SS/Screenshot%202025-11-21%20at%209.38.59%20PM.png)
+*GradeX SGPA calculator interface*
+
+![Mobile Responsive Design](public/SS/Screenshot%202025-11-21%20at%209.39.06%20PM.png)
+*Fully responsive mobile experience*
 
 ## 👨‍💻 Creator
 
@@ -186,22 +243,50 @@ SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key  # For admin operations only
 ```
 
-### Admin Tools
+### API Endpoints
 
-Manage Supabase data using the admin tool:
+- `/api/seating` - Main seat finding endpoint
+- `/api/get-name-by-last-digits` - Student name lookup
+- `/api/subjects` - Subject code to name mapping
+- `/api/log-enquiry` - Log search queries
+- `/api/admin-enquiries` - Admin dashboard data (requires service role key)
 
-```bash
-# View stats
-node supabase-admin.js stats
+### Project Structure
 
-# Find student
-node supabase-admin.js find RA2311003012124
-
-# Upload data
-node supabase-admin.js upload public/seat-data.json
+```
+GradeX/
+├── src/
+│   ├── components/
+│   │   ├── SeatFinder.jsx    # Main seat finding component
+│   │   ├── GradeX.jsx        # SGPA calculator
+│   │   ├── FeedFill.jsx      # FeedFill feature page
+│   │   └── AdminPortal.jsx   # Admin dashboard
+│   ├── App.jsx               # Main app with routing
+│   ├── main.jsx              # Entry point
+│   └── styles.css            # Global styles
+├── api/
+│   ├── seating.js            # Main seating API
+│   ├── seating-utils.js      # Seating utilities
+│   ├── admin-enquiries.js    # Admin API
+│   └── supabase-client.js   # Supabase configuration
+├── public/                   # Static assets
+│   ├── SS/                   # Screenshots
+│   └── [venue images]        # MC.jpg, TP.jpg, TP2.JPG, UB.png, VPT.JPG
+└── vercel.json               # Vercel deployment config
 ```
 
-See `supabase-admin.js --help` for all commands.
+## 📝 Recent Updates (v3.1)
+
+- ✨ Added FeedFill feature with Chrome extension integration
+- 🎨 Added Main Campus (MC) venue map image support
+- ⚡ Performance optimizations: session caching and request deduplication
+- 📱 Enhanced mobile responsiveness with optimized font sizes
+- 🎯 Admin portal with real-time analytics and pagination
+- 📊 Latest ID tracking for accurate search counts
+- 🔤 Proper case formatting for all student names
+- 🎨 Improved room name formatting (removes TP-2 prefix)
+- 📱 Mobile-optimized admin table with horizontal scrolling
+- 🔄 Auto-refresh functionality for admin dashboard
 
 ## 📝 License
 
