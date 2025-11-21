@@ -737,6 +737,10 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
   if (!campusConfig) return [];
   
   try {
+    // Polite delay between campus fetches (300-700ms) - restored from original
+    const delay = 300 + Math.random() * 400;
+    await new Promise(resolve => setTimeout(resolve, delay));
+    
     let html = '';
     let fetchUrl = campusConfig.fetchData;
     
@@ -747,32 +751,28 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
     if (dateVariants && dateVariants.length > 0) {
       const dateParam = dateVariants[0];
       
-      // Try both Forenoon and Afternoon sessions IN PARALLEL for ultra-fast fetching
+      // Try both Forenoon and Afternoon sessions SEQUENTIALLY (original approach)
       const sessions = ['FN', 'AN'];
       
-      // Format date for POST (usually DD/MM/YYYY or DD-MM-YYYY)
-      // Convert to DD/MM/YYYY format which is common for date pickers
-      let formattedDate = dateParam;
-      if (dateParam.includes('-')) {
-        formattedDate = dateParam.replace(/-/g, '/');
-      }
-      
-      // Fetch sessions with small delay between them to avoid overwhelming server
-      const sessionPromises = sessions.map(async (session, sessionIndex) => {
-        // Add small delay: Forenoon (0ms), Afternoon (150ms)
-        await new Promise(resolve => setTimeout(resolve, sessionIndex * 150));
-        
+      for (const session of sessions) {
         try {
+          // Format date for POST (usually DD/MM/YYYY or DD-MM-YYYY)
+          // Convert to DD/MM/YYYY format which is common for date pickers
+          let formattedDate = dateParam;
+          if (dateParam.includes('-')) {
+            formattedDate = dateParam.replace(/-/g, '/');
+          }
+          
           // Create form data
           const formData = new URLSearchParams();
           formData.append('dated', formattedDate);
           formData.append('session', session);
           formData.append('submit', 'Submit');
           
-          // Fetch room-wise data from fetch_data.php with reasonable timeout
+          // Fetch room-wise data from fetch_data.php
           const postHtml = await fetchPage(
             campusConfig.fetchData,
-            12000, // Increased back to 12s for reliability
+            12000,
             1,
             {
               method: 'POST',
@@ -787,76 +787,34 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
           const hasTargetRA = ra ? new RegExp(ra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(postHtml) : true;
           
           if (postHtml.length > 5000 && (hasRAPattern || hasTargetRA)) {
-            return { html: postHtml, session, url: `${campusConfig.fetchData}?dated=${encodeURIComponent(formattedDate)}&session=${session}` };
+            allHtmlSources.push(postHtml);
+            fetchUrl = `${campusConfig.fetchData}?dated=${encodeURIComponent(formattedDate)}&session=${session}`;
+            console.log(`[DEBUG ${campusName}] Found HTML from ${session} session, length: ${postHtml.length}, hasTargetRA: ${hasTargetRA}`);
           }
-          return null;
         } catch (e) {
           console.error(`Error POSTing to ${campusName} (${session}):`, e.message);
-          return null;
+          continue;
         }
-      });
-      
-      // For Tech Park 2, also fetch report.php with delay after sessions
-      // Add delay to avoid hitting server with 3 requests at once
-      // NOTE: Can be disabled via ENABLE_REPORT_PHP flag if not contributing
-      const reportPromise = (ENABLE_REPORT_PHP && campusName === 'Tech Park 2' && campusConfig.report) ? (async () => {
-        // Wait 300ms after sessions start (gives them time to begin)
-        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+    }
+    
+    // For Tech Park 2, also try report.php as an additional source to merge with fetch_data.php results
+    if (campusName === 'Tech Park 2' && campusConfig.report && ENABLE_REPORT_PHP) {
+      try {
+        const reportHtml = await fetchPage(campusConfig.report, 12000, 1);
+        const hasRAPattern = /(?:>|"|'|\b)(RA\d{2,})/i.test(reportHtml);
+        const hasTargetRA = ra ? new RegExp(ra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(reportHtml) : true;
         
-        try {
-          const reportHtml = await fetchPage(campusConfig.report, 12000, 1);
-          const hasRAPattern = /(?:>|"|'|\b)(RA\d{2,})/i.test(reportHtml);
-          const hasTargetRA = ra ? new RegExp(ra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(reportHtml) : true;
-          
-          console.log(`[DEBUG ${campusName}] report.php check - HTML length: ${reportHtml.length}, hasRAPattern: ${hasRAPattern}, hasTargetRA: ${hasTargetRA}, targetRA: ${ra}`);
-          
-          if (reportHtml.length > 5000 && (hasRAPattern || hasTargetRA)) {
-            console.log(`[DEBUG ${campusName}] report.php VALID - will include in merge`);
-            return reportHtml;
-          } else {
-            console.log(`[DEBUG ${campusName}] report.php INVALID - skipping (length: ${reportHtml.length}, hasRAPattern: ${hasRAPattern}, hasTargetRA: ${hasTargetRA})`);
-          }
-          return null;
-        } catch (e) {
-          console.log(`[${campusName}] Could not fetch from report.php:`, e.message);
-          return null;
-        }
-      })() : Promise.resolve(null);
-      
-      // Wait for ALL requests (sessions + report) in parallel - they all run simultaneously
-      const [sessionResults, reportHtml] = await Promise.all([
-        Promise.allSettled(sessionPromises),
-        reportPromise
-      ]);
-      
-      // Process session results
-      let sessionMatchesCount = 0;
-      sessionResults.forEach((result, index) => {
-        if (result.status === 'fulfilled' && result.value) {
-          allHtmlSources.push(result.value.html);
-          fetchUrl = result.value.url;
-          // Test if this session HTML has the target RA
-          const hasTargetRA = ra ? new RegExp(ra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(result.value.html) : false;
-          if (hasTargetRA) sessionMatchesCount++;
-          console.log(`[DEBUG ${campusName}] Found HTML from ${sessions[index]} session, length: ${result.value.html.length}, hasTargetRA: ${hasTargetRA}`);
-        }
-      });
-      
-      // Process report result (Tech Park 2 only) - TEST if it contributes
-      let reportHasTargetRA = false;
-      if (reportHtml) {
-        reportHasTargetRA = ra ? new RegExp(ra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(reportHtml) : false;
-        if (reportHasTargetRA) {
+        console.log(`[DEBUG ${campusName}] report.php check - HTML length: ${reportHtml.length}, hasRAPattern: ${hasRAPattern}, hasTargetRA: ${hasTargetRA}, targetRA: ${ra}`);
+        
+        if (reportHtml.length > 5000 && (hasRAPattern || hasTargetRA)) {
           allHtmlSources.push(reportHtml);
           console.log(`[DEBUG ${campusName}] ✅ report.php INCLUDED - has target RA ${ra}, length: ${reportHtml.length}`);
         } else {
           console.log(`[DEBUG ${campusName}] ❌ report.php SKIPPED - does NOT have target RA ${ra}, length: ${reportHtml.length}`);
         }
-      }
-      
-      // Log summary
-      if (campusName === 'Tech Park 2') {
-        console.log(`[DEBUG ${campusName}] Source summary - Sessions with RA: ${sessionMatchesCount}/${sessions.length}, report.php with RA: ${reportHasTargetRA ? 'YES' : 'NO'}`);
+      } catch (e) {
+        console.log(`[${campusName}] Could not fetch from report.php:`, e.message);
       }
     }
     
@@ -1598,23 +1556,11 @@ export async function getSeatingInfo(ra, date) {
   // Generate date variants
   const dateVariants = date ? generateDateVariants(date) : [];
   
-  // STEP 2: Fetch from all campuses with staggered delays to avoid overwhelming server
+  // STEP 2: Fetch from all campuses in parallel (delays handled inside fetchCampusSeating)
   const campusNames = Object.keys(CAMPUS_ENDPOINTS);
-  const fetchPromises = campusNames.map((campusName, index) => {
-    // Stagger requests: 0ms, 200ms, 400ms, 600ms, 800ms (more spacing)
-    const delay = index * 200;
-    return new Promise(resolve => {
-      setTimeout(async () => {
-        try {
-          const result = await fetchCampusSeating(campusName, normalizedRA, dateVariants);
-          resolve(result);
-        } catch (error) {
-          console.error(`[getSeatingInfo] Error fetching ${campusName}:`, error.message);
-          resolve([]); // Return empty array on error
-        }
-      }, delay);
-    });
-  });
+  const fetchPromises = campusNames.map(campusName =>
+    fetchCampusSeating(campusName, normalizedRA, dateVariants)
+  );
   
   const campusResults = await Promise.allSettled(fetchPromises);
   
