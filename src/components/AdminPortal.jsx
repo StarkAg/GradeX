@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const REFRESH_INTERVAL_MS = 15000;
 const PAGE_SIZE = 50;
@@ -13,6 +13,7 @@ export default function AdminPortal() {
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [boundedCount, setBoundedCount] = useState(0);
+  const pageRef = useRef(1);
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(Math.max(1, boundedCount) / PAGE_SIZE)),
@@ -20,7 +21,7 @@ export default function AdminPortal() {
   );
 
   const fetchEnquiries = useCallback(async (showSpinner = false, nextPage) => {
-    const targetPage = nextPage ?? page ?? 1;
+    const targetPage = Math.max(nextPage ?? pageRef.current ?? 1, 1);
     if (showSpinner) {
       setLoading(true);
     } else {
@@ -54,6 +55,7 @@ export default function AdminPortal() {
         Math.max(1, Math.ceil(Math.max(1, boundedTotal) / PAGE_SIZE))
       );
       setPage(safePage);
+      pageRef.current = safePage;
       setLastUpdated(new Date());
     } catch (err) {
       setError(err.message || 'Unable to load enquiries');
@@ -67,10 +69,14 @@ export default function AdminPortal() {
   }, []);
 
   useEffect(() => {
+    pageRef.current = page;
+  }, [page]);
+
+  useEffect(() => {
     fetchEnquiries(true, 1);
-    const interval = setInterval(() => fetchEnquiries(false, page), REFRESH_INTERVAL_MS);
+    const interval = setInterval(() => fetchEnquiries(false, pageRef.current), REFRESH_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [fetchEnquiries, page]);
+  }, [fetchEnquiries]);
 
   const stats = useMemo(() => {
     const pageSuccessful = enquiries.filter(e => e.results_found).length;
