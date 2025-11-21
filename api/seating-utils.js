@@ -114,7 +114,7 @@ export function generateDateVariants(date) {
  * @param {Object} options - Additional options (method, body, headers)
  * @returns {Promise<string>} - HTML content
  */
-export async function fetchPage(url, timeout = 8000, retries = 1, options = {}) {
+export async function fetchPage(url, timeout = 12000, retries = 1, options = {}) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
   
@@ -737,8 +737,8 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
   if (!campusConfig) return [];
   
   try {
-    // Ultra-fast: No delay between campus fetches (parallel execution)
-    // Removed delay for maximum speed
+    // Small delay to avoid overwhelming server (50ms - minimal but helps)
+    await new Promise(resolve => setTimeout(resolve, 50));
     
     let html = '';
     let fetchUrl = campusConfig.fetchData;
@@ -769,10 +769,10 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
           formData.append('session', session);
           formData.append('submit', 'Submit');
           
-          // Fetch room-wise data from fetch_data.php with reduced timeout
+          // Fetch room-wise data from fetch_data.php with reasonable timeout
           const postHtml = await fetchPage(
             campusConfig.fetchData,
-            8000, // Reduced from 12000 for faster failure
+            12000, // Increased back to 12s for reliability
             1,
             {
               method: 'POST',
@@ -801,7 +801,7 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
       // NOTE: Can be disabled via ENABLE_REPORT_PHP flag if not contributing
       const reportPromise = (ENABLE_REPORT_PHP && campusName === 'Tech Park 2' && campusConfig.report) ? (async () => {
         try {
-          const reportHtml = await fetchPage(campusConfig.report, 8000, 1);
+          const reportHtml = await fetchPage(campusConfig.report, 12000, 1);
           const hasRAPattern = /(?:>|"|'|\b)(RA\d{2,})/i.test(reportHtml);
           const hasTargetRA = ra ? new RegExp(ra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(reportHtml) : true;
           
@@ -869,7 +869,7 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
       try {
         // Use explicit report endpoint if available, otherwise construct from base
         const reportUrl = campusConfig.report || `${campusConfig.base}/report.php`;
-        html = await fetchPage(reportUrl, 8000, 1); // Reduced timeout for faster failure
+        html = await fetchPage(reportUrl, 12000, 1); // Reasonable timeout for reliability
         fetchUrl = reportUrl;
       } catch (e) {
         // 404 errors are expected for some campuses - log as warning, not error
