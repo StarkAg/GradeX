@@ -1426,7 +1426,7 @@ body {
 
   .admin-table th:nth-child(7),
   .admin-table td:nth-child(7) {
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .admin-table th:nth-child(1),
