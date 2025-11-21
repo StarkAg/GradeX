@@ -757,8 +757,11 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
         formattedDate = dateParam.replace(/-/g, '/');
       }
       
-      // Fetch both sessions in parallel for maximum speed
-      const sessionPromises = sessions.map(async (session) => {
+      // Fetch sessions with small delay between them to avoid overwhelming server
+      const sessionPromises = sessions.map(async (session, sessionIndex) => {
+        // Add small delay: Forenoon (0ms), Afternoon (150ms)
+        await new Promise(resolve => setTimeout(resolve, sessionIndex * 150));
+        
         try {
           // Create form data
           const formData = new URLSearchParams();
@@ -793,10 +796,13 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
         }
       });
       
-      // For Tech Park 2, also fetch report.php in TRUE PARALLEL with sessions
-      // This means: Forenoon session, Afternoon session, AND report.php all fetch simultaneously
+      // For Tech Park 2, also fetch report.php with delay after sessions
+      // Add delay to avoid hitting server with 3 requests at once
       // NOTE: Can be disabled via ENABLE_REPORT_PHP flag if not contributing
       const reportPromise = (ENABLE_REPORT_PHP && campusName === 'Tech Park 2' && campusConfig.report) ? (async () => {
+        // Wait 300ms after sessions start (gives them time to begin)
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
         try {
           const reportHtml = await fetchPage(campusConfig.report, 12000, 1);
           const hasRAPattern = /(?:>|"|'|\b)(RA\d{2,})/i.test(reportHtml);
