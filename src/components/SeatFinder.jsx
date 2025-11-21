@@ -19,7 +19,8 @@ export default function SeatFinder() {
   const [useLiveAPI, setUseLiveAPI] = useState(true); // Toggle between live API and static data
   const autoRefreshIntervalRef = useRef(null);
   const digitsInputRef = useRef(null);
-  const shouldLogEnquiryRef = useRef(null); // Track if we should log enquiry after state update
+  const sessionCacheRef = useRef(new Map());
+  const inflightRequestsRef = useRef(new Map());
 
   // Check if desktop/mobile on mount and resize
   useEffect(() => {
@@ -714,8 +715,93 @@ export default function SeatFinder() {
     }
   };
 
+  const buildCacheKey = (ra, date) => `${ra}|${date}`;
+
+  const logSuccess = (ra, selectedDate, seats) => {
+    const campuses = Array.from(new Set(seats.map(seat => seat.campus || seat.building).filter(Boolean)));
+    const studentName = seats[0]?.name || null;
+    logEnquiry(
+      ra,
+      selectedDate,
+      true,
+      seats.length,
+      campuses,
+      null,
+      studentName
+    );
+  };
+
+  const logFailure = (ra, selectedDate, message) => {
+    logEnquiry(ra, selectedDate, false, 0, [], message, null);
+  };
+
+  const fetchSeatsForRequest = async (cacheKey, ra, selectedDate) => {
+    if (useLiveAPI) {
+      try {
+        const liveResult = await fetchFromLiveAPI(ra, selectedDate);
+        if (liveResult.found && liveResult.seats.length > 0) {
+          sessionCacheRef.current.set(cacheKey, liveResult.seats);
+          logSuccess(ra, selectedDate, liveResult.seats);
+          return liveResult.seats;
+        }
+      } catch (err) {
+        console.warn('Live API failed, will try static data:', err.message || err);
+      }
+
+      try {
+        const staticSeats = await fetchFromStaticData(ra, selectedDate, {
+          allowSetState: true,
+          allowFallback: true
+        });
+
+        if (staticSeats.length > 0) {
+          sessionCacheRef.current.set(cacheKey, staticSeats);
+          logSuccess(ra, selectedDate, staticSeats);
+          return staticSeats;
+        }
+      } catch (staticErr) {
+        console.warn('Static data fetch failed:', staticErr.message || staticErr);
+        const message = staticErr.message || 'Static data fetch failed';
+        logFailure(ra, selectedDate, message);
+        setError(message);
+        setSeatInfo(null);
+        return [];
+      }
+
+      const message = 'No seating information found for this register number and date.';
+      setSeatInfo(null);
+      setError(message);
+      logFailure(ra, selectedDate, message);
+      return [];
+    }
+
+    try {
+      const staticSeats = await fetchFromStaticData(ra, selectedDate, {
+        allowSetState: true,
+        allowFallback: true
+      });
+
+      if (staticSeats.length > 0) {
+        sessionCacheRef.current.set(cacheKey, staticSeats);
+        logSuccess(ra, selectedDate, staticSeats);
+      } else {
+        const message = 'No seating information found for this register number and date.';
+        setSeatInfo(null);
+        setError(message);
+        logFailure(ra, selectedDate, message);
+      }
+
+      return staticSeats;
+    } catch (staticErr) {
+      const message = staticErr.message || 'Static data fetch failed';
+      setSeatInfo(null);
+      setError(message);
+      logFailure(ra, selectedDate, message);
+      return [];
+    }
+  };
+
   const handleFindSeat = async () => {
-    // Validate RA number
     const validation = validateRA(registerNumber);
     if (!validation.valid) {
       setError(validation.error);
@@ -724,172 +810,50 @@ export default function SeatFinder() {
       return;
     }
 
+    const trimmedRA = registerNumber.trim();
     const selectedDate = getSelectedDate();
+    const cacheKey = buildCacheKey(trimmedRA, selectedDate);
+
+    if (sessionCacheRef.current.has(cacheKey)) {
+      const cachedSeats = sessionCacheRef.current.get(cacheKey);
+      updateSeatInfoWithSubjects(cachedSeats);
+      setError(null);
+      return;
+    }
+
+    if (inflightRequestsRef.current.has(cacheKey)) {
+      setLoading(true);
+      try {
+        await inflightRequestsRef.current.get(cacheKey);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSeatInfo(null);
     setApiResults(null);
 
+    const fetchPromise = fetchSeatsForRequest(cacheKey, trimmedRA, selectedDate)
+      .catch(err => {
+        console.error('Error fetching seat data:', err);
+        const message = err?.message || 'Failed to fetch seat information. Please try again.';
+        setSeatInfo(null);
+        setError(message);
+        logFailure(trimmedRA, selectedDate, message);
+      });
+
+    inflightRequestsRef.current.set(cacheKey, fetchPromise);
+
     try {
-      if (useLiveAPI) {
-        let liveApiError = null;
-        let staticError = null;
-
-        const liveApiPromise = fetchFromLiveAPI(registerNumber.trim(), selectedDate)
-          .then(result => {
-            if (result.found && result.seats.length > 0) {
-              console.log(`✅ Found ${result.seats.length} seat(s) from live API`);
-              return result.seats;
-            }
-            return [];
-          })
-          .catch(err => {
-            liveApiError = err;
-            console.warn('Live API failed, will rely on other sources:', err.message);
-            return [];
-          });
-
-        const staticPromise = fetchFromStaticData(
-          registerNumber.trim(),
-          selectedDate,
-          { allowSetState: false, allowFallback: false }
-        )
-          .then(seats => {
-            console.log(
-              `✅ Found ${seats.length} seat(s) from static data:`,
-              seats.map(s => `${s.room} (${s.session})`)
-            );
-            return seats;
-          })
-          .catch(err => {
-            staticError = err;
-            console.warn('Static data fetch failed:', err.message || err);
-            return [];
-          });
-
-        const [liveApiSeats, staticSeats] = await Promise.all([liveApiPromise, staticPromise]);
-
-        // Merge results without duplicates
-        const allSeats = [...liveApiSeats];
-        staticSeats.forEach(staticSeat => {
-          const isDuplicate = allSeats.some(existing =>
-            existing.room === staticSeat.room &&
-            existing.session === staticSeat.session &&
-            existing.bench === staticSeat.bench
-          );
-          if (!isDuplicate) {
-            allSeats.push(staticSeat);
-            console.log(`➕ Added static seat: ${staticSeat.room}, ${staticSeat.session}`);
-          } else {
-            console.log(`⚠️ Duplicate skipped: ${staticSeat.room}, ${staticSeat.session}`);
-          }
-        });
-
-        if (allSeats.length > 0) {
-          console.log(`✅ Total seats found: ${allSeats.length} (${liveApiSeats.length} live + ${staticSeats.length} static)`);
-          updateSeatInfoWithSubjects(allSeats);
-          setError(null);
-
-          const campuses = Array.from(new Set(allSeats.map(seat => seat.campus || seat.building).filter(Boolean)));
-          const studentName = allSeats[0]?.name || null;
-          logEnquiry(
-            registerNumber.trim(),
-            selectedDate,
-            true,
-            allSeats.length,
-            campuses,
-            null,
-            studentName
-          );
-        } else {
-          setSeatInfo(null);
-          setError('No seating information found for this register number and date.');
-
-          const errorMessage = liveApiError?.message || staticError?.message || 'No seating information found';
-          logEnquiry(
-            registerNumber.trim(),
-            selectedDate,
-            false,
-            0,
-            [],
-            errorMessage,
-            null
-          );
-        }
-      } else {
-        // Static mode - fetch and log results
-        try {
-          // Set flag to log after state updates
-          shouldLogEnquiryRef.current = {
-            registerNumber: registerNumber.trim(),
-            searchDate: selectedDate,
-          };
-          
-          // Fetch with allowSetState=true so it sets state
-          await fetchFromStaticData(registerNumber.trim(), selectedDate);
-          
-          // Logging will happen in useEffect when state updates
-        } catch (staticErr) {
-          // Clear flag since we're handling error here
-          shouldLogEnquiryRef.current = null;
-          
-          // Log failed enquiry (no name available)
-          logEnquiry(
-            registerNumber.trim(),
-            selectedDate,
-            false,
-            0,
-            [],
-            staticErr.message || 'Static data fetch failed',
-            null // studentName not available
-          );
-        }
-      }
-    } catch (err) {
-      console.error('Error in handleFindSeat:', err);
-      setError(err.message || 'Failed to fetch seat information. Please try again.');
-      setSeatInfo(null);
-      
-      // Log error enquiry (no name available)
-      logEnquiry(
-        registerNumber.trim(),
-        selectedDate,
-        false,
-        0,
-        [],
-        err.message || 'Unexpected error',
-        null // studentName not available
-      );
+      await fetchPromise;
     } finally {
-      // Always clear loading state, even on error
+      inflightRequestsRef.current.delete(cacheKey);
       setLoading(false);
     }
   };
-
-  // Log enquiry after static mode fetch (when state updates)
-  useEffect(() => {
-    if (shouldLogEnquiryRef.current && !useLiveAPI) {
-      const { registerNumber: ra, searchDate } = shouldLogEnquiryRef.current;
-      const hasResults = seatInfo && seatInfo.length > 0 && !error;
-      const campuses = hasResults 
-        ? Array.from(new Set(seatInfo.map(seat => seat.campus || seat.building).filter(Boolean)))
-        : [];
-      
-      const studentName = seatInfo && seatInfo.length > 0 ? seatInfo[0]?.name || null : null;
-      logEnquiry(
-        ra,
-        searchDate,
-        hasResults,
-        seatInfo ? seatInfo.length : 0,
-        campuses,
-        error || (!hasResults ? 'No results found in static data' : null),
-        studentName
-      );
-      
-      // Clear flag
-      shouldLogEnquiryRef.current = null;
-    }
-  }, [seatInfo, error, useLiveAPI]);
 
   // Auto-refresh every 3 minutes if seat info exists (ideal balance)
   useEffect(() => {
