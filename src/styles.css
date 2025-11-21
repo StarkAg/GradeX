@@ -1272,8 +1272,12 @@ body {
 
 .admin-table td {
   padding: 12px 10px;
-  border-bottom: 1px solid var(--border-color);
   font-size: 13px;
+}
+
+.admin-table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.2s ease;
 }
 
 .admin-table tbody tr:hover {
