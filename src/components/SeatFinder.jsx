@@ -400,6 +400,11 @@ export default function SeatFinder() {
               buildingName = VPT_BUILDING_NAME;
             }
             
+            // Remove TP-2 or TP2 prefix from LH/LS/CLS rooms (e.g., TP-2LH1005 -> LH1005)
+            if (formattedRoom.match(/^TP-?2?(LH|LS|CLS)/i)) {
+              formattedRoom = formattedRoom.replace(/^TP-?2?/i, '');
+            }
+            
             // CLS, LS, and LH rooms are in Tech Park 2
             if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS') || formattedRoom.startsWith('LH')) {
               buildingName = 'Tech Park 2';
