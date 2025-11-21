@@ -1,5 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+// Convert name to proper case (title case)
+const toProperCase = (name) => {
+  if (!name || name === '-' || name === 'N/A') return name;
+  return name
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 const REFRESH_INTERVAL_MS = 15000;
 const PAGE_SIZE = 50;
 const MAX_ENTRIES = 500;
@@ -187,7 +197,7 @@ export default function AdminPortal() {
                     <tr key={enquiry.id}>
                       <td>{enquiry.id}</td>
                       <td className="mono">{enquiry.register_number}</td>
-                      <td>{enquiry.student_name || '-'}</td>
+                      <td>{toProperCase(enquiry.student_name || '-')}</td>
                       <td>{enquiry.search_date || '-'}</td>
                       <td className="timestamp">{formatIST(enquiry.searched_at)}</td>
                       <td>

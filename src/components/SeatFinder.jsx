@@ -1,5 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+// Convert name to proper case (title case)
+const toProperCase = (name) => {
+  if (!name || name === '-' || name === 'N/A') return name;
+  return name
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 export default function SeatFinder() {
   const RA_PREFIX = 'RA';
   const VPT_BUILDING_NAME = 'Valliammai Block Behind TP';
@@ -1513,7 +1523,7 @@ export default function SeatFinder() {
                             seatObject: seat
                           });
                         }
-                        return displayName;
+                        return toProperCase(displayName);
                       })()}
                     </div>
                   </div>
@@ -1894,7 +1904,7 @@ export default function SeatFinder() {
                             seatObject: seat
                           });
                         }
-                        return displayName;
+                        return toProperCase(displayName);
                       })()}
                     </div>
                   </div>
