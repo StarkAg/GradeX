@@ -36,7 +36,7 @@ export default async function handler(req, res) {
     // Search for RA numbers ending with these digits
     // Try both case-sensitive and case-insensitive search
     const { data, error } = await supabase
-      .from('students')
+      .from('CLEAN_RA_NAME_MERGED')
       .select('register_number, name')
       .ilike('register_number', `%${lastDigits}`)
       .limit(20);
