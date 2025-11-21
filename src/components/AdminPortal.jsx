@@ -159,7 +159,6 @@ export default function AdminPortal() {
             <div className="admin-stat-card">
               <p className="label">Total Searches</p>
               <p className="value">{stats.total.toLocaleString()}</p>
-              <p className="hint">Latest {boundedCount.toLocaleString()} shown</p>
             </div>
             <div className="admin-stat-card">
               <p className="label">Successful (page)</p>
