@@ -41,14 +41,31 @@ export default async function handler(req, res) {
       return;
     }
     
-    const limit = parseInt(req.query.limit) || 500;
-    
-    // Fetch enquiries
-    const { data, error } = await clientToUse
+  const page = Math.max(parseInt(req.query.page) || 1, 1);
+  const pageSize = Math.min(Math.max(parseInt(req.query.pageSize) || 50, 10), 200);
+  const offset = (page - 1) * pageSize;
+  
+  // Fetch total count once
+  const { count, error: countError } = await clientToUse
+    .from('enquiries')
+    .select('*', { count: 'exact', head: true });
+  
+  if (countError) {
+    console.error('[admin-enquiries] Count error:', countError);
+    res.status(500).json({
+      status: 'error',
+      error: 'Failed to fetch total search count',
+      message: countError.message,
+    });
+    return;
+  }
+  
+  // Fetch paginated enquiries
+  const { data, error } = await clientToUse
       .from('enquiries')
       .select('*')
       .order('searched_at', { ascending: false })
-      .limit(limit);
+    .range(offset, offset + pageSize - 1);
     
     if (error) {
       console.error('[admin-enquiries] Error:', error);
@@ -64,6 +81,9 @@ export default async function handler(req, res) {
     res.status(200).json({
       status: 'success',
       count: data.length,
+      totalCount: count || 0,
+      page,
+      pageSize,
       data: data || [],
     });
   } catch (error) {

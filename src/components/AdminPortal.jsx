@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 const REFRESH_INTERVAL_MS = 15000;
+const PAGE_SIZE = 50;
+const MAX_ENTRIES = 500;
 
 export default function AdminPortal() {
   const [enquiries, setEnquiries] = useState([]);
@@ -8,8 +10,16 @@ export default function AdminPortal() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
-  const fetchEnquiries = useCallback(async (showSpinner = false) => {
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(Math.min(totalCount, MAX_ENTRIES) / PAGE_SIZE)),
+    [totalCount]
+  );
+
+  const fetchEnquiries = useCallback(async (showSpinner = false, nextPage) => {
+    const targetPage = nextPage ?? page ?? 1;
     if (showSpinner) {
       setLoading(true);
     } else {
@@ -18,7 +28,7 @@ export default function AdminPortal() {
     setError(null);
 
     try {
-      const response = await fetch('/api/admin-enquiries?limit=500', {
+      const response = await fetch(`/api/admin-enquiries?page=${targetPage}&pageSize=${PAGE_SIZE}`, {
         cache: 'no-store',
       });
 
@@ -32,6 +42,8 @@ export default function AdminPortal() {
       }
 
       setEnquiries(payload.data || []);
+      setTotalCount(Math.min(payload.totalCount || 0, MAX_ENTRIES));
+      setPage(payload.page || targetPage);
       setLastUpdated(new Date());
     } catch (err) {
       setError(err.message || 'Unable to load enquiries');
@@ -45,10 +57,10 @@ export default function AdminPortal() {
   }, []);
 
   useEffect(() => {
-    fetchEnquiries(true);
-    const interval = setInterval(() => fetchEnquiries(false), REFRESH_INTERVAL_MS);
+    fetchEnquiries(true, 1);
+    const interval = setInterval(() => fetchEnquiries(false, page), REFRESH_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [fetchEnquiries]);
+  }, [fetchEnquiries, page]);
 
   const stats = useMemo(() => {
     const total = enquiries.length;
@@ -87,7 +99,7 @@ export default function AdminPortal() {
           <button
             className="feedfill-button"
             type="button"
-            onClick={() => fetchEnquiries(true)}
+            onClick={() => fetchEnquiries(true, page)}
             disabled={refreshing}
           >
             {refreshing ? 'Refreshing…' : 'Manual Refresh'}
@@ -173,6 +185,28 @@ export default function AdminPortal() {
                   ))}
                 </tbody>
               </table>
+              <div className="admin-pagination">
+                <button
+                  type="button"
+                  className="feedfill-button secondary"
+                  disabled={page <= 1 || refreshing}
+                  onClick={() => fetchEnquiries(true, page - 1)}
+                >
+                  Previous
+                </button>
+                <span className="admin-page-info">
+                  Page {page} of {totalPages} · Showing {(page - 1) * PAGE_SIZE + 1} –{' '}
+                  {Math.min(page * PAGE_SIZE, totalCount)} of {totalCount} records
+                </span>
+                <button
+                  type="button"
+                  className="feedfill-button secondary"
+                  disabled={page >= totalPages || refreshing}
+                  onClick={() => fetchEnquiries(true, page + 1)}
+                >
+                  Next
+                </button>
+              </div>
             </div>
           )}
         </>

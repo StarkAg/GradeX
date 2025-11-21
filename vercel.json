@@ -1,7 +1,5 @@
 {
   "rewrites": [
-    { "source": "/admin", "destination": "/GradeX_Admin/index.html" },
-    { "source": "/admin/(.*)", "destination": "/GradeX_Admin/$1" },
     { "source": "/(.*)", "destination": "/" }
   ]
 }
