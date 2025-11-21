@@ -23,6 +23,9 @@ export default function AdminPortal() {
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [boundedCount, setBoundedCount] = useState(0);
+  const [totalSuccessful, setTotalSuccessful] = useState(0);
+  const [totalFailed, setTotalFailed] = useState(0);
+  const [totalFoundRate, setTotalFoundRate] = useState('0.0');
   const pageRef = useRef(1);
 
   const totalPages = useMemo(
@@ -59,6 +62,9 @@ export default function AdminPortal() {
       setEnquiries(payload.data || []);
       setTotalCount(fetchedTotal);
       setBoundedCount(boundedTotal);
+      setTotalSuccessful(payload.totalSuccessful || 0);
+      setTotalFailed(payload.totalFailed || 0);
+      setTotalFoundRate(payload.totalFoundRate || '0.0');
 
       const safePage = Math.min(
         Math.max(payload.page || targetPage, 1),
@@ -89,12 +95,6 @@ export default function AdminPortal() {
   }, [fetchEnquiries]);
 
   const stats = useMemo(() => {
-    const pageSuccessful = enquiries.filter(e => e.results_found).length;
-    const pageFailed = enquiries.length - pageSuccessful;
-    const pageSuccessRate = enquiries.length
-      ? ((pageSuccessful / enquiries.length) * 100).toFixed(1)
-      : '0.0';
-
     // Get the latest ID from enquiries (highest ID = latest)
     const latestId = enquiries.length > 0 
       ? Math.max(...enquiries.map(e => e.id || 0))
@@ -102,11 +102,11 @@ export default function AdminPortal() {
 
     return {
       total: latestId || totalCount, // Use latest ID, fallback to totalCount
-      pageSuccessful,
-      pageFailed,
-      pageSuccessRate,
+      successful: totalSuccessful,
+      failed: totalFailed,
+      foundRate: totalFoundRate,
     };
-  }, [enquiries, totalCount]);
+  }, [enquiries, totalCount, totalSuccessful, totalFailed, totalFoundRate]);
 
   const formatIST = useCallback((timestamp) => {
     if (!timestamp) return '-';
@@ -166,16 +166,16 @@ export default function AdminPortal() {
               <p className="value">{stats.total.toLocaleString()}</p>
             </div>
             <div className="admin-stat-card">
-              <p className="label">Successful (page)</p>
-              <p className="value success">{stats.pageSuccessful}</p>
+              <p className="label">Successful</p>
+              <p className="value success">{stats.successful.toLocaleString()}</p>
             </div>
             <div className="admin-stat-card">
-              <p className="label">Failed (page)</p>
-              <p className="value danger">{stats.pageFailed}</p>
+              <p className="label">Failed</p>
+              <p className="value danger">{stats.failed.toLocaleString()}</p>
             </div>
             <div className="admin-stat-card">
-              <p className="label">Found Rate (page)</p>
-              <p className="value accent">{stats.pageSuccessRate}%</p>
+              <p className="label">Found Rate</p>
+              <p className="value accent">{stats.foundRate}%</p>
             </div>
           </div>
 

@@ -45,7 +45,7 @@ export default async function handler(req, res) {
   const pageSize = Math.min(Math.max(parseInt(req.query.pageSize) || 50, 10), 200);
   const offset = (page - 1) * pageSize;
   
-  // Fetch total count once
+  // Fetch total count and statistics once
   const { count, error: countError } = await clientToUse
     .from('enquiries')
     .select('*', { count: 'exact', head: true });
@@ -59,6 +59,22 @@ export default async function handler(req, res) {
     });
     return;
   }
+  
+  // Fetch total successful and failed counts across all data
+  const { count: successfulCount, error: successfulError } = await clientToUse
+    .from('enquiries')
+    .select('*', { count: 'exact', head: true })
+    .eq('results_found', true);
+  
+  if (successfulError) {
+    console.error('[admin-enquiries] Successful count error:', successfulError);
+  }
+  
+  const totalSuccessful = successfulCount || 0;
+  const totalFailed = (count || 0) - totalSuccessful;
+  const totalFoundRate = count && count > 0 
+    ? ((totalSuccessful / count) * 100).toFixed(1)
+    : '0.0';
   
   // Fetch paginated enquiries
   const { data, error } = await clientToUse
@@ -82,6 +98,9 @@ export default async function handler(req, res) {
       status: 'success',
       count: data.length,
       totalCount: count || 0,
+      totalSuccessful,
+      totalFailed,
+      totalFoundRate,
       page,
       pageSize,
       data: data || [],
