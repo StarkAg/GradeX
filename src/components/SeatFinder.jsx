@@ -732,110 +732,89 @@ export default function SeatFinder() {
 
     try {
       if (useLiveAPI) {
-        let liveApiSeats = [];
-        try {
-          const liveApiResult = await fetchFromLiveAPI(registerNumber.trim(), selectedDate);
-          // Store live API results if found
-          if (liveApiResult.found && liveApiResult.seats.length > 0) {
-            liveApiSeats = liveApiResult.seats;
-            console.log(`✅ Found ${liveApiSeats.length} seat(s) from live API`);
+        let liveApiError = null;
+        let staticError = null;
+
+        const liveApiPromise = fetchFromLiveAPI(registerNumber.trim(), selectedDate)
+          .then(result => {
+            if (result.found && result.seats.length > 0) {
+              console.log(`✅ Found ${result.seats.length} seat(s) from live API`);
+              return result.seats;
+            }
+            return [];
+          })
+          .catch(err => {
+            liveApiError = err;
+            console.warn('Live API failed, will rely on other sources:', err.message);
+            return [];
+          });
+
+        const staticPromise = fetchFromStaticData(
+          registerNumber.trim(),
+          selectedDate,
+          { allowSetState: false, allowFallback: false }
+        )
+          .then(seats => {
+            console.log(
+              `✅ Found ${seats.length} seat(s) from static data:`,
+              seats.map(s => `${s.room} (${s.session})`)
+            );
+            return seats;
+          })
+          .catch(err => {
+            staticError = err;
+            console.warn('Static data fetch failed:', err.message || err);
+            return [];
+          });
+
+        const [liveApiSeats, staticSeats] = await Promise.all([liveApiPromise, staticPromise]);
+
+        // Merge results without duplicates
+        const allSeats = [...liveApiSeats];
+        staticSeats.forEach(staticSeat => {
+          const isDuplicate = allSeats.some(existing =>
+            existing.room === staticSeat.room &&
+            existing.session === staticSeat.session &&
+            existing.bench === staticSeat.bench
+          );
+          if (!isDuplicate) {
+            allSeats.push(staticSeat);
+            console.log(`➕ Added static seat: ${staticSeat.room}, ${staticSeat.session}`);
+          } else {
+            console.log(`⚠️ Duplicate skipped: ${staticSeat.room}, ${staticSeat.session}`);
           }
-        } catch (apiErr) {
-          console.warn('Live API failed, will try static data:', apiErr.message);
-        }
-        
-        // Always check static data to find additional results (e.g., different sessions)
-        console.log('🔍 Checking static data for additional results...');
-        let staticSeats = [];
-        try {
-          // Call fetchFromStaticData but capture return value without triggering fallback/setState
-          staticSeats = await fetchFromStaticData(
+        });
+
+        if (allSeats.length > 0) {
+          console.log(`✅ Total seats found: ${allSeats.length} (${liveApiSeats.length} live + ${staticSeats.length} static)`);
+          updateSeatInfoWithSubjects(allSeats);
+          setError(null);
+
+          const campuses = Array.from(new Set(allSeats.map(seat => seat.campus || seat.building).filter(Boolean)));
+          const studentName = allSeats[0]?.name || null;
+          logEnquiry(
             registerNumber.trim(),
             selectedDate,
-            { allowSetState: false, allowFallback: false }
+            true,
+            allSeats.length,
+            campuses,
+            null,
+            studentName
           );
-          console.log(`✅ Found ${staticSeats.length} seat(s) from static data:`, staticSeats.map(s => `${s.room} (${s.session})`));
-          
-          // Merge results from both sources
-          const allSeats = [...liveApiSeats];
-          staticSeats.forEach(staticSeat => {
-            // Only add if not already present (avoid duplicates)
-            const isDuplicate = allSeats.some(existing => 
-              existing.room === staticSeat.room && 
-              existing.session === staticSeat.session &&
-              existing.bench === staticSeat.bench
-            );
-            if (!isDuplicate) {
-              allSeats.push(staticSeat);
-              console.log(`➕ Added static seat: ${staticSeat.room}, ${staticSeat.session}`);
-            } else {
-              console.log(`⚠️ Duplicate skipped: ${staticSeat.room}, ${staticSeat.session}`);
-            }
-          });
-          
-          if (allSeats.length > 0) {
-            console.log(`✅ Total seats found: ${allSeats.length} (${liveApiSeats.length} live + ${staticSeats.length} static)`);
-            updateSeatInfoWithSubjects(allSeats);
-            setError(null);
-            
-            // Log successful enquiry
-            const campuses = Array.from(new Set(allSeats.map(seat => seat.campus || seat.building).filter(Boolean)));
-            const studentName = allSeats[0]?.name || null; // Get name from first seat
-            logEnquiry(
-              registerNumber.trim(),
-              selectedDate,
-              true,
-              allSeats.length,
-              campuses,
-              null, // errorMessage
-              studentName
-            );
-          } else if (liveApiSeats.length === 0 && staticSeats.length === 0) {
-            setSeatInfo(null);
-            setError('No seating information found for this register number and date.');
-            
-            // Log unsuccessful enquiry (no name available since no results)
-            logEnquiry(
-              registerNumber.trim(),
-              selectedDate,
-              false,
-              0,
-              [],
-              'No seating information found',
-              null // studentName not available
-            );
-          }
-        } catch (staticErr) {
-          console.warn('Static data fetch failed:', staticErr);
-          // If we have live API results, use those
-          if (liveApiSeats.length > 0) {
-            updateSeatInfoWithSubjects(liveApiSeats);
-            setError(null);
-            
-            // Log successful enquiry with live API results only
-            const campuses = Array.from(new Set(liveApiSeats.map(seat => seat.campus || seat.building).filter(Boolean)));
-            const studentName = liveApiSeats[0]?.name || null; // Get name from first seat
-            logEnquiry(
-              registerNumber.trim(),
-              selectedDate,
-              true,
-              liveApiSeats.length,
-              campuses,
-              null, // errorMessage
-              studentName
-            );
-          } else {
-            // Log failed enquiry (no name available)
-            logEnquiry(
-              registerNumber.trim(),
-              selectedDate,
-              false,
-              0,
-              [],
-              staticErr.message || 'Static data fetch failed',
-              null // studentName not available
-            );
-          }
+        } else {
+          setSeatInfo(null);
+          setError('No seating information found for this register number and date.');
+
+          const errorMessage = liveApiError?.message || staticError?.message || 'No seating information found';
+          logEnquiry(
+            registerNumber.trim(),
+            selectedDate,
+            false,
+            0,
+            [],
+            errorMessage,
+            null
+          );
         }
       } else {
         // Static mode - fetch and log results
