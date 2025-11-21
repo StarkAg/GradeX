@@ -179,46 +179,48 @@ export default function AdminPortal() {
             <div className="admin-no-data">No enquiries recorded yet.</div>
           ) : (
             <div className="admin-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>RA Number</th>
-                    <th>Name</th>
-                    <th>Search Date</th>
-                    <th>Time (IST)</th>
-                    <th>Status</th>
-                    <th>Results</th>
-                    <th>Campuses</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {enquiries.map((enquiry) => (
-                    <tr key={enquiry.id}>
-                      <td>{enquiry.id}</td>
-                      <td className="mono">{enquiry.register_number}</td>
-                      <td>{toProperCase(enquiry.student_name || '-')}</td>
-                      <td>{enquiry.search_date || '-'}</td>
-                      <td className="timestamp">{formatIST(enquiry.searched_at)}</td>
-                      <td>
-                        <span className={`admin-badge ${enquiry.results_found ? 'success' : 'danger'}`}>
-                          {enquiry.results_found ? '✓ Found' : '✗ Not Found'}
-                        </span>
-                      </td>
-                      <td>{enquiry.result_count || 0}</td>
-                      <td className="campus-cell">
-                        {(enquiry.campuses || []).length === 0
-                          ? '-'
-                          : enquiry.campuses.map((campus) => (
-                              <span key={campus} className="admin-badge campus">
-                                {campus}
-                              </span>
-                            ))}
-                      </td>
+              <div className="admin-table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>RA Number</th>
+                      <th>Name</th>
+                      <th>Search Date</th>
+                      <th>Time (IST)</th>
+                      <th>Status</th>
+                      <th>Results</th>
+                      <th>Campuses</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {enquiries.map((enquiry) => (
+                      <tr key={enquiry.id}>
+                        <td>{enquiry.id}</td>
+                        <td className="mono">{enquiry.register_number}</td>
+                        <td>{toProperCase(enquiry.student_name || '-')}</td>
+                        <td>{enquiry.search_date || '-'}</td>
+                        <td className="timestamp">{formatIST(enquiry.searched_at)}</td>
+                        <td>
+                          <span className={`admin-badge ${enquiry.results_found ? 'success' : 'danger'}`}>
+                            {enquiry.results_found ? '✓ Found' : '✗ Not Found'}
+                          </span>
+                        </td>
+                        <td>{enquiry.result_count || 0}</td>
+                        <td className="campus-cell">
+                          {(enquiry.campuses || []).length === 0
+                            ? '-'
+                            : enquiry.campuses.map((campus) => (
+                                <span key={campus} className="admin-badge campus">
+                                  {campus}
+                                </span>
+                              ))}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
               <div className="admin-pagination">
                 <button
                   type="button"
