@@ -15,11 +15,14 @@ const rateLimitStore = new Map();
 // Configuration
 const RATE_LIMIT_CONFIG = {
   windowMs: 60 * 1000, // 1 minute window
-  maxRequests: 10, // Max 10 requests per minute per IP
-  blockDurationMs: 15 * 60 * 1000, // Block for 15 minutes if exceeded
+  maxRequests: 5, // Max 5 requests per minute per IP (stricter)
+  blockDurationMs: 30 * 60 * 1000, // Block for 30 minutes if exceeded
 };
 
 const BLOCKED_IPS = new Set(); // Track blocked IPs
+
+// Track sequential RA patterns (bot detection)
+const sequentialPatternStore = new Map(); // IP -> { lastRA, count, firstSeen }
 
 /**
  * Get client IP address from request
@@ -169,7 +172,7 @@ function validateTiming(ip) {
   );
   
   // Check for too many requests in short time
-  if (timingData.requests.length >= 5) {
+  if (timingData.requests.length >= 3) {
     return {
       valid: false,
       reason: 'Too many requests in short time period',
@@ -184,9 +187,61 @@ function validateTiming(ip) {
 }
 
 /**
+ * Detect sequential RA number patterns (bot scraping)
+ */
+function detectSequentialPattern(ip, ra) {
+  if (!ra || typeof ra !== 'string') return { suspicious: false };
+  
+  // Extract numeric part from RA (e.g., "RA2311003012253" -> "2311003012253")
+  const numericMatch = ra.match(/\d+/);
+  if (!numericMatch) return { suspicious: false };
+  
+  const numericPart = numericMatch[0];
+  const patternData = sequentialPatternStore.get(ip) || { lastRA: null, count: 0, firstSeen: Date.now() };
+  const now = Date.now();
+  
+  // Reset if more than 5 minutes passed
+  if (now - patternData.firstSeen > 5 * 60 * 1000) {
+    patternData.lastRA = null;
+    patternData.count = 0;
+    patternData.firstSeen = now;
+  }
+  
+  if (patternData.lastRA) {
+    const lastNumeric = patternData.lastRA.match(/\d+/)?.[0];
+    if (lastNumeric) {
+      const lastNum = parseInt(lastNumeric.slice(-6)); // Last 6 digits
+      const currentNum = parseInt(numericPart.slice(-6));
+      
+      // Check if sequential (difference of 1)
+      if (Math.abs(currentNum - lastNum) === 1) {
+        patternData.count++;
+        
+        // If 3+ sequential requests, it's suspicious
+        if (patternData.count >= 3) {
+          sequentialPatternStore.set(ip, patternData);
+          return {
+            suspicious: true,
+            reason: 'Detected sequential RA number pattern (likely automated scraping)',
+          };
+        }
+      } else {
+        // Reset count if not sequential
+        patternData.count = 0;
+      }
+    }
+  }
+  
+  patternData.lastRA = ra;
+  sequentialPatternStore.set(ip, patternData);
+  
+  return { suspicious: false };
+}
+
+/**
  * Main bot protection check
  */
-export function checkBotProtection(req) {
+export function checkBotProtection(req, ra = null) {
   const ip = getClientIP(req);
   
   // Check rate limit
@@ -220,6 +275,24 @@ export function checkBotProtection(req) {
     };
   }
   
+  // Detect sequential RA patterns (if RA provided)
+  if (ra) {
+    const patternCheck = detectSequentialPattern(ip, ra);
+    if (patternCheck.suspicious) {
+      // Block IP for sequential pattern
+      BLOCKED_IPS.add(ip);
+      rateLimitStore.set(`blocked:${ip}`, {
+        until: Date.now() + RATE_LIMIT_CONFIG.blockDurationMs,
+      });
+      return {
+        blocked: true,
+        reason: patternCheck.reason,
+        retryAfter: RATE_LIMIT_CONFIG.blockDurationMs / 1000,
+        ip,
+      };
+    }
+  }
+  
   return {
     blocked: false,
     ip,
@@ -244,6 +317,13 @@ export function cleanupRateLimitStore() {
         const ip = key.replace('blocked:', '');
         BLOCKED_IPS.delete(ip);
       }
+    }
+  }
+  
+  // Clean up old sequential pattern data
+  for (const [ip, patternData] of sequentialPatternStore.entries()) {
+    if (now - patternData.firstSeen > 5 * 60 * 1000) {
+      sequentialPatternStore.delete(ip);
     }
   }
   

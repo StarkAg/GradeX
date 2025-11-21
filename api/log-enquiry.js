@@ -29,19 +29,6 @@ export default async function handler(req, res) {
     return;
   }
   
-  // Bot protection check
-  const botCheck = checkBotProtection(req);
-  if (botCheck.blocked) {
-    console.warn(`[Bot Protection] Blocked log-enquiry from IP: ${botCheck.ip}, Reason: ${botCheck.reason}`);
-    res.status(429).json({
-      status: 'error',
-      error: 'Request blocked',
-      message: botCheck.reason || 'Too many requests. Please try again later.',
-      retryAfter: botCheck.retryAfter || 60,
-    });
-    return;
-  }
-  
   try {
     if (!isSupabaseConfigured() || !supabase) {
       console.error('[log-enquiry] Supabase not configured');
@@ -63,6 +50,19 @@ export default async function handler(req, res) {
       error_message = null,
       student_name = null,
     } = req.body;
+    
+    // Bot protection check (with RA for pattern detection)
+    const botCheck = checkBotProtection(req, register_number);
+    if (botCheck.blocked) {
+      console.warn(`[Bot Protection] Blocked log-enquiry from IP: ${botCheck.ip}, RA: ${register_number}, Reason: ${botCheck.reason}`);
+      res.status(429).json({
+        status: 'error',
+        error: 'Request blocked',
+        message: botCheck.reason || 'Too many requests. Please try again later.',
+        retryAfter: botCheck.retryAfter || 60,
+      });
+      return;
+    }
     
     console.log('[log-enquiry] Received enquiry:', {
       register_number,

@@ -29,22 +29,22 @@ export default async function handler(req, res) {
     return;
   }
   
-  // Bot protection check
-  const botCheck = checkBotProtection(req);
-  if (botCheck.blocked) {
-    console.warn(`[Bot Protection] Blocked request from IP: ${botCheck.ip}, Reason: ${botCheck.reason}`);
-    res.status(429).json({
-      status: 'error',
-      error: 'Request blocked',
-      message: botCheck.reason || 'Too many requests. Please try again later.',
-      retryAfter: botCheck.retryAfter || 60,
-    });
-    return;
-  }
-  
   try {
     // Extract query parameters
     const { ra, date } = req.query;
+    
+    // Bot protection check (with RA for pattern detection)
+    const botCheck = checkBotProtection(req, ra);
+    if (botCheck.blocked) {
+      console.warn(`[Bot Protection] Blocked request from IP: ${botCheck.ip}, RA: ${ra}, Reason: ${botCheck.reason}`);
+      res.status(429).json({
+        status: 'error',
+        error: 'Request blocked',
+        message: botCheck.reason || 'Too many requests. Please try again later.',
+        retryAfter: botCheck.retryAfter || 60,
+      });
+      return;
+    }
     
     // Validate RA
     if (!ra || typeof ra !== 'string' || ra.trim().length === 0) {
