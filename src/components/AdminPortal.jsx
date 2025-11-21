@@ -95,8 +95,13 @@ export default function AdminPortal() {
       ? ((pageSuccessful / enquiries.length) * 100).toFixed(1)
       : '0.0';
 
+    // Get the latest ID from enquiries (highest ID = latest)
+    const latestId = enquiries.length > 0 
+      ? Math.max(...enquiries.map(e => e.id || 0))
+      : 0;
+
     return {
-      total: totalCount,
+      total: latestId || totalCount, // Use latest ID, fallback to totalCount
       pageSuccessful,
       pageFailed,
       pageSuccessRate,

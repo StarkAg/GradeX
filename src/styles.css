@@ -1206,13 +1206,17 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
+  justify-items: center;
 }
 
 .admin-stat-card {
+  width: 100%;
+  max-width: 200px;
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 12px 16px;
   background: var(--card-bg);
+  text-align: center;
 }
 
 .admin-stat-card .label {
