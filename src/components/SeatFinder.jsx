@@ -611,6 +611,8 @@ export default function SeatFinder() {
       setEasterEggMessage('EWW!!');
     } else if (upperRA === 'RA2311003010432') {
       setEasterEggMessage('MONNIES!!');
+    } else if (upperRA === 'RA2311003012190') {
+      setEasterEggMessage('Mogger!!');
     }
     
     const selectedDate = getSelectedDate();
@@ -2153,44 +2155,96 @@ export default function SeatFinder() {
 // 🎉 EASTER EGG Component: Bouncing glowing message
 function EasterEggBounce({ message = 'EWW!!' }) {
   const [position, setPosition] = useState({ x: 50, y: 50 });
-  const velocityRef = useRef({ x: 2, y: 2 });
+  const velocityRef = useRef({ 
+    x: (Math.random() - 0.5) * 3 + 1.5, // Random initial velocity between -0.5 and 2.5
+    y: (Math.random() - 0.5) * 3 + 1.5
+  });
+  const elementRef = useRef(null);
   const containerRef = useRef(null);
 
   useEffect(() => {
+    let animationFrameId;
+
     const animate = () => {
       setPosition(prev => {
-        let newX = prev.x + velocityRef.current.x;
-        let newY = prev.y + velocityRef.current.y;
+        if (!elementRef.current || !containerRef.current) return prev;
+
+        // Get element and container dimensions
+        const element = elementRef.current;
+        const container = containerRef.current;
+        const elementRect = element.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+
+        // Calculate position in pixels (center of element)
+        const currentX = (prev.x / 100) * containerRect.width;
+        const currentY = (prev.y / 100) * containerRect.height;
+
+        // Calculate new position
+        let newX = currentX + velocityRef.current.x;
+        let newY = currentY + velocityRef.current.y;
         let newVelX = velocityRef.current.x;
         let newVelY = velocityRef.current.y;
 
-        // Bounce off walls
-        if (newX <= 0 || newX >= 100) {
-          newVelX = -newVelX;
-          newX = Math.max(0, Math.min(100, newX));
+        // Get element dimensions for proper collision detection
+        const halfWidth = elementRect.width / 2;
+        const halfHeight = elementRect.height / 2;
+        const containerWidth = containerRect.width;
+        const containerHeight = containerRect.height;
+
+        // Bounce off left wall
+        if (newX - halfWidth <= 0) {
+          newVelX = Math.abs(newVelX); // Bounce right
+          newX = halfWidth;
         }
-        if (newY <= 0 || newY >= 100) {
-          newVelY = -newVelY;
-          newY = Math.max(0, Math.min(100, newY));
+        // Bounce off right wall
+        else if (newX + halfWidth >= containerWidth) {
+          newVelX = -Math.abs(newVelX); // Bounce left
+          newX = containerWidth - halfWidth;
         }
 
-        // Add some randomness for fun
-        if (Math.random() < 0.1) {
-          newVelX += (Math.random() - 0.5) * 0.5;
-          newVelY += (Math.random() - 0.5) * 0.5;
+        // Bounce off top wall
+        if (newY - halfHeight <= 0) {
+          newVelY = Math.abs(newVelY); // Bounce down
+          newY = halfHeight;
+        }
+        // Bounce off bottom wall
+        else if (newY + halfHeight >= containerHeight) {
+          newVelY = -Math.abs(newVelY); // Bounce up
+          newY = containerHeight - halfHeight;
         }
 
-        // Limit velocity
-        newVelX = Math.max(-3, Math.min(3, newVelX));
-        newVelY = Math.max(-3, Math.min(3, newVelY));
+        // Add slight randomness for more natural movement
+        if (Math.random() < 0.03) {
+          newVelX += (Math.random() - 0.5) * 0.2;
+          newVelY += (Math.random() - 0.5) * 0.2;
+        }
+
+        // Limit velocity for smooth movement
+        const maxVel = 2.5;
+        newVelX = Math.max(-maxVel, Math.min(maxVel, newVelX));
+        newVelY = Math.max(-maxVel, Math.min(maxVel, newVelY));
 
         velocityRef.current = { x: newVelX, y: newVelY };
-        return { x: newX, y: newY };
+
+        // Convert back to percentage
+        const newXPercent = (newX / containerWidth) * 100;
+        const newYPercent = (newY / containerHeight) * 100;
+
+        return { 
+          x: Math.max(0, Math.min(100, newXPercent)), 
+          y: Math.max(0, Math.min(100, newYPercent)) 
+        };
       });
+
+      animationFrameId = requestAnimationFrame(animate);
     };
 
-    const interval = setInterval(animate, 16); // ~60fps
-    return () => clearInterval(interval);
+    animationFrameId = requestAnimationFrame(animate);
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
   }, []);
 
   return (
@@ -2208,26 +2262,39 @@ function EasterEggBounce({ message = 'EWW!!' }) {
       }}
     >
       <div
+        ref={elementRef}
         style={{
           position: 'absolute',
           left: `${position.x}%`,
           top: `${position.y}%`,
           transform: 'translate(-50%, -50%)',
-          fontSize: 'clamp(48px, 12vw, 120px)',
+          fontSize: 'clamp(32px, 8vw, 64px)', // Smaller and more responsive
           fontWeight: 900,
           color: '#ff006e',
+          // Text outline using multiple text-shadows (black outline)
           textShadow: `
+            /* Black outline - 4 directions */
+            -2px -2px 0 #000,
+            2px -2px 0 #000,
+            -2px 2px 0 #000,
+            2px 2px 0 #000,
+            /* Additional outline layers for thickness */
+            -1px -1px 0 #000,
+            1px -1px 0 #000,
+            -1px 1px 0 #000,
+            1px 1px 0 #000,
+            /* Glowing pink effect */
+            0 0 10px #ff006e,
             0 0 20px #ff006e,
-            0 0 40px #ff006e,
-            0 0 60px #ff006e,
-            0 0 80px #ff006e,
-            0 0 100px #ff006e
+            0 0 30px #ff006e,
+            0 0 40px #ff006e
           `,
           animation: 'pulse 0.5s ease-in-out infinite alternate',
           fontFamily: 'system-ui, -apple-system, sans-serif',
           letterSpacing: '0.1em',
           userSelect: 'none',
-          transition: 'all 0.1s linear',
+          whiteSpace: 'nowrap',
+          willChange: 'transform', // Optimize for animation
         }}
       >
         {message}
