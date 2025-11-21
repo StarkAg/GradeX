@@ -1595,11 +1595,17 @@ export async function getSeatingInfo(ra, date) {
   // STEP 2: Fetch from all campuses with staggered delays to avoid overwhelming server
   const campusNames = Object.keys(CAMPUS_ENDPOINTS);
   const fetchPromises = campusNames.map((campusName, index) => {
-    // Stagger requests: 0ms, 100ms, 200ms, 300ms, 400ms
-    const delay = index * 100;
+    // Stagger requests: 0ms, 200ms, 400ms, 600ms, 800ms (more spacing)
+    const delay = index * 200;
     return new Promise(resolve => {
-      setTimeout(() => {
-        resolve(fetchCampusSeating(campusName, normalizedRA, dateVariants));
+      setTimeout(async () => {
+        try {
+          const result = await fetchCampusSeating(campusName, normalizedRA, dateVariants);
+          resolve(result);
+        } catch (error) {
+          console.error(`[getSeatingInfo] Error fetching ${campusName}:`, error.message);
+          resolve([]); // Return empty array on error
+        }
       }, delay);
     });
   });
