@@ -737,9 +737,6 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
   if (!campusConfig) return [];
   
   try {
-    // Small delay to avoid overwhelming server (50ms - minimal but helps)
-    await new Promise(resolve => setTimeout(resolve, 50));
-    
     let html = '';
     let fetchUrl = campusConfig.fetchData;
     
@@ -1595,11 +1592,17 @@ export async function getSeatingInfo(ra, date) {
   // Generate date variants
   const dateVariants = date ? generateDateVariants(date) : [];
   
-  // STEP 2: Fetch from all campuses in parallel (with delays handled internally)
+  // STEP 2: Fetch from all campuses with staggered delays to avoid overwhelming server
   const campusNames = Object.keys(CAMPUS_ENDPOINTS);
-  const fetchPromises = campusNames.map(campusName =>
-    fetchCampusSeating(campusName, normalizedRA, dateVariants)
-  );
+  const fetchPromises = campusNames.map((campusName, index) => {
+    // Stagger requests: 0ms, 100ms, 200ms, 300ms, 400ms
+    const delay = index * 100;
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve(fetchCampusSeating(campusName, normalizedRA, dateVariants));
+      }, delay);
+    });
+  });
   
   const campusResults = await Promise.allSettled(fetchPromises);
   
