@@ -35,6 +35,374 @@ const cache = new Map();
 let studentDataCache = null;
 let studentDataLoadPromise = null;
 
+// Global campus data cache - stores ALL seating data from all campuses
+// Structure: { timestamp: number, data: Map<RA, Array<matches>>, date: string }
+// NOTE: In-memory cache resets on Vercel serverless function restart
+// For persistent cache, we use Upstash Redis (see getAllCampusDataCache)
+let allCampusDataCache = null;
+let allCampusDataLoadPromise = null;
+const ALL_CAMPUS_CACHE_TTL = 60 * 60 * 1000; // 1 hour in milliseconds
+
+/**
+ * Fetch ALL seating data from a single campus (no RA filtering)
+ * Same as fetchCampusSeating but without RA filtering - fetches all data
+ * @param {string} campusName - Campus name
+ * @param {string[]} dateVariants - Date format variants
+ * @returns {Promise<string>} - Combined HTML from all sessions
+ */
+async function fetchAllCampusDataRaw(campusName, dateVariants) {
+  const campusConfig = CAMPUS_ENDPOINTS[campusName];
+  if (!campusConfig) return '';
+  
+  try {
+    // NOTE: No delay here - delays are handled in fetchAllCampusData() parent function
+    // This matches the original fetchCampusSeating approach
+    
+    let allHtmlSources = [];
+    
+    if (dateVariants && dateVariants.length > 0) {
+      const dateParam = dateVariants[0];
+      
+      // Try both Forenoon and Afternoon sessions (sequential, same as original)
+      const sessions = ['FN', 'AN'];
+      
+      for (const session of sessions) {
+        try {
+          // Format date for POST (usually DD/MM/YYYY or DD-MM-YYYY)
+          let formattedDate = dateParam;
+          if (dateParam.includes('-')) {
+            formattedDate = dateParam.replace(/-/g, '/');
+          }
+          
+          // Create form data
+          const formData = new URLSearchParams();
+          formData.append('dated', formattedDate);
+          formData.append('session', session);
+          formData.append('submit', 'Submit');
+          
+          // Fetch room-wise data from fetch_data.php (same timeout and retry as original)
+          const postHtml = await fetchPage(
+            campusConfig.fetchData,
+            12000,  // Same 12s timeout as original
+            1,      // Same 1 retry as original
+            {
+              method: 'POST',
+              body: formData.toString(),
+            }
+          );
+          
+          // Check if we got actual data with RA numbers (same validation as original)
+          const hasRAPattern = /(?:>|"|'|\b)(RA\d{2,})/i.test(postHtml);
+          
+          if (postHtml.length > 5000 && hasRAPattern) {
+            allHtmlSources.push(postHtml);
+            console.log(`[fetchAllCampusDataRaw] ${campusName} ${session}: ${postHtml.length} bytes`);
+          }
+        } catch (e) {
+          console.error(`Error fetching ${campusName} ${session}:`, e.message);
+          continue; // Continue to next session even if one fails
+        }
+      }
+    }
+    
+    // Merge all HTML sources (same as original)
+    return allHtmlSources.join('\n<!-- MERGED FROM MULTIPLE SOURCES -->\n');
+  } catch (error) {
+    console.error(`Error fetching all data from ${campusName}:`, error.message);
+    return '';
+  }
+}
+
+/**
+ * Fetch and parse ALL seating data from all campuses for a given date
+ * @param {string} date - Date string
+ * @returns {Promise<Map>} - Map of RA -> Array of matches from all campuses
+ */
+async function fetchAllCampusData(date) {
+  console.log(`[fetchAllCampusData] Starting to fetch all campus data for date: ${date}`);
+  const startTime = Date.now();
+  
+  const dateVariants = date ? generateDateVariants(date) : [];
+  const campusNames = Object.keys(CAMPUS_ENDPOINTS);
+  
+  // Fetch campuses SEQUENTIALLY with polite delays (same as original approach)
+  // This prevents server overload and ensures reliability
+  const campusResults = [];
+  for (const campusName of campusNames) {
+    try {
+      // Polite delay between campus fetches (300-700ms) - same as original
+      const delay = 300 + Math.random() * 400;
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
+      const html = await fetchAllCampusDataRaw(campusName, dateVariants);
+      campusResults.push({ campusName, html });
+      console.log(`[fetchAllCampusData] ✅ ${campusName}: ${html.length} bytes`);
+    } catch (error) {
+      console.error(`[fetchAllCampusData] Error fetching ${campusName}:`, error.message);
+      campusResults.push({ campusName, html: '' });
+    }
+  }
+  
+  // Parse all HTML and build a Map of RA -> matches
+  const raMatchesMap = new Map();
+  
+  for (const { campusName, html } of campusResults) {
+    if (!html || html.length === 0) {
+      console.log(`[fetchAllCampusData] ${campusName}: No data`);
+      continue;
+    }
+    
+    // Parse HTML to extract ALL RAs (pass null to extract all, not just one)
+    const allRows = extractSeatingRows(html, null); // null = extract all RAs
+    
+    console.log(`[fetchAllCampusData] ${campusName}: Found ${allRows.length} total entries`);
+    
+    // Group by RA
+    for (const row of allRows) {
+      const ra = normalizeRA(row.ra);
+      if (!ra) continue;
+      
+      if (!raMatchesMap.has(ra)) {
+        raMatchesMap.set(ra, []);
+      }
+      
+      // Build URL for this match
+      const dateParam = dateVariants[0] || '';
+      const sessionParam = row.session === 'Forenoon' ? 'FN' : (row.session === 'Afternoon' ? 'AN' : 'FN');
+      let formattedDate = dateParam;
+      if (dateParam.includes('-')) {
+        formattedDate = dateParam.replace(/-/g, '/');
+      }
+      
+      raMatchesMap.get(ra).push({
+        ...row,
+        matched: true,
+        campus: campusName,
+        url: `${CAMPUS_ENDPOINTS[campusName].fetchData}?dated=${encodeURIComponent(formattedDate)}&session=${sessionParam}`,
+      });
+    }
+  }
+  
+  const elapsed = Date.now() - startTime;
+  console.log(`[fetchAllCampusData] Completed in ${elapsed}ms. Cached ${raMatchesMap.size} unique RAs`);
+  
+  return raMatchesMap;
+}
+
+/**
+ * Get cached all-campus data or fetch if expired/missing
+ * Uses both in-memory cache (fast) and Supabase (persistent across restarts)
+ * @param {string} date - Date string
+ * @returns {Promise<Map>} - Map of RA -> Array of matches
+ */
+async function getAllCampusDataCache(date) {
+  const cacheKey = date || 'any';
+  
+  // STEP 1: Check in-memory cache first (fastest)
+  if (allCampusDataCache && allCampusDataCache.date === cacheKey) {
+    const age = Date.now() - allCampusDataCache.timestamp;
+    if (age < ALL_CAMPUS_CACHE_TTL) {
+      console.log(`[getAllCampusDataCache] Using in-memory cache (age: ${Math.round(age / 1000)}s, ${allCampusDataCache.data.size} RAs)`);
+      return allCampusDataCache.data;
+    } else {
+      console.log(`[getAllCampusDataCache] In-memory cache expired (age: ${Math.round(age / 1000)}s), checking Supabase...`);
+    }
+  }
+  
+  // STEP 2: Check Upstash Redis cache first (fastest persistent storage)
+  try {
+    // Try Upstash Redis (via Marketplace)
+    // Supports multiple naming conventions (default, custom prefix, legacy)
+    const redisUrl = process.env.UPSTASH_REDIS__KV_REST_API_URL ||  // Custom prefix (UPSTASH_REDIS__)
+                     process.env.UPSTASH_REDIS_REST_URL ||          // Default naming
+                     process.env.REDIS_REST_URL ||                   // Alternative naming
+                     process.env.KV_REST_API_URL;                    // Legacy KV naming
+    const redisToken = process.env.UPSTASH_REDIS__KV_REST_API_TOKEN ||  // Custom prefix (UPSTASH_REDIS__)
+                       process.env.UPSTASH_REDIS_REST_TOKEN ||          // Default naming
+                       process.env.REDIS_REST_TOKEN ||                   // Alternative naming
+                       process.env.KV_REST_API_TOKEN;                    // Legacy KV naming
+    
+    if (redisUrl && redisToken) {
+      const { Redis } = await import('@upstash/redis');
+      const redis = new Redis({
+        url: redisUrl,
+        token: redisToken,
+      });
+      
+      const redisKey = `campus_cache:${cacheKey}`;
+      const cachedData = await redis.get(redisKey);
+      
+      if (cachedData) {
+        const { timestamp, data: cachedDataMap } = cachedData;
+        const age = Date.now() - timestamp;
+        
+        if (age < ALL_CAMPUS_CACHE_TTL) {
+          // Cache is valid, restore to in-memory
+          console.log(`[getAllCampusDataCache] ✅ Found valid Upstash Redis cache (age: ${Math.round(age / 1000)}s)`);
+          
+          // Convert object back to Map
+          const dataMap = new Map();
+          if (cachedDataMap && typeof cachedDataMap === 'object') {
+            for (const [ra, matches] of Object.entries(cachedDataMap)) {
+              dataMap.set(ra, matches);
+            }
+          }
+          
+          // Restore to in-memory cache
+          allCampusDataCache = {
+            timestamp,
+            date: cacheKey,
+            data: dataMap,
+          };
+          
+          console.log(`[getAllCampusDataCache] Restored ${dataMap.size} RAs from Upstash Redis to in-memory cache`);
+          return dataMap;
+        } else {
+          console.log(`[getAllCampusDataCache] Upstash Redis cache expired (age: ${Math.round(age / 1000)}s), will refresh...`);
+        }
+      }
+    }
+    // Fallback: Try Vercel KV (legacy, if still available)
+    else if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+      const { kv } = await import('@vercel/kv');
+      const kvKey = `campus_cache:${cacheKey}`;
+      
+      const cachedData = await kv.get(kvKey);
+      if (cachedData) {
+        const { timestamp, data: cachedDataMap } = cachedData;
+        const age = Date.now() - timestamp;
+        
+        if (age < ALL_CAMPUS_CACHE_TTL) {
+          console.log(`[getAllCampusDataCache] ✅ Found valid Vercel KV cache (age: ${Math.round(age / 1000)}s)`);
+          
+          const dataMap = new Map();
+          if (cachedDataMap && typeof cachedDataMap === 'object') {
+            for (const [ra, matches] of Object.entries(cachedDataMap)) {
+              dataMap.set(ra, matches);
+            }
+          }
+          
+          allCampusDataCache = {
+            timestamp,
+            date: cacheKey,
+            data: dataMap,
+          };
+          
+          console.log(`[getAllCampusDataCache] Restored ${dataMap.size} RAs from Vercel KV to in-memory cache`);
+          return dataMap;
+        }
+      }
+    }
+  } catch (error) {
+    console.warn(`[getAllCampusDataCache] Error checking Redis cache:`, error.message);
+    // Continue to fetch if Redis unavailable
+  }
+  
+  // STEP 3: If already fetching, wait for that promise
+  if (allCampusDataLoadPromise) {
+    console.log(`[getAllCampusDataCache] Already fetching, waiting...`);
+    return await allCampusDataLoadPromise;
+  }
+  
+  // STEP 4: Fetch fresh data
+  allCampusDataLoadPromise = fetchAllCampusData(date).then(async (data) => {
+    // Update in-memory cache
+    allCampusDataCache = {
+      timestamp: Date.now(),
+      date: cacheKey,
+      data,
+    };
+    
+    // Save to persistent storage (Upstash Redis or Vercel KV)
+    saveCacheToRedis(cacheKey, data).catch(err => {
+      console.warn(`[getAllCampusDataCache] Failed to save to Redis:`, err.message);
+    });
+    
+    allCampusDataLoadPromise = null;
+    console.log(`[getAllCampusDataCache] ✅ Cache refreshed: ${data.size} unique RAs`);
+    return data;
+  }).catch(error => {
+    console.error(`[getAllCampusDataCache] Error:`, error);
+    allCampusDataLoadPromise = null;
+    throw error;
+  });
+  
+  return await allCampusDataLoadPromise;
+}
+
+/**
+ * Save cache to Redis (Upstash Redis or Vercel KV)
+ * @param {string} cacheKey - Cache key (date or 'any')
+ * @param {Map} dataMap - Map of RA -> Array of matches
+ */
+async function saveCacheToRedis(cacheKey, dataMap) {
+  // Convert Map to plain object for JSON storage
+  const dataObject = {};
+  for (const [ra, matches] of dataMap.entries()) {
+    dataObject[ra] = matches;
+  }
+  
+  const timestamp = Date.now();
+  
+  // Try Upstash Redis first (via Marketplace - recommended)
+  try {
+    // Supports multiple naming conventions (default, custom prefix, legacy)
+    const redisUrl = process.env.UPSTASH_REDIS__KV_REST_API_URL ||  // Custom prefix (UPSTASH_REDIS__)
+                     process.env.UPSTASH_REDIS_REST_URL ||          // Default naming
+                     process.env.REDIS_REST_URL ||                   // Alternative naming
+                     process.env.KV_REST_API_URL;                    // Legacy KV naming
+    const redisToken = process.env.UPSTASH_REDIS__KV_REST_API_TOKEN ||  // Custom prefix (UPSTASH_REDIS__)
+                       process.env.UPSTASH_REDIS_REST_TOKEN ||          // Default naming
+                       process.env.REDIS_REST_TOKEN ||                   // Alternative naming
+                       process.env.KV_REST_API_TOKEN;                    // Legacy KV naming
+    
+    if (redisUrl && redisToken) {
+      const { Redis } = await import('@upstash/redis');
+      const redis = new Redis({
+        url: redisUrl,
+        token: redisToken,
+      });
+      
+      const redisKey = `campus_cache:${cacheKey}`;
+      
+      await redis.set(redisKey, {
+        timestamp,
+        data: dataObject,
+      }, { ex: 3600 }); // TTL: 1 hour
+      
+      console.log(`[saveCacheToRedis] ✅ Saved ${dataMap.size} RAs to Upstash Redis cache`);
+      return; // Success
+    }
+    // Fallback: Try Vercel KV (legacy, if still available)
+    else if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+      const { kv } = await import('@vercel/kv');
+      const kvKey = `campus_cache:${cacheKey}`;
+      
+      await kv.set(kvKey, {
+        timestamp,
+        data: dataObject,
+      });
+      
+      await kv.expire(kvKey, 3600);
+      
+      console.log(`[saveCacheToRedis] ✅ Saved ${dataMap.size} RAs to Vercel KV cache`);
+      return;
+    }
+  } catch (error) {
+    console.warn(`[saveCacheToRedis] Redis save failed:`, error.message);
+    throw error; // Don't fallback, just log the error
+  }
+}
+
+/**
+ * Clear the global campus data cache (useful for manual refresh)
+ */
+export function clearAllCampusDataCache() {
+  console.log('[clearAllCampusDataCache] Clearing global campus data cache');
+  allCampusDataCache = null;
+  allCampusDataLoadPromise = null;
+}
+
 /**
  * Normalize RA number
  * @param {string} ra - Register number
@@ -1516,7 +1884,7 @@ export async function getSeatingInfo(ra, date) {
     }
   }
   
-  // Check cache first
+  // Check per-RA cache first (legacy, for backward compatibility)
   const cached = getCachedResult(normalizedRA, date);
   if (cached) {
     // Enhance cached results with pre-loaded student information
@@ -1532,10 +1900,55 @@ export async function getSeatingInfo(ra, date) {
     };
   }
   
+  // STEP 2: Try global all-campus cache (NEW - ULTRA FAST)
+  try {
+    const allCampusData = await getAllCampusDataCache(date);
+    const matches = allCampusData.get(normalizedRA);
+    
+    if (matches && matches.length > 0) {
+      console.log(`[getSeatingInfo] ✅ Found RA ${normalizedRA} in global cache (${matches.length} matches)`);
+      
+      // Group matches by campus
+      const results = {};
+      for (const match of matches) {
+        const campusName = match.campus || 'Unknown';
+        if (!results[campusName]) {
+          results[campusName] = [];
+        }
+        results[campusName].push(match);
+      }
+      
+      // Enhance with student info
+      const enhancedResults = {};
+      for (const [campusName, campusMatches] of Object.entries(results)) {
+        enhancedResults[campusName] = enhanceMatchesWithPreloadedStudentInfo(campusMatches, studentInfo);
+      }
+      
+      const response = {
+        status: 'ok',
+        lastUpdated: allCampusDataCache.timestamp,
+        results: enhancedResults,
+        cached: true,
+        source: 'global_cache',
+      };
+      
+      // Also cache in per-RA cache for backward compatibility
+      setCachedResult(normalizedRA, date, response);
+      
+      return response;
+    } else {
+      console.log(`[getSeatingInfo] RA ${normalizedRA} not found in global cache, falling back to direct fetch`);
+    }
+  } catch (error) {
+    console.warn(`[getSeatingInfo] Error accessing global cache:`, error.message);
+    // Fall through to direct fetch
+  }
+  
+  // STEP 3: Fallback to direct fetch (if not in cache)
   // Generate date variants
   const dateVariants = date ? generateDateVariants(date) : [];
   
-  // STEP 2: Fetch from all campuses with early exit optimization
+  // Fetch from all campuses with early exit optimization
   const campusNames = Object.keys(CAMPUS_ENDPOINTS);
   const results = {};
   let hasErrors = false;
