@@ -23,12 +23,18 @@ A modern, tech-inspired grade planning tool for tracking semester courses, calcu
 - 🎓 **Grade Tracking**: Supports both incomplete (60 marks) and complete (100 marks) courses
 
 ### SRMIST Seat Finder (v3.1)
+- ⚡ **Ultra-Fast Performance**: Sub-1-second response times with global cache system
+  - **Global Cache**: Pre-fetches all campus data and caches for 1 hour (Upstash Redis)
+  - **Fast Fail**: Instant responses (<1s) when RA not found in fresh cache
+  - **Smart Caching**: In-memory → Redis → Direct fetch fallback chain
+  - **Early Exit**: Stops fetching once RA is found
 - 🔍 **Live Real-Time Fetch**: Data fetched with high frequency and utmost accuracy
 - 🏫 **Multi-Campus Support**: Searches across Main Campus, Tech Park, Tech Park 2, Biotech & Architecture, and University Building
-- ⚡ **Performance Optimized**: 
-  - Session-scoped caching to eliminate duplicate requests
-  - Request deduplication prevents concurrent duplicate API calls
-  - Live API-first strategy for fastest results
+- 🛡️ **Bot Protection**: Advanced rate limiting and pattern detection (no CAPTCHA required)
+  - Rate limiting (30 requests/minute)
+  - Sequential RA pattern detection
+  - Request timing analysis
+  - IP-based blocking
 - 🗄️ **Supabase Integration**: PostgreSQL database with 6,177+ student records for fast, reliable name lookups
 - 📋 **Complete Information**: Displays Name (proper case), Seat No., Room/Venue, Floor, Department, Subject Code, and Session
 - 🎨 **Smart Room Formatting**: 
@@ -40,6 +46,7 @@ A modern, tech-inspired grade planning tool for tracking semester courses, calcu
 - 📱 **Mobile Optimized**: Fully responsive with touch-friendly interface, optimized font sizes, and horizontal table scrolling
 - 🖥️ **Desktop Optimized**: Compact font sizes ensure room names like "VPT-009" display on single line
 - 📧 **Support Contact**: Easy access to support email for inquiries
+- 🎉 **Easter Eggs**: Fun bouncing animations for special RA numbers
 
 ### FeedFill (NEW)
 - 🔗 **Chrome Extension Integration**: Direct link to SRM Academia Course Feedback Filler extension
@@ -168,16 +175,24 @@ Access the admin dashboard at `https://www.gradex.bond/admin` (hidden from publi
 ### Backend (Seat Finder API)
 - **Node.js**: Serverless functions
 - **Vercel Functions**: API endpoints
+- **Upstash Redis**: Global cache system for ultra-fast lookups
+  - 1-hour cache TTL with lazy refresh
+  - Persistent storage across serverless restarts
+  - Cache hit/miss tracking and monitoring
 - **Supabase**: PostgreSQL database for student data (6,177+ records)
   - Fast indexed queries for student name lookups
   - Reliable data access in serverless environment
   - Admin tools for data management
 - **HTML Scraping**: Real-time data extraction from SRM exam cell
 - **Performance Optimizations**:
+  - Global campus data cache (all RAs pre-fetched)
+  - Fast fail mode for non-existent RAs (<1s response)
+  - Early exit when RA found
   - Session-scoped caching (Map-based)
   - Request deduplication (prevents concurrent duplicates)
-  - Live API-first strategy
-- **Multi-Campus Support**: Parallel fetching from 5 campus endpoints
+  - Reduced timeouts for failure cases (3s vs 12s)
+- **Bot Protection**: Rate limiting, pattern detection, and IP blocking
+- **Multi-Campus Support**: Sequential fetching from 5 campus endpoints with polite delays
 - **Error Handling**: Comprehensive error handling and retry logic
 
 ## 🎨 Design
@@ -201,7 +216,9 @@ Access the admin dashboard at `https://www.gradex.bond/admin` (hidden from publi
 ## 🎁 Easter Eggs
 
 - Hidden play button next to Arc Reactor icon (plays Iron Man theme)
-- "Welcome EWW" message for specific grade patterns
+- Bouncing "EWW!!" message for RA2311003012233
+- Bouncing "MONNIES!!" message for RA2311003010432
+- Bouncing "Mogger!!" message for RA2311003012190
 - Arc Reactor pulsing animation on splash screen
 
 ## 📸 Screenshots
@@ -238,18 +255,24 @@ Access the admin dashboard at `https://www.gradex.bond/admin` (hidden from publi
 For local development, create a `.env.local` file:
 
 ```env
+# Supabase (for student data and enquiries)
 SUPABASE_URL=https://phlggcheaajkupppozho.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key  # For admin operations only
+
+# Upstash Redis (for global cache - via Vercel Marketplace)
+UPSTASH_REDIS__KV_REST_API_URL=your-redis-url
+UPSTASH_REDIS__KV_REST_API_TOKEN=your-redis-token
 ```
 
 ### API Endpoints
 
-- `/api/seating` - Main seat finding endpoint
+- `/api/seating` - Main seat finding endpoint (ultra-fast with global cache)
 - `/api/get-name-by-last-digits` - Student name lookup
 - `/api/subjects` - Subject code to name mapping
 - `/api/log-enquiry` - Log search queries
 - `/api/admin-enquiries` - Admin dashboard data (requires service role key)
+- `/api/cache-status` - Cache monitoring and statistics
 
 ### Project Structure
 
@@ -277,6 +300,15 @@ GradeX/
 
 ## 📝 Recent Updates (v3.1)
 
+- ⚡ **Ultra-Fast Global Cache**: Sub-1-second response times with Upstash Redis
+  - Pre-fetches all campus data and caches for 1 hour
+  - Fast fail mode for non-existent RAs (<1s)
+  - Cache monitoring endpoint for real-time stats
+- 🛡️ **Bot Protection**: Advanced rate limiting and pattern detection
+  - No CAPTCHA required - intelligent detection
+  - Sequential RA pattern blocking
+  - User-friendly error messages
+- 🎉 **Easter Eggs**: Fun bouncing animations for special RA numbers
 - ✨ Added FeedFill feature with Chrome extension integration
 - 🎨 Added Main Campus (MC) venue map image support
 - ⚡ Performance optimizations: session caching and request deduplication
