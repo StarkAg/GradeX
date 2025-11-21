@@ -1314,7 +1314,8 @@ export default function SeatFinder() {
                 const originalHallUpper = seat.context && typeof seat.context === 'string' ? seat.context.toUpperCase() : '';
                 const hasTPVPT = originalHallUpper.includes('TPVPT') || roomUpper.includes('VPT') || roomUpper.includes('TPVPT');
                 const hasCLSorLSorLH = roomUpper.startsWith('CLS') || roomUpper.startsWith('LS') || roomUpper.startsWith('LH');
-                const hasImage = roomUpper && roomUpper.length > 0 && (roomUpper.startsWith('TP2') || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT || hasCLSorLSorLH);
+                const hasMainCampus = roomUpper.startsWith('H');
+                const hasImage = roomUpper && roomUpper.length > 0 && (roomUpper.startsWith('TP2') || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT || hasCLSorLSorLH || hasMainCampus);
                 
                 return (
                 <div key={index} style={{
@@ -1384,6 +1385,48 @@ export default function SeatFinder() {
                           <img 
                             src="/VPT.JPG" 
                             alt="VPT Venue Map" 
+                            style={{
+                              width: '100%',
+                              height: 'auto',
+                              borderRadius: '14px',
+                              maxHeight: isMobile ? '180px' : '300px',
+                              maxWidth: isMobile ? '100%' : 'none',
+                              objectFit: 'contain',
+                              filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
+                              boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(34, 197, 94, 0.15)',
+                              transition: 'all 0.3s ease',
+                              border: '2px solid rgba(34, 197, 94, 0.25)'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!isMobile) {
+                                e.currentTarget.style.filter = 'brightness(1.1) contrast(1.15) saturate(1.2)';
+                                e.currentTarget.style.transform = 'scale(1.02)';
+                                e.currentTarget.style.boxShadow = '0 12px 28px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.35)';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isMobile) {
+                                e.currentTarget.style.filter = 'brightness(1.05) contrast(1.1) saturate(1.15)';
+                                e.currentTarget.style.transform = 'scale(1)';
+                                e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(34, 197, 94, 0.15)';
+                              }
+                            }}
+                          />
+                        </div>
+                      );
+                    } else if (hasMainCampus) {
+                      return (
+                        <div style={{
+                          flexShrink: 0,
+                          width: isMobile ? '100%' : 'clamp(100px, 20vw, 150px)',
+                          maxWidth: isMobile ? '180px' : 'none',
+                          margin: isMobile ? '0 auto 12px auto' : '0',
+                          textAlign: 'center',
+                          position: 'relative'
+                        }}>
+                          <img 
+                            src="/MC.jpg" 
+                            alt="Main Campus Venue Map" 
                             style={{
                               width: '100%',
                               height: 'auto',
@@ -1718,7 +1761,8 @@ export default function SeatFinder() {
                 const originalHallUpper = seat.context && typeof seat.context === 'string' ? seat.context.toUpperCase() : '';
                 const hasTPVPT = originalHallUpper.includes('TPVPT') || roomUpper.includes('VPT') || roomUpper.includes('TPVPT');
                 const hasCLSorLSorLH = roomUpper.startsWith('CLS') || roomUpper.startsWith('LS') || roomUpper.startsWith('LH');
-                const hasImage = roomUpper && roomUpper.length > 0 && (roomUpper.startsWith('TP2') || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT || hasCLSorLSorLH);
+                const hasMainCampus = roomUpper.startsWith('H');
+                const hasImage = roomUpper && roomUpper.length > 0 && (roomUpper.startsWith('TP2') || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT || hasCLSorLSorLH || hasMainCampus);
                 
                 return (
                 <div key={index} style={{
@@ -1781,6 +1825,41 @@ export default function SeatFinder() {
                           <img 
                             src="/VPT.JPG" 
                             alt="VPT Venue Map" 
+                            style={{
+                              width: '100%',
+                              height: 'auto',
+                              borderRadius: '14px',
+                              maxHeight: '400px',
+                              objectFit: 'contain',
+                              filter: 'brightness(1.05) contrast(1.1) saturate(1.15)',
+                              boxShadow: '0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.2)',
+                              transition: 'all 0.3s ease',
+                              border: '2px solid rgba(34, 197, 94, 0.3)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.filter = 'brightness(1.1) contrast(1.15) saturate(1.2)';
+                              e.currentTarget.style.transform = 'scale(1.02)';
+                              e.currentTarget.style.boxShadow = '0 14px 32px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(34, 197, 94, 0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.filter = 'brightness(1.05) contrast(1.1) saturate(1.15)';
+                              e.currentTarget.style.transform = 'scale(1)';
+                              e.currentTarget.style.boxShadow = '0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(34, 197, 94, 0.2)';
+                            }}
+                          />
+                        </div>
+                      );
+                    } else if (hasMainCampus) {
+                      return (
+                        <div style={{
+                          flexShrink: 0,
+                          width: '180px',
+                          textAlign: 'center',
+                          position: 'relative'
+                        }}>
+                          <img 
+                            src="/MC.jpg" 
+                            alt="Main Campus Venue Map" 
                             style={{
                               width: '100%',
                               height: 'auto',
