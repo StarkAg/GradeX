@@ -11,12 +11,11 @@ export default function SeatFinder() {
   const [error, setError] = useState(null);
   const [seatInfo, setSeatInfo] = useState(null);
   const [subjectNames, setSubjectNames] = useState({});
-  const [seatData, setSeatData] = useState([]);
   const [isDesktop, setIsDesktop] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [apiResults, setApiResults] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [useLiveAPI, setUseLiveAPI] = useState(true); // Toggle between live API and static data
+  const useLiveAPI = true;
   const autoRefreshIntervalRef = useRef(null);
   const digitsInputRef = useRef(null);
   const sessionCacheRef = useRef(new Map());
@@ -32,53 +31,6 @@ export default function SeatFinder() {
     window.addEventListener('resize', checkScreenSize);
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
-
-  // Load seat data ONLY when needed (lazy loading)
-  // This reduces initial page load from 1.2MB+ to near zero
-  // With Supabase, most users won't need this data at all
-  // Data is loaded on-demand when user searches with static mode OR when live API uses it as fallback
-  const loadSeatDataIfNeeded = async () => {
-    // If already loaded, don't reload
-    if (seatData.length > 0) {
-      return;
-    }
-
-    // Lazy load: only fetch when actually needed (not on page load)
-    // This way, the default Supabase flow doesn't waste bandwidth
-    console.log('📦 Loading static seat data (lazy load)...');
-    try {
-      // Load main seat data
-      const mainRes = await fetch('/seat-data.json');
-      const mainData = await mainRes.json();
-      
-      // Load PDF-extracted data from multiple sources
-      const pdfSources = [
-        '/17-nov-fn-seating.json',
-        '/17-11-25-fn-seating.json'
-      ];
-      
-      let allPdfData = [];
-      for (const pdfSource of pdfSources) {
-        try {
-          const pdfRes = await fetch(pdfSource);
-          if (pdfRes.ok) {
-            const pdfData = await pdfRes.json();
-            allPdfData = [...allPdfData, ...pdfData];
-            console.log(`✓ Loaded ${pdfData.length} records from ${pdfSource}`);
-          }
-        } catch (pdfErr) {
-          console.warn(`Could not load ${pdfSource}:`, pdfErr);
-        }
-      }
-      
-      // Merge all datasets (PDF data takes priority for duplicates)
-      const mergedData = [...mainData, ...allPdfData];
-      setSeatData(mergedData);
-      console.log(`✓ Total seat data loaded: ${mergedData.length} records (${mainData.length} main + ${allPdfData.length} PDF)`);
-    } catch (err) {
-      console.error('Error loading seat data:', err);
-    }
-  };
 
   // Get today's and tomorrow's dates
   const today = new Date();
@@ -565,155 +517,6 @@ export default function SeatFinder() {
     }
   };
 
-  // Fetch from static JSON data (fallback)
-  const fetchFromStaticData = async (ra, date, options = {}) => {
-    const {
-      allowSetState = true,
-      allowFallback = true
-    } = options;
-    
-    // Load static data if not already loaded
-    if (seatData.length === 0) {
-      await loadSeatDataIfNeeded();
-    }
-    
-    const regNoUpper = ra.trim().toUpperCase();
-    const normalizeDate = (dateStr) => {
-      if (!dateStr) return '';
-      return dateStr.replace(/\//g, '/');
-    };
-    
-    const normalizedSelectedDate = normalizeDate(date);
-    const allMatchingSeats = seatData.filter(seat => {
-      const seatRegNo = seat.registerNumber ? seat.registerNumber.toUpperCase() : '';
-      return seatRegNo === regNoUpper;
-    });
-    
-    if (allMatchingSeats.length === 0) {
-      setError('Register number not found');
-      setSeatInfo(null);
-      return []; // Return empty array instead of undefined
-    }
-    
-    const permanentData = {
-      name: allMatchingSeats[0].name || '-',
-      department: allMatchingSeats[0].department || '-'
-    };
-    
-    const foundSeats = normalizedSelectedDate 
-      ? allMatchingSeats.filter(seat => {
-          const seatDate = normalizeDate(seat.date);
-          const matchesDate = seatDate === normalizedSelectedDate || !seatDate || seatDate === '';
-          // Also filter out entries with no room information (incomplete data)
-          const hasRoomInfo = seat.room && seat.room !== null && seat.room !== '-';
-          return matchesDate && hasRoomInfo;
-        })
-      : allMatchingSeats.filter(seat => {
-          // Filter out entries with no room information even when no date specified
-          return seat.room && seat.room !== null && seat.room !== '-';
-        });
-    
-    // Helper function to format room and extract floor
-    const formatRoomAndFloor = (room, existingBuilding = null) => {
-      if (!room || room === '-') {
-        return { formattedRoom: '-', floorNumber: '-', buildingName: existingBuilding || '-' };
-      }
-      
-      // Format room name: TPTP-401 -> TP-401, TPVPT-301 -> VPT-301
-      // Special case: TPVPT-028 -> Room: VPT-028, Building: Valliammai Block Behind TP, Floor: Ground Floor
-      let formattedRoom = room;
-      let floorNumber = '-';
-      let buildingName = existingBuilding || null;
-      
-      if (formattedRoom === 'TPVPT-028') {
-        formattedRoom = 'VPT-028';
-        buildingName = VPT_BUILDING_NAME;
-        floorNumber = 'Ground Floor';
-      } else if (formattedRoom.startsWith('TPTP-')) {
-        formattedRoom = formattedRoom.replace('TPTP-', 'TP-');
-      } else if (formattedRoom.startsWith('TPVPT-')) {
-        formattedRoom = formattedRoom.replace('TPVPT-', 'VPT-');
-        buildingName = VPT_BUILDING_NAME;
-      } else if (formattedRoom.startsWith('VPT-')) {
-        buildingName = VPT_BUILDING_NAME;
-      }
-      
-      // CLS, LS, and LH rooms are in Tech Park 2
-      if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS') || formattedRoom.startsWith('LH')) {
-        buildingName = 'Tech Park 2';
-      }
-      
-      // Extract floor number from room name (e.g., TP-401 -> 4th, H301F -> 3rd, VPT-301 -> 3rd)
-      if (floorNumber === '-') {
-        const floorMatch = formattedRoom.match(/(\d+)/);
-        if (floorMatch) {
-          const numStr = floorMatch[1];
-          // Check if room starts with letter(s) followed by number (e.g., H301F, S45, UB604, VPT-301)
-          const letterNumberPattern = /^[A-Z]+[-]?(\d+)/;
-          const letterMatch = formattedRoom.match(letterNumberPattern);
-          
-          if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS')) {
-            // For CLS1019, LS2019 - first digit after letters is floor
-            const firstDigit = parseInt(numStr.charAt(0));
-            floorNumber = formatFloorNumber(firstDigit);
-          } else if (letterMatch || formattedRoom.startsWith('VPT-')) {
-            // For H301F, S45, UB604, VPT-301 - first digit after letter is floor
-            const firstDigit = parseInt(numStr.charAt(0));
-            floorNumber = formatFloorNumber(firstDigit);
-          } else if (formattedRoom.startsWith('TP-')) {
-            // For TP-401, the first digit is the floor (4)
-            const firstDigit = parseInt(numStr.charAt(0));
-            floorNumber = formatFloorNumber(firstDigit);
-          } else {
-            // For 1504 (pure number), first two digits might be floor (15)
-            if (numStr.length >= 2) {
-              const firstTwo = parseInt(numStr.substring(0, 2));
-              floorNumber = formatFloorNumber(firstTwo);
-            } else {
-              const firstDigit = parseInt(numStr.charAt(0));
-              floorNumber = formatFloorNumber(firstDigit);
-            }
-          }
-        }
-      }
-      
-      return { formattedRoom, floorNumber, buildingName: buildingName || '-' };
-    };
-    
-    if (foundSeats.length === 0) {
-      const fallbackSeat = [{
-        registerNumber: regNoUpper,
-        name: permanentData.name,
-        department: permanentData.department,
-        room: '-',
-        floor: '-',
-        building: '-',
-        subcode: '-',
-        session: '-',
-        date: date
-      }];
-      if (allowFallback && allowSetState) {
-        updateSeatInfoWithSubjects(fallbackSeat);
-      }
-      return allowFallback ? fallbackSeat : [];
-    } else {
-      const mergedSeats = foundSeats.map(seat => {
-        const { formattedRoom, floorNumber, buildingName } = formatRoomAndFloor(seat.room, seat.building);
-        return {
-          ...seat,
-          name: seat.name || permanentData.name || '-',
-          department: seat.department || permanentData.department || '-',
-          room: formattedRoom,
-          floor: floorNumber,
-          building: buildingName
-        };
-      });
-      if (allowSetState) {
-        updateSeatInfoWithSubjects(mergedSeats);
-      }
-      return mergedSeats; // Return seats array
-    }
-  };
 
   const buildCacheKey = (ra, date) => `${ra}|${date}`;
 
@@ -736,36 +539,12 @@ export default function SeatFinder() {
   };
 
   const fetchSeatsForRequest = async (cacheKey, ra, selectedDate) => {
-    if (useLiveAPI) {
-      try {
-        const liveResult = await fetchFromLiveAPI(ra, selectedDate);
-        if (liveResult.found && liveResult.seats.length > 0) {
-          sessionCacheRef.current.set(cacheKey, liveResult.seats);
-          logSuccess(ra, selectedDate, liveResult.seats);
-          return liveResult.seats;
-        }
-      } catch (err) {
-        console.warn('Live API failed, will try static data:', err.message || err);
-      }
-
-      try {
-        const staticSeats = await fetchFromStaticData(ra, selectedDate, {
-          allowSetState: true,
-          allowFallback: true
-        });
-
-        if (staticSeats.length > 0) {
-          sessionCacheRef.current.set(cacheKey, staticSeats);
-          logSuccess(ra, selectedDate, staticSeats);
-          return staticSeats;
-        }
-      } catch (staticErr) {
-        console.warn('Static data fetch failed:', staticErr.message || staticErr);
-        const message = staticErr.message || 'Static data fetch failed';
-        logFailure(ra, selectedDate, message);
-        setError(message);
-        setSeatInfo(null);
-        return [];
+    try {
+      const liveResult = await fetchFromLiveAPI(ra, selectedDate);
+      if (liveResult.found && liveResult.seats.length > 0) {
+        sessionCacheRef.current.set(cacheKey, liveResult.seats);
+        logSuccess(ra, selectedDate, liveResult.seats);
+        return liveResult.seats;
       }
 
       const message = 'No seating information found for this register number and date.';
@@ -773,27 +552,8 @@ export default function SeatFinder() {
       setError(message);
       logFailure(ra, selectedDate, message);
       return [];
-    }
-
-    try {
-      const staticSeats = await fetchFromStaticData(ra, selectedDate, {
-        allowSetState: true,
-        allowFallback: true
-      });
-
-      if (staticSeats.length > 0) {
-        sessionCacheRef.current.set(cacheKey, staticSeats);
-        logSuccess(ra, selectedDate, staticSeats);
-      } else {
-        const message = 'No seating information found for this register number and date.';
-        setSeatInfo(null);
-        setError(message);
-        logFailure(ra, selectedDate, message);
-      }
-
-      return staticSeats;
-    } catch (staticErr) {
-      const message = staticErr.message || 'Static data fetch failed';
+    } catch (err) {
+      const message = err?.message || 'Failed to fetch seat information. Please try again.';
       setSeatInfo(null);
       setError(message);
       logFailure(ra, selectedDate, message);
