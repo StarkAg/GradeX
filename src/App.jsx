@@ -1,17 +1,17 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import GradeX from './components/GradeX';
 import SeatFinder from './components/SeatFinder';
 import FeedFill from './components/FeedFill';
 
 const NAV_ITEMS = [
-  { id: 'seatfinder', label: 'Seat Finder' },
-  { id: 'feedfill', label: 'FeedFill', badge: 'NEW' },
-  { id: 'gradex', label: 'GradeX' },
+  { id: 'seatfinder', label: 'Seat Finder', path: '/' },
+  { id: 'feedfill', label: 'FeedFill', badge: 'NEW', path: '/feedfill' },
+  { id: 'gradex', label: 'GradeX', path: '/gradex' },
 ];
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState('seatfinder');
   const [isPlaying, setIsPlaying] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [loadingText, setLoadingText] = useState('');
@@ -21,6 +21,16 @@ export default function App() {
     return savedTheme || 'dark';
   });
   const audioRef = useRef(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const currentPage = useMemo(() => {
+    const path = location.pathname.toLowerCase();
+    if (path === '/' || path === '/seatfinder' || path === '/seat-finder') return 'seatfinder';
+    if (path === '/feedfill') return 'feedfill';
+    if (path === '/gradex') return 'gradex';
+    return 'seatfinder';
+  }, [location.pathname]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -323,7 +333,7 @@ export default function App() {
                   <button
                     key={item.id}
                     className={`nav-button${isFeedFill ? ' feedfill-nav-button' : ''}${isActive ? ' is-active' : ''}`}
-                    onClick={() => setCurrentPage(item.id)}
+                    onClick={() => navigate(item.path)}
                     style={{
                       padding: '6px 12px',
                       fontSize: '12px',
@@ -461,9 +471,14 @@ export default function App() {
           </div>
       </header>
       <main className="app-main single">
-        {currentPage === 'seatfinder' && <SeatFinder />}
-        {currentPage === 'gradex' && <GradeX />}
-        {currentPage === 'feedfill' && <FeedFill />}
+        <Routes>
+          <Route path="/" element={<SeatFinder />} />
+          <Route path="/seatfinder" element={<SeatFinder />} />
+          <Route path="/seat-finder" element={<SeatFinder />} />
+          <Route path="/feedfill" element={<FeedFill />} />
+          <Route path="/gradex" element={<GradeX />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
       <audio
         ref={audioRef}
