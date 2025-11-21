@@ -6,6 +6,7 @@
  */
 
 import { getSeatingInfo } from './seating-utils.js';
+import { checkBotProtection } from './bot-protection.js';
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -24,6 +25,19 @@ export default async function handler(req, res) {
     res.status(405).json({
       status: 'error',
       error: 'Method not allowed',
+    });
+    return;
+  }
+  
+  // Bot protection check
+  const botCheck = checkBotProtection(req);
+  if (botCheck.blocked) {
+    console.warn(`[Bot Protection] Blocked request from IP: ${botCheck.ip}, Reason: ${botCheck.reason}`);
+    res.status(429).json({
+      status: 'error',
+      error: 'Request blocked',
+      message: botCheck.reason || 'Too many requests. Please try again later.',
+      retryAfter: botCheck.retryAfter || 60,
     });
     return;
   }
