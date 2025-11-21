@@ -43,6 +43,17 @@ let allCampusDataCache = null;
 let allCampusDataLoadPromise = null;
 const ALL_CAMPUS_CACHE_TTL = 60 * 60 * 1000; // 1 hour in milliseconds
 
+// Cache statistics for monitoring
+let cacheStats = {
+  hits: 0,
+  misses: 0,
+  writes: 0,
+  errors: 0,
+  lastHit: null,
+  lastMiss: null,
+  lastWrite: null,
+};
+
 /**
  * Fetch ALL seating data from a single campus (no RA filtering)
  * Same as fetchCampusSeating but without RA filtering - fetches all data
@@ -202,10 +213,12 @@ async function getAllCampusDataCache(date) {
   if (allCampusDataCache && allCampusDataCache.date === cacheKey) {
     const age = Date.now() - allCampusDataCache.timestamp;
     if (age < ALL_CAMPUS_CACHE_TTL) {
-      console.log(`[getAllCampusDataCache] Using in-memory cache (age: ${Math.round(age / 1000)}s, ${allCampusDataCache.data.size} RAs)`);
+      cacheStats.hits++;
+      cacheStats.lastHit = Date.now();
+      console.log(`[getAllCampusDataCache] ✅ CACHE HIT - Using in-memory cache (age: ${Math.round(age / 1000)}s, ${allCampusDataCache.data.size} RAs)`);
       return allCampusDataCache.data;
     } else {
-      console.log(`[getAllCampusDataCache] In-memory cache expired (age: ${Math.round(age / 1000)}s), checking Supabase...`);
+      console.log(`[getAllCampusDataCache] ⚠️ CACHE EXPIRED - In-memory cache expired (age: ${Math.round(age / 1000)}s), checking Redis...`);
     }
   }
   
@@ -238,7 +251,9 @@ async function getAllCampusDataCache(date) {
         
         if (age < ALL_CAMPUS_CACHE_TTL) {
           // Cache is valid, restore to in-memory
-          console.log(`[getAllCampusDataCache] ✅ Found valid Upstash Redis cache (age: ${Math.round(age / 1000)}s)`);
+          cacheStats.hits++;
+          cacheStats.lastHit = Date.now();
+          console.log(`[getAllCampusDataCache] ✅ CACHE HIT - Found valid Upstash Redis cache (age: ${Math.round(age / 1000)}s)`);
           
           // Convert object back to Map
           const dataMap = new Map();
@@ -255,11 +270,11 @@ async function getAllCampusDataCache(date) {
             data: dataMap,
           };
           
-          console.log(`[getAllCampusDataCache] Restored ${dataMap.size} RAs from Upstash Redis to in-memory cache`);
+          console.log(`[getAllCampusDataCache] ✅ Restored ${dataMap.size} RAs from Upstash Redis to in-memory cache`);
           return dataMap;
-        } else {
-          console.log(`[getAllCampusDataCache] Upstash Redis cache expired (age: ${Math.round(age / 1000)}s), will refresh...`);
-        }
+    } else {
+      console.log(`[getAllCampusDataCache] ⚠️ CACHE EXPIRED - Upstash Redis cache expired (age: ${Math.round(age / 1000)}s), will refresh...`);
+    }
       }
     }
     // Fallback: Try Vercel KV (legacy, if still available)
@@ -314,8 +329,13 @@ async function getAllCampusDataCache(date) {
     };
     
     // Save to persistent storage (Upstash Redis or Vercel KV)
-    saveCacheToRedis(cacheKey, data).catch(err => {
-      console.warn(`[getAllCampusDataCache] Failed to save to Redis:`, err.message);
+    saveCacheToRedis(cacheKey, data).then(() => {
+      cacheStats.writes++;
+      cacheStats.lastWrite = Date.now();
+      console.log(`[getAllCampusDataCache] 💾 CACHE WRITE - Saved ${data.size} unique RAs to Redis`);
+    }).catch(err => {
+      cacheStats.errors++;
+      console.warn(`[getAllCampusDataCache] ❌ CACHE WRITE ERROR - Failed to save to Redis:`, err.message);
     });
     
     allCampusDataLoadPromise = null;
@@ -401,6 +421,112 @@ export function clearAllCampusDataCache() {
   console.log('[clearAllCampusDataCache] Clearing global campus data cache');
   allCampusDataCache = null;
   allCampusDataLoadPromise = null;
+  cacheStats = {
+    hits: 0,
+    misses: 0,
+    writes: 0,
+    errors: 0,
+    lastHit: null,
+    lastMiss: null,
+    lastWrite: null,
+  };
+}
+
+/**
+ * Get cache status and statistics
+ * @returns {Promise<Object>} - Cache status information
+ */
+export async function getCacheStatus() {
+  const status = {
+    inMemory: {
+      exists: allCampusDataCache !== null,
+      date: allCampusDataCache?.date || null,
+      timestamp: allCampusDataCache?.timestamp || null,
+      age: allCampusDataCache ? Date.now() - allCampusDataCache.timestamp : null,
+      ageFormatted: null,
+      size: allCampusDataCache?.data?.size || 0,
+      isExpired: allCampusDataCache ? (Date.now() - allCampusDataCache.timestamp) > ALL_CAMPUS_CACHE_TTL : true,
+    },
+    redis: {
+      available: false,
+      connected: false,
+      keys: [],
+      sampleKeys: [],
+    },
+    stats: {
+      ...cacheStats,
+      hitRate: cacheStats.hits + cacheStats.misses > 0 
+        ? ((cacheStats.hits / (cacheStats.hits + cacheStats.misses)) * 100).toFixed(1) + '%'
+        : '0%',
+    },
+  };
+  
+  // Format age
+  if (status.inMemory.age !== null) {
+    const seconds = Math.floor(status.inMemory.age / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    if (hours > 0) {
+      status.inMemory.ageFormatted = `${hours}h ${minutes % 60}m ${seconds % 60}s`;
+    } else if (minutes > 0) {
+      status.inMemory.ageFormatted = `${minutes}m ${seconds % 60}s`;
+    } else {
+      status.inMemory.ageFormatted = `${seconds}s`;
+    }
+  }
+  
+  // Check Redis connection
+  try {
+    const redisUrl = process.env.UPSTASH_REDIS__KV_REST_API_URL || 
+                     process.env.UPSTASH_REDIS_REST_URL || 
+                     process.env.REDIS_REST_URL || 
+                     process.env.KV_REST_API_URL;
+    const redisToken = process.env.UPSTASH_REDIS__KV_REST_API_TOKEN || 
+                       process.env.UPSTASH_REDIS_REST_TOKEN || 
+                       process.env.REDIS_REST_TOKEN || 
+                       process.env.KV_REST_API_TOKEN;
+    
+    if (redisUrl && redisToken) {
+      status.redis.available = true;
+      
+      const { Redis } = await import('@upstash/redis');
+      const redis = new Redis({
+        url: redisUrl,
+        token: redisToken,
+      });
+      
+      // Test connection
+      try {
+        await redis.ping();
+        status.redis.connected = true;
+        
+        // Get cache keys (sample)
+        const keys = await redis.keys('campus_cache:*');
+        status.redis.keys = keys;
+        status.redis.sampleKeys = keys.slice(0, 10); // First 10 keys
+        
+        // Get sample cache data
+        if (keys.length > 0) {
+          const sampleKey = keys[0];
+          const sampleData = await redis.get(sampleKey);
+          if (sampleData) {
+            status.redis.sampleData = {
+              key: sampleKey,
+              timestamp: sampleData.timestamp,
+              age: Date.now() - sampleData.timestamp,
+              dataSize: sampleData.data ? Object.keys(sampleData.data).length : 0,
+            };
+          }
+        }
+      } catch (err) {
+        status.redis.error = err.message;
+      }
+    }
+  } catch (error) {
+    status.redis.error = error.message;
+  }
+  
+  return status;
 }
 
 /**
@@ -1112,13 +1238,13 @@ function parseConsolidatedReport(html, ra, dateVariants) {
  * @param {string[]} dateVariants - Date format variants
  * @returns {Promise<Array>} - Array of matches for this campus
  */
-export async function fetchCampusSeating(campusName, ra, dateVariants) {
+export async function fetchCampusSeating(campusName, ra, dateVariants, fastFail = false) {
   const campusConfig = CAMPUS_ENDPOINTS[campusName];
   if (!campusConfig) return [];
   
   try {
-    // Polite delay between campus fetches (300-700ms)
-    const delay = 300 + Math.random() * 400;
+    // Reduced delay for fast fail mode (100-200ms) vs normal (300-700ms)
+    const delay = fastFail ? (100 + Math.random() * 100) : (300 + Math.random() * 400);
     await new Promise(resolve => setTimeout(resolve, delay));
     
     let html = '';
@@ -1150,9 +1276,11 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
           formData.append('submit', 'Submit');
           
           // Fetch room-wise data from fetch_data.php
+          // Use shorter timeout for fast fail mode (3s) vs normal (12s)
+          const timeout = fastFail ? 3000 : 12000;
           const postHtml = await fetchPage(
             campusConfig.fetchData,
-            12000,
+            timeout,
             1,
             {
               method: 'POST',
@@ -1901,8 +2029,12 @@ export async function getSeatingInfo(ra, date) {
   }
   
   // STEP 2: Try global all-campus cache (NEW - ULTRA FAST)
+  let cacheExists = false;
+  let cacheSize = 0;
   try {
     const allCampusData = await getAllCampusDataCache(date);
+    cacheExists = allCampusData && allCampusData.size > 0;
+    cacheSize = allCampusData ? allCampusData.size : 0;
     const matches = allCampusData.get(normalizedRA);
     
     if (matches && matches.length > 0) {
@@ -1937,10 +2069,39 @@ export async function getSeatingInfo(ra, date) {
       
       return response;
     } else {
-      console.log(`[getSeatingInfo] RA ${normalizedRA} not found in global cache, falling back to direct fetch`);
+      // FAST FAIL: If RA not in cache and cache is fresh, fail immediately
+      // Don't waste time fetching all campuses if we know it's not there
+      cacheStats.misses++;
+      cacheStats.lastMiss = Date.now();
+      console.log(`[getSeatingInfo] ❌ CACHE MISS - RA ${normalizedRA} not found in global cache`);
+      
+      // Check if cache is fresh (less than 30 minutes old)
+      const cacheAge = allCampusDataCache ? (Date.now() - allCampusDataCache.timestamp) : Infinity;
+      const CACHE_FRESH_THRESHOLD = 30 * 60 * 1000; // 30 minutes
+      
+      if (cacheAge < CACHE_FRESH_THRESHOLD && cacheExists && cacheSize > 0) {
+        console.log(`[getSeatingInfo] ⚡ FAST FAIL - Cache is fresh (${Math.round(cacheAge / 1000)}s old, ${cacheSize} RAs), RA not found. Returning empty result immediately.`);
+        
+        // Return empty result immediately - no need to fetch
+        const response = {
+          status: 'ok',
+          lastUpdated: new Date(allCampusDataCache.timestamp).toISOString(),
+          results: {},
+          cached: true,
+          source: 'global_cache_fast_fail',
+        };
+        
+        // Cache the empty result to avoid future fetches
+        setCachedResult(normalizedRA, date, response);
+        
+        return response;
+      } else {
+        console.log(`[getSeatingInfo] Cache is stale or empty, falling back to direct fetch`);
+      }
     }
   } catch (error) {
-    console.warn(`[getSeatingInfo] Error accessing global cache:`, error.message);
+    cacheStats.errors++;
+    console.warn(`[getSeatingInfo] ⚠️ CACHE ERROR - Error accessing global cache:`, error.message);
     // Fall through to direct fetch
   }
   
@@ -1954,11 +2115,14 @@ export async function getSeatingInfo(ra, date) {
   let hasErrors = false;
   let foundRA = false;
   
+  // Determine if we should use fast fail mode (cache exists but is stale)
+  const useFastFail = cacheExists; // Use fast fail if cache exists (even if stale)
+  
   // OPTIMIZATION: Fetch campuses one by one and exit early if RA found
   // This is faster than Promise.all when RA is found early
   for (const campusName of campusNames) {
     try {
-      const campusMatches = await fetchCampusSeating(campusName, normalizedRA, dateVariants);
+      const campusMatches = await fetchCampusSeating(campusName, normalizedRA, dateVariants, useFastFail);
       results[campusName] = campusMatches;
       
       // OPTIMIZATION: Early exit if RA found in any campus
