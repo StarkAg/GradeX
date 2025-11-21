@@ -16,8 +16,7 @@ const CAMPUS_ENDPOINTS = {
   },
   'Tech Park 2': {
     base: 'https://examcell.srmist.edu.in/tp2/seating/bench',
-    fetchData: 'https://examcell.srmist.edu.in/tp2/seating/bench/fetch_data.php',
-    report: 'https://examcell.srmist.edu.in/tp2/seating/bench/report.php'
+    fetchData: 'https://examcell.srmist.edu.in/tp2/seating/bench/fetch_data.php'
   },
   'Biotech & Architecture': {
     base: 'https://examcell.srmist.edu.in/bio/seating/bench',
@@ -300,6 +299,9 @@ export function extractSeatingRows(html, targetRA = null) {
   // Track unique entries to avoid duplicates (same RA + room + session)
   const seenEntries = new Set();
   
+  // OPTIMIZATION: Early exit if we found the target RA and have matches
+  let foundTargetRA = false;
+  
   for (const raMatch of allRAMatches) {
     const ra = raMatch[0].toUpperCase();
     const raIndex = raMatch.index;
@@ -440,6 +442,19 @@ export function extractSeatingRows(html, targetRA = null) {
       subjectCode: subjectCode || null,
       context: textContent.substring(0, 150),
     });
+    
+    // OPTIMIZATION: Early exit if we found the target RA and have a complete match
+    if (targetRA && ra.toUpperCase() === targetRA.toUpperCase() && roomName && session) {
+      foundTargetRA = true;
+      console.log(`[DEBUG extractSeatingRows] Target RA ${targetRA} found, stopping further parsing`);
+      break; // Exit early - we found what we need
+    }
+  }
+  
+  // OPTIMIZATION: If we found target RA early, return immediately
+  if (foundTargetRA && rows.length > 0) {
+    console.log(`[DEBUG extractSeatingRows] Early exit - target RA found, returning ${rows.length} matches`);
+    return rows;
   }
   
   // Method 2: If no table rows found, do regex text scanning
@@ -787,27 +802,18 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
             allHtmlSources.push(postHtml);
             fetchUrl = `${campusConfig.fetchData}?dated=${encodeURIComponent(formattedDate)}&session=${session}`;
             console.log(`[DEBUG ${campusName}] Found HTML from ${session} session, length: ${postHtml.length}, hasTargetRA: ${hasTargetRA}`);
+            
+            // OPTIMIZATION: Skip Afternoon if Forenoon has the target RA
+            // If we found the target RA in Forenoon session, no need to check Afternoon
+            if (ra && hasTargetRA && session === 'FN') {
+              console.log(`[DEBUG ${campusName}] Target RA found in Forenoon, skipping Afternoon session`);
+              break; // Exit session loop early
+            }
           }
         } catch (e) {
           console.error(`Error POSTing to ${campusName} (${session}):`, e.message);
           continue;
         }
-      }
-    }
-    
-    // For Tech Park 2, also try report.php as an additional source to merge with fetch_data.php results
-    if (campusName === 'Tech Park 2' && campusConfig.report) {
-      try {
-        const reportHtml = await fetchPage(campusConfig.report, 12000, 1);
-        const hasRAPattern = /(?:>|"|'|\b)(RA\d{2,})/i.test(reportHtml);
-        const hasTargetRA = ra ? new RegExp(ra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(reportHtml) : true;
-        
-        if (reportHtml.length > 5000 && (hasRAPattern || hasTargetRA)) {
-          allHtmlSources.push(reportHtml);
-          console.log(`[DEBUG ${campusName}] Found HTML from report.php, length: ${reportHtml.length}, hasTargetRA: ${hasTargetRA}`);
-        }
-      } catch (e) {
-        console.log(`[${campusName}] Could not fetch from report.php:`, e.message);
       }
     }
     
@@ -818,22 +824,6 @@ export async function fetchCampusSeating(campusName, ra, dateVariants) {
       console.log(`[DEBUG ${campusName}] Merged ${allHtmlSources.length} HTML sources, total length: ${html.length}`);
     }
     
-    // Fallback: Try GET request to report.php (prioritize explicit report endpoint if available)
-    if (!html || html.length < 5000) {
-      try {
-        // Use explicit report endpoint if available, otherwise construct from base
-        const reportUrl = campusConfig.report || `${campusConfig.base}/report.php`;
-        html = await fetchPage(reportUrl, 12000, 1);
-        fetchUrl = reportUrl;
-      } catch (e) {
-        // 404 errors are expected for some campuses - log as warning, not error
-        if (e.message && e.message.includes('404')) {
-          console.log(`[${campusName}] Base URL not available (404) - this is expected for some campuses`);
-        } else {
-          console.warn(`[${campusName}] Error fetching base URL:`, e.message);
-        }
-      }
-    }
     
     // Debug: Check HTML structure
     const debugInfo = {
@@ -896,10 +886,10 @@ export function getCachedResult(ra, date) {
   
   if (!cached) return null;
   
-  // Check if cache is still valid (5 minutes TTL - ideal for exam seating data)
+  // Check if cache is still valid (15 minutes TTL - increased for better performance)
   const now = Date.now();
   const age = now - cached.timestamp;
-  const ttl = 5 * 60 * 1000; // 5 minutes - ideal balance between freshness and efficiency
+  const ttl = 15 * 60 * 1000; // 15 minutes - increased from 5 minutes for better speed
   
   if (age > ttl) {
     cache.delete(key);
@@ -1545,35 +1535,45 @@ export async function getSeatingInfo(ra, date) {
   // Generate date variants
   const dateVariants = date ? generateDateVariants(date) : [];
   
-  // STEP 2: Fetch from all campuses in parallel (with delays handled internally)
+  // STEP 2: Fetch from all campuses with early exit optimization
   const campusNames = Object.keys(CAMPUS_ENDPOINTS);
-  const fetchPromises = campusNames.map(campusName =>
-    fetchCampusSeating(campusName, normalizedRA, dateVariants)
-  );
-  
-  const campusResults = await Promise.allSettled(fetchPromises);
-  
-  // Build results object
   const results = {};
   let hasErrors = false;
+  let foundRA = false;
   
-  campusResults.forEach((result, index) => {
-    const campusName = campusNames[index];
-    
-    if (result.status === 'fulfilled') {
-      results[campusName] = result.value;
-    } else {
+  // OPTIMIZATION: Fetch campuses one by one and exit early if RA found
+  // This is faster than Promise.all when RA is found early
+  for (const campusName of campusNames) {
+    try {
+      const campusMatches = await fetchCampusSeating(campusName, normalizedRA, dateVariants);
+      results[campusName] = campusMatches;
+      
+      // OPTIMIZATION: Early exit if RA found in any campus
+      // Check if we have matches for the target RA
+      if (campusMatches && campusMatches.length > 0) {
+        const hasTargetRA = campusMatches.some(match => 
+          match.ra && match.ra.toUpperCase() === normalizedRA.toUpperCase()
+        );
+        
+        if (hasTargetRA) {
+          foundRA = true;
+          console.log(`[getSeatingInfo] ✅ Target RA ${normalizedRA} found in ${campusName}, stopping other campus fetches`);
+          // Cancel remaining fetches by breaking the loop
+          // Note: Already started fetches will complete, but we won't wait for them
+          break;
+        }
+      }
+    } catch (error) {
       hasErrors = true;
       results[campusName] = [];
-      // Log as warning, not error - some campuses may not be available
-      const errorMsg = result.reason?.message || String(result.reason);
+      const errorMsg = error?.message || String(error);
       if (errorMsg.includes('404')) {
         console.log(`[${campusName}] Not available (404) - skipping`);
       } else {
         console.warn(`[${campusName}] Failed to fetch:`, errorMsg);
       }
     }
-  });
+  }
   
   // STEP 3: Enhance all matches with pre-loaded student information
   // Use the student info we loaded at the start (from JSON)
@@ -1599,5 +1599,180 @@ export async function getSeatingInfo(ra, date) {
   setCachedResult(normalizedRA, date, response);
   
   return response;
+}
+
+/**
+ * Streaming version of getSeatingInfo - yields results as they come in
+ * @param {string} ra - RA number
+ * @param {string} date - Date string
+ * @param {Function} onCampusResult - Callback when a campus completes (campusName, matches, complete)
+ * @param {Function} onComplete - Callback when all campuses complete (finalResult)
+ */
+export async function getSeatingInfoStreaming(ra, date, onCampusResult, onComplete) {
+  // Normalize inputs
+  const normalizedRA = normalizeRA(ra);
+  if (!normalizedRA) {
+    onComplete({
+      status: 'error',
+      error: 'RA number is required',
+      lastUpdated: new Date().toISOString(),
+      results: {},
+    });
+    return;
+  }
+  
+  // STEP 1: Load student name from Supabase/JSON (same as getSeatingInfo)
+  console.log(`[getSeatingInfoStreaming] Pre-loading student name for RA: ${normalizedRA}`);
+  let studentInfo = { name: null };
+  
+  let studentData = null;
+  let attempts = 0;
+  const maxAttempts = 3;
+  
+  while (attempts < maxAttempts && !studentData) {
+    attempts++;
+    try {
+      studentData = await loadStudentData();
+      if (studentData && studentData.size > 0) {
+        console.log(`[getSeatingInfoStreaming] ✓ Student data map loaded: ${studentData.size} records`);
+        break;
+      } else {
+        studentDataCache = null;
+        studentDataLoadPromise = null;
+        studentData = null;
+        if (attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+    } catch (error) {
+      console.error(`[getSeatingInfoStreaming] Attempt ${attempts} failed:`, error.message);
+      studentDataCache = null;
+      studentDataLoadPromise = null;
+      if (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+  }
+  
+  // Try direct lookup
+  if (studentData && studentData.size > 0) {
+    const lookupResult = studentData.get(normalizedRA);
+    if (lookupResult) {
+      studentInfo = lookupResult;
+    } else {
+      // Try case-insensitive search
+      for (const [key, value] of studentData.entries()) {
+        if (key.toUpperCase() === normalizedRA.toUpperCase()) {
+          studentInfo = value;
+          break;
+        }
+      }
+    }
+  }
+  
+  // Fallback: Direct Supabase lookup if map lookup failed
+  if (!studentInfo || !studentInfo.name) {
+    try {
+      const { supabase: supabaseClient, isSupabaseConfigured } = await import('./supabase-client.js');
+      if (isSupabaseConfigured() && supabaseClient) {
+        const { data, error } = await supabaseClient
+          .from('students')
+          .select('name')
+          .eq('register_number', normalizedRA)
+          .single();
+        
+        if (!error && data && data.name) {
+          studentInfo = { name: data.name };
+        }
+      }
+    } catch (fallbackError) {
+      console.error(`[getSeatingInfoStreaming] Direct Supabase fallback failed:`, fallbackError.message);
+    }
+  }
+  
+  // Check cache first
+  const cached = getCachedResult(normalizedRA, date);
+  if (cached) {
+    // Enhance cached results
+    const enhancedCachedResults = {};
+    for (const [campusName, matches] of Object.entries(cached.results || {})) {
+      enhancedCachedResults[campusName] = enhanceMatchesWithPreloadedStudentInfo(matches, studentInfo);
+    }
+    
+    onComplete({
+      ...cached,
+      results: enhancedCachedResults,
+      cached: true,
+    });
+    return;
+  }
+  
+  // Generate date variants
+  const dateVariants = date ? generateDateVariants(date) : [];
+  
+  // STEP 2: Fetch campuses and stream results
+  const campusNames = Object.keys(CAMPUS_ENDPOINTS);
+  const results = {};
+  let hasErrors = false;
+  let foundRA = false;
+  
+  for (const campusName of campusNames) {
+    try {
+      const campusMatches = await fetchCampusSeating(campusName, normalizedRA, dateVariants);
+      results[campusName] = campusMatches;
+      
+      // Enhance matches before streaming
+      const enhanced = enhanceMatchesWithPreloadedStudentInfo(campusMatches, studentInfo);
+      
+      // Stream this campus result immediately
+      onCampusResult({
+        campusName,
+        matches: enhanced,
+        complete: false,
+      });
+      
+      // Early exit if RA found
+      if (campusMatches && campusMatches.length > 0) {
+        const hasTargetRA = campusMatches.some(match => 
+          match.ra && match.ra.toUpperCase() === normalizedRA.toUpperCase()
+        );
+        
+        if (hasTargetRA) {
+          foundRA = true;
+          console.log(`[getSeatingInfoStreaming] ✅ Target RA ${normalizedRA} found in ${campusName}, stopping other campus fetches`);
+          break;
+        }
+      }
+    } catch (error) {
+      hasErrors = true;
+      results[campusName] = [];
+      onCampusResult({
+        campusName,
+        matches: [],
+        complete: false,
+        error: error.message,
+      });
+    }
+  }
+  
+  // STEP 3: Enhance all matches (already done above, but ensure consistency)
+  const enhancedResults = {};
+  for (const [campusName, matches] of Object.entries(results)) {
+    enhancedResults[campusName] = enhanceMatchesWithPreloadedStudentInfo(matches, studentInfo);
+  }
+  
+  // Build final result
+  const finalResult = {
+    status: hasErrors ? 'partial' : 'ok',
+    lastUpdated: new Date().toISOString(),
+    results: enhancedResults,
+    foundRA,
+  };
+  
+  // Cache the result
+  setCachedResult(normalizedRA, date, finalResult);
+  
+  // Send final complete result
+  onComplete(finalResult);
 }
 

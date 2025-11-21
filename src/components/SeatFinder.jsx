@@ -334,7 +334,269 @@ export default function SeatFinder() {
     });
   };
 
-  // Fetch from live API
+  // Transform API results to seat data format
+  const transformResultsToSeats = (data, studentName, ra, date) => {
+    const transformedSeats = [];
+    
+    // Process results from all campuses
+    Object.keys(data.results || {}).forEach(campusName => {
+      const campusResults = data.results[campusName] || [];
+      campusResults.forEach(result => {
+        if (result.matched) {
+          // Format room name: TPTP-401 -> TP-401, TPVPT-301 -> VPT-301
+          // Special case: TPVPT-028 -> Room: VPT-028, Building: Valliammai Block Behind TP, Floor: Ground Floor
+          let formattedRoom = result.hall || '-';
+          let floorNumber = '-';
+          let buildingName = campusName; // Default to campus name
+          
+          if (formattedRoom === 'TPVPT-028') {
+            formattedRoom = 'VPT-028';
+            buildingName = VPT_BUILDING_NAME;
+            floorNumber = 'Ground Floor';
+          } else if (formattedRoom.startsWith('TPTP-')) {
+            formattedRoom = formattedRoom.replace('TPTP-', 'TP-');
+          } else if (formattedRoom.startsWith('TPVPT-')) {
+            formattedRoom = formattedRoom.replace('TPVPT-', 'VPT-');
+            buildingName = VPT_BUILDING_NAME;
+          } else if (formattedRoom.startsWith('VPT-')) {
+            buildingName = VPT_BUILDING_NAME;
+          }
+          
+          // Remove TP-2 or TP2 prefix from LH/LS/CLS rooms (e.g., TP-2LH1005 -> LH1005)
+          if (formattedRoom.match(/^TP-?2?(LH|LS|CLS)/i)) {
+            formattedRoom = formattedRoom.replace(/^TP-?2?/i, '');
+          }
+          
+          // CLS, LS, and LH rooms are in Tech Park 2
+          if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS') || formattedRoom.startsWith('LH')) {
+            buildingName = 'Tech Park 2';
+          }
+          
+          // Extract floor number from room name (e.g., TP-401 -> 4th, H301F -> 3rd)
+          if (formattedRoom !== '-' && floorNumber === '-') {
+            // Extract number from room name (e.g., TP-401, UB604, H301F, 1504)
+            const floorMatch = formattedRoom.match(/(\d+)/);
+            if (floorMatch) {
+              const numStr = floorMatch[1];
+              // Check if room starts with letter(s) followed by number (e.g., H301F, S45, UB604, VPT-301)
+              const letterNumberPattern = /^[A-Z]+[-]?(\d+)/;
+              const letterMatch = formattedRoom.match(letterNumberPattern);
+              
+              if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS') || formattedRoom.startsWith('LH')) {
+                // For CLS1019, LS2019, LH506 - first digit after letters is floor
+                const firstDigit = parseInt(numStr.charAt(0));
+                floorNumber = formatFloorNumber(firstDigit);
+              } else if (letterMatch || formattedRoom.startsWith('VPT-')) {
+                // For H301F, S45, UB604, VPT-301 - first digit after letter is floor
+                const firstDigit = parseInt(numStr.charAt(0));
+                floorNumber = formatFloorNumber(firstDigit);
+              } else if (formattedRoom.startsWith('TP-')) {
+                // For TP-401, the first digit is the floor (4)
+                const firstDigit = parseInt(numStr.charAt(0));
+                floorNumber = formatFloorNumber(firstDigit);
+              } else {
+                // For 1504 (pure number), first two digits might be floor (15)
+                if (numStr.length >= 2) {
+                  const firstTwo = parseInt(numStr.substring(0, 2));
+                  floorNumber = formatFloorNumber(firstTwo);
+                } else {
+                  const firstDigit = parseInt(numStr.charAt(0));
+                  floorNumber = formatFloorNumber(firstDigit);
+                }
+              }
+            }
+          }
+          
+          // Use name from Supabase (fetched earlier), fallback to API name if needed
+          let finalName = studentName; // studentName is from Supabase lookup above
+          
+          // Fallback to API name if Supabase name is still '-'
+          if (finalName === '-' && result.name) {
+            const apiName = String(result.name).trim();
+            if (apiName.length > 0) {
+              finalName = apiName;
+              console.log('✅ Using API name as fallback:', finalName);
+            }
+          }
+          
+          const seatData = {
+            registerNumber: ra.toUpperCase(),
+            name: finalName,
+            department: result.department || '-', // Use API department (from exam seating data)
+            room: formattedRoom,
+            floor: floorNumber,
+            building: buildingName,
+            subcode: result.subjectCode || '-',
+            session: result.session || '-',
+            bench: result.bench || '-', // Seat number
+            date: date,
+            context: result.context,
+            url: result.url,
+            campus: campusName
+          };
+          
+          transformedSeats.push(seatData);
+        }
+      });
+    });
+    
+    return transformedSeats;
+  };
+
+  // Streaming fetch from live API using Server-Sent Events
+  // Returns: { found: boolean, seats: array }
+  const fetchFromLiveAPIStreaming = async (ra, date) => {
+    return new Promise((resolve, reject) => {
+      const lastDigits = ra.slice(-4);
+      let studentName = '-';
+      let allResults = {};
+      let transformedSeats = [];
+      let eventSource = null;
+      let timeoutId = null;
+      let resolved = false;
+      
+      // Set a timeout to prevent hanging (60 seconds max)
+      timeoutId = setTimeout(() => {
+        if (!resolved && eventSource) {
+          eventSource.close();
+          if (transformedSeats.length > 0) {
+            resolved = true;
+            resolve({ found: true, seats: transformedSeats });
+          } else {
+            resolved = true;
+            reject(new Error('Request timeout. Please try again.'));
+          }
+        }
+      }, 60000);
+      
+      // Fetch name in parallel (non-blocking)
+      fetch(`/api/get-name-by-last-digits?lastDigits=${lastDigits}&fullRA=${encodeURIComponent(ra)}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(nameData => {
+          if (nameData?.success) {
+            if (nameData.name && nameData.registerNumber) {
+              if (nameData.registerNumber.toUpperCase() === ra.toUpperCase()) {
+                studentName = nameData.name;
+              }
+            }
+            if (studentName === '-' && nameData.matches && Array.isArray(nameData.matches)) {
+              const exactMatch = nameData.matches.find(m => 
+                m.registerNumber && m.registerNumber.toUpperCase() === ra.toUpperCase()
+              );
+              if (exactMatch && exactMatch.name) {
+                studentName = exactMatch.name;
+              }
+            }
+          }
+        })
+        .catch(() => {}); // Silently fail, name is not critical
+      
+      // Check if EventSource is supported
+      if (typeof EventSource === 'undefined') {
+        clearTimeout(timeoutId);
+        reject(new Error('Streaming not supported in this browser'));
+        return;
+      }
+      
+      // Start streaming
+      const apiDate = formatDateForAPI(date);
+      const params = new URLSearchParams({ ra });
+      if (apiDate) params.append('date', apiDate);
+      
+      try {
+        eventSource = new EventSource(`/api/seating-stream?${params.toString()}`);
+      } catch (err) {
+        clearTimeout(timeoutId);
+        reject(new Error('Failed to start streaming connection'));
+        return;
+      }
+      
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'connected') {
+            console.log('✅ Streaming connected');
+            return;
+          }
+          
+          if (data.type === 'campus_result') {
+            // Update results as each campus completes
+            allResults[data.campus] = data.matches || [];
+            
+            // Transform and update UI immediately
+            const tempData = {
+              results: { ...allResults },
+              lastUpdated: new Date().toISOString(),
+            };
+            
+            transformedSeats = transformResultsToSeats(tempData, studentName, ra, date);
+            
+            // Update UI with partial results
+            if (transformedSeats.length > 0) {
+              updateSeatInfoWithSubjects(transformedSeats);
+              setError(null);
+            }
+            
+            console.log(`📡 Streamed result from ${data.campus}: ${data.matches?.length || 0} matches`);
+          }
+          
+          if (data.type === 'complete') {
+            if (resolved) return;
+            resolved = true;
+            clearTimeout(timeoutId);
+            
+            // Final result
+            setApiResults(data);
+            setLastUpdated(data.lastUpdated || new Date().toISOString());
+            
+            // Final transformation
+            transformedSeats = transformResultsToSeats(data, studentName, ra, date);
+            
+            eventSource.close();
+            
+            if (transformedSeats.length > 0) {
+              updateSeatInfoWithSubjects(transformedSeats);
+              setError(null);
+              resolve({ found: true, seats: transformedSeats });
+            } else {
+              setSeatInfo(null);
+              setError('No seating information found for this register number and date.');
+              resolve({ found: false, seats: [] });
+            }
+          }
+          
+          if (data.type === 'error') {
+            if (resolved) return;
+            resolved = true;
+            clearTimeout(timeoutId);
+            eventSource.close();
+            reject(new Error(data.message || 'Failed to fetch seat information. Please try again.'));
+          }
+        } catch (err) {
+          console.error('Error parsing stream data:', err);
+        }
+      };
+      
+      eventSource.onerror = (error) => {
+        // Only reject if we haven't resolved yet and connection is closed
+        if (eventSource.readyState === EventSource.CLOSED && !resolved) {
+          resolved = true;
+          clearTimeout(timeoutId);
+          eventSource.close();
+          
+          // If we have partial results, return them
+          if (transformedSeats.length > 0) {
+            resolve({ found: true, seats: transformedSeats });
+          } else {
+            reject(new Error('Connection error. Please try again.'));
+          }
+        }
+      };
+    });
+  };
+
+  // Fetch from live API (non-streaming, fallback)
   // Returns: { found: boolean, seats: array }
   const fetchFromLiveAPI = async (ra, date) => {
     try {
@@ -399,140 +661,11 @@ export default function SeatFinder() {
       setApiResults(data);
       setLastUpdated(data.lastUpdated);
       
-      // Transform API results to match existing UI format
-      const transformedSeats = [];
-      
-      // Process results from all campuses
-      // studentName is already fetched from Supabase above
-      Object.keys(data.results || {}).forEach(campusName => {
-        const campusResults = data.results[campusName] || [];
-        campusResults.forEach(result => {
-          if (result.matched) {
-            // Format room name: TPTP-401 -> TP-401, TPVPT-301 -> VPT-301
-            // Special case: TPVPT-028 -> Room: VPT-028, Building: Valliammai Block Behind TP, Floor: Ground Floor
-            let formattedRoom = result.hall || '-';
-            let floorNumber = '-';
-            let buildingName = campusName; // Default to campus name
-            
-            if (formattedRoom === 'TPVPT-028') {
-              formattedRoom = 'VPT-028';
-              buildingName = VPT_BUILDING_NAME;
-              floorNumber = 'Ground Floor';
-            } else if (formattedRoom.startsWith('TPTP-')) {
-              formattedRoom = formattedRoom.replace('TPTP-', 'TP-');
-            } else if (formattedRoom.startsWith('TPVPT-')) {
-              formattedRoom = formattedRoom.replace('TPVPT-', 'VPT-');
-              buildingName = VPT_BUILDING_NAME;
-            } else if (formattedRoom.startsWith('VPT-')) {
-              buildingName = VPT_BUILDING_NAME;
-            }
-            
-            // Remove TP-2 or TP2 prefix from LH/LS/CLS rooms (e.g., TP-2LH1005 -> LH1005)
-            if (formattedRoom.match(/^TP-?2?(LH|LS|CLS)/i)) {
-              formattedRoom = formattedRoom.replace(/^TP-?2?/i, '');
-            }
-            
-            // CLS, LS, and LH rooms are in Tech Park 2
-            if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS') || formattedRoom.startsWith('LH')) {
-              buildingName = 'Tech Park 2';
-            }
-            
-            // Extract floor number from room name (e.g., TP-401 -> 4th, H301F -> 3rd)
-            if (formattedRoom !== '-' && floorNumber === '-') {
-              // Extract number from room name (e.g., TP-401, UB604, H301F, 1504)
-              const floorMatch = formattedRoom.match(/(\d+)/);
-              if (floorMatch) {
-                const numStr = floorMatch[1];
-                // Check if room starts with letter(s) followed by number (e.g., H301F, S45, UB604, VPT-301)
-                const letterNumberPattern = /^[A-Z]+[-]?(\d+)/;
-                const letterMatch = formattedRoom.match(letterNumberPattern);
-                
-                if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS') || formattedRoom.startsWith('LH')) {
-                  // For CLS1019, LS2019, LH506 - first digit after letters is floor
-                  const firstDigit = parseInt(numStr.charAt(0));
-                  floorNumber = formatFloorNumber(firstDigit);
-                } else if (letterMatch || formattedRoom.startsWith('VPT-')) {
-                  // For H301F, S45, UB604, VPT-301 - first digit after letter is floor
-                  const firstDigit = parseInt(numStr.charAt(0));
-                  floorNumber = formatFloorNumber(firstDigit);
-                } else if (formattedRoom.startsWith('TP-')) {
-                  // For TP-401, the first digit is the floor (4)
-                  const firstDigit = parseInt(numStr.charAt(0));
-                  floorNumber = formatFloorNumber(firstDigit);
-                } else {
-                  // For 1504 (pure number), first two digits might be floor (15)
-                  if (numStr.length >= 2) {
-                    const firstTwo = parseInt(numStr.substring(0, 2));
-                    floorNumber = formatFloorNumber(firstTwo);
-                  } else {
-                    const firstDigit = parseInt(numStr.charAt(0));
-                    floorNumber = formatFloorNumber(firstDigit);
-                  }
-                }
-              }
-            }
-            
-            // Use name from Supabase (fetched earlier), fallback to API name if needed
-            let finalName = studentName; // studentName is from Supabase lookup above
-            
-            // Fallback to API name if Supabase name is still '-'
-            if (finalName === '-' && result.name) {
-              const apiName = String(result.name).trim();
-              if (apiName.length > 0) {
-                finalName = apiName;
-                console.log('✅ Using API name as fallback:', finalName);
-              }
-            }
-            
-            const seatData = {
-              registerNumber: ra.toUpperCase(),
-              name: finalName,
-              department: result.department || '-', // Use API department (from exam seating data)
-              room: formattedRoom,
-              floor: floorNumber,
-              building: buildingName,
-              subcode: result.subjectCode || '-',
-              session: result.session || '-',
-              bench: result.bench || '-', // Seat number
-              date: date,
-              context: result.context,
-              url: result.url,
-              campus: campusName
-            };
-            
-            // Debug logging
-            console.log('🔍 Seat Transformation:', {
-              ra: ra,
-              supabaseName: studentName,
-              apiName: result.name,
-              finalName: seatData.name,
-              hall: result.hall,
-              formattedRoom: formattedRoom
-            });
-            
-            transformedSeats.push(seatData);
-          }
-        });
-      });
+      // Transform API results using shared function
+      const transformedSeats = transformResultsToSeats(data, studentName, ra, date);
       
       if (transformedSeats.length > 0) {
         console.log('✅ Transformed seats:', transformedSeats);
-        // Log name for debugging
-        transformedSeats.forEach((seat, idx) => {
-          console.log(`Seat ${idx}:`, {
-            ra: seat.registerNumber,
-            name: seat.name,
-            room: seat.room,
-            nameType: typeof seat.name,
-            nameIsDash: seat.name === '-',
-            nameTruthy: !!seat.name
-          });
-          
-          // Final check - if name is still '-', try to fix it
-          if (seat.name === '-' && seat.registerNumber === 'RA2311033010014') {
-            console.error('❌ CRITICAL: Name is still "-" in final array!', seat);
-          }
-        });
         updateSeatInfoWithSubjects(transformedSeats);
         setError(null);
         return { found: true, seats: transformedSeats }; // Return seats array
@@ -572,7 +705,8 @@ export default function SeatFinder() {
 
   const fetchSeatsForRequest = async (cacheKey, ra, selectedDate) => {
     try {
-      const liveResult = await fetchFromLiveAPI(ra, selectedDate);
+      // Use streaming API for faster results
+      const liveResult = await fetchFromLiveAPIStreaming(ra, selectedDate);
       if (liveResult.found && liveResult.seats.length > 0) {
         sessionCacheRef.current.set(cacheKey, liveResult.seats);
         logSuccess(ra, selectedDate, liveResult.seats);
@@ -585,6 +719,19 @@ export default function SeatFinder() {
       logFailure(ra, selectedDate, message);
       return [];
     } catch (err) {
+      // Fallback to non-streaming API on error
+      console.warn('Streaming failed, falling back to regular API:', err);
+      try {
+        const liveResult = await fetchFromLiveAPI(ra, selectedDate);
+        if (liveResult.found && liveResult.seats.length > 0) {
+          sessionCacheRef.current.set(cacheKey, liveResult.seats);
+          logSuccess(ra, selectedDate, liveResult.seats);
+          return liveResult.seats;
+        }
+      } catch (fallbackErr) {
+        console.error('Fallback also failed:', fallbackErr);
+      }
+      
       const message = err?.message || 'Failed to fetch seat information. Please try again.';
       setSeatInfo(null);
       setError(message);
