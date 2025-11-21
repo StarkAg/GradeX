@@ -25,6 +25,7 @@ export default function SeatFinder() {
   const [isMobile, setIsMobile] = useState(false);
   const [apiResults, setApiResults] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [easterEggMessage, setEasterEggMessage] = useState(null);
   const useLiveAPI = true;
   const autoRefreshIntervalRef = useRef(null);
   const digitsInputRef = useRef(null);
@@ -603,6 +604,15 @@ export default function SeatFinder() {
     }
 
     const trimmedRA = registerNumber.trim();
+    
+    // 🎉 EASTER EGG: Special RA numbers trigger bouncing messages
+    const upperRA = trimmedRA.toUpperCase();
+    if (upperRA === 'RA2311003012233') {
+      setEasterEggMessage('EWW!!');
+    } else if (upperRA === 'RA2311003010432') {
+      setEasterEggMessage('MONNIES!!');
+    }
+    
     const selectedDate = getSelectedDate();
     const cacheKey = buildCacheKey(trimmedRA, selectedDate);
 
@@ -2131,6 +2141,109 @@ export default function SeatFinder() {
           </div>
         )}
       </div>
+      
+      {/* 🎉 EASTER EGG: Bouncing messages for special RAs */}
+      {easterEggMessage && (
+        <EasterEggBounce message={easterEggMessage} />
+      )}
+    </div>
+  );
+}
+
+// 🎉 EASTER EGG Component: Bouncing glowing message
+function EasterEggBounce({ message = 'EWW!!' }) {
+  const [position, setPosition] = useState({ x: 50, y: 50 });
+  const velocityRef = useRef({ x: 2, y: 2 });
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const animate = () => {
+      setPosition(prev => {
+        let newX = prev.x + velocityRef.current.x;
+        let newY = prev.y + velocityRef.current.y;
+        let newVelX = velocityRef.current.x;
+        let newVelY = velocityRef.current.y;
+
+        // Bounce off walls
+        if (newX <= 0 || newX >= 100) {
+          newVelX = -newVelX;
+          newX = Math.max(0, Math.min(100, newX));
+        }
+        if (newY <= 0 || newY >= 100) {
+          newVelY = -newVelY;
+          newY = Math.max(0, Math.min(100, newY));
+        }
+
+        // Add some randomness for fun
+        if (Math.random() < 0.1) {
+          newVelX += (Math.random() - 0.5) * 0.5;
+          newVelY += (Math.random() - 0.5) * 0.5;
+        }
+
+        // Limit velocity
+        newVelX = Math.max(-3, Math.min(3, newVelX));
+        newVelY = Math.max(-3, Math.min(3, newVelY));
+
+        velocityRef.current = { x: newVelX, y: newVelY };
+        return { x: newX, y: newY };
+      });
+    };
+
+    const interval = setInterval(animate, 16); // ~60fps
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: 9999,
+        overflow: 'hidden',
+      }}
+    >
+      <div
+        style={{
+          position: 'absolute',
+          left: `${position.x}%`,
+          top: `${position.y}%`,
+          transform: 'translate(-50%, -50%)',
+          fontSize: 'clamp(48px, 12vw, 120px)',
+          fontWeight: 900,
+          color: '#ff006e',
+          textShadow: `
+            0 0 20px #ff006e,
+            0 0 40px #ff006e,
+            0 0 60px #ff006e,
+            0 0 80px #ff006e,
+            0 0 100px #ff006e
+          `,
+          animation: 'pulse 0.5s ease-in-out infinite alternate',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          letterSpacing: '0.1em',
+          userSelect: 'none',
+          transition: 'all 0.1s linear',
+        }}
+      >
+        {message}
+      </div>
+      <style>{`
+        @keyframes pulse {
+          0% {
+            transform: translate(-50%, -50%) scale(1);
+            filter: brightness(1);
+          }
+          100% {
+            transform: translate(-50%, -50%) scale(1.1);
+            filter: brightness(1.3);
+          }
+        }
+      `}</style>
     </div>
   );
 }
