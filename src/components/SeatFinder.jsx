@@ -1971,7 +1971,7 @@ export default function SeatFinder() {
                     alignItems: 'center'
                   }}>
                     <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Name</div>
-                    <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: '18px' }}>
+                    <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: '16px' }}>
                       {(() => {
                         const displayName = seat.name && seat.name !== '-' ? seat.name : 'N/A';
                         // Debug for specific RA
@@ -2011,9 +2011,10 @@ export default function SeatFinder() {
                       <div style={{ 
                         color: seat.room && seat.room !== '-' ? '#22c55e' : '#fbbf24', 
                         fontWeight: 700, 
-                        fontSize: '20px', 
+                        fontSize: '16px', 
                         letterSpacing: '-0.02em',
-                        fontStyle: seat.room === '-' ? 'italic' : 'normal'
+                        fontStyle: seat.room === '-' ? 'italic' : 'normal',
+                        whiteSpace: 'nowrap'
                       }}>{seat.room || '-'}</div>
                       {seat.building && seat.building !== '-' && (
                         <div style={{ 
@@ -2039,7 +2040,7 @@ export default function SeatFinder() {
                       <div style={{ 
                         color: '#fbbf24', 
                         fontWeight: 700, 
-                        fontSize: '20px', 
+                        fontSize: '16px', 
                         letterSpacing: '-0.02em'
                       }}>{seat.floor && seat.floor !== '-' ? seat.floor : 'N/A'}</div>
                     </div>
@@ -2055,7 +2056,7 @@ export default function SeatFinder() {
                       justifyContent: 'center'
                     }}>
                       <div style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Seat No.</div>
-                      <div style={{ color: '#8b5cf6', fontWeight: 700, fontSize: '20px', letterSpacing: '-0.02em' }}>{seat.bench && seat.bench !== '-' ? seat.bench : 'N/A'}</div>
+                      <div style={{ color: '#8b5cf6', fontWeight: 700, fontSize: '16px', letterSpacing: '-0.02em' }}>{seat.bench && seat.bench !== '-' ? seat.bench : 'N/A'}</div>
                     </div>
                     <div style={{
                       background: 'rgba(255, 255, 255, 0.05)',
