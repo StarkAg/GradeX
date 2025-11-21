@@ -1445,7 +1445,7 @@ async function loadStudentData() {
         
         if (isSupabaseConfigured() && supabase) {
           const { data, error } = await supabase
-            .from('CLEAN_RA_NAME_MERGED')
+            .from('students')
             .select('register_number, name');
           
           if (error) {
@@ -1995,7 +1995,7 @@ export async function getSeatingInfo(ra, date) {
       const { supabase: supabaseClient, isSupabaseConfigured } = await import('./supabase-client.js');
       if (isSupabaseConfigured() && supabaseClient) {
         const { data, error } = await supabaseClient
-          .from('CLEAN_RA_NAME_MERGED')
+          .from('students')
           .select('name')
           .eq('register_number', normalizedRA)
           .single();
@@ -2253,7 +2253,7 @@ export async function getSeatingInfoStreaming(ra, date, onCampusResult, onComple
       const { supabase: supabaseClient, isSupabaseConfigured } = await import('./supabase-client.js');
       if (isSupabaseConfigured() && supabaseClient) {
         const { data, error } = await supabaseClient
-          .from('CLEAN_RA_NAME_MERGED')
+          .from('students')
           .select('name')
           .eq('register_number', normalizedRA)
           .single();
