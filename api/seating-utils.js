@@ -2050,10 +2050,79 @@ export async function getSeatingInfo(ra, date) {
   let cacheExists = false;
   let cacheSize = 0;
   try {
-    const allCampusData = await getAllCampusDataCache(date);
+    let allCampusData = await getAllCampusDataCache(date);
     cacheExists = allCampusData && allCampusData.size > 0;
     cacheSize = allCampusData ? allCampusData.size : 0;
-    const matches = allCampusData.get(normalizedRA);
+    let matches = allCampusData ? allCampusData.get(normalizedRA) : null;
+    
+    // If RA not found in in-memory cache, check Redis directly (might have newer data)
+    if (!matches || matches.length === 0) {
+      console.log(`[getSeatingInfo] RA ${normalizedRA} not in in-memory cache, checking Redis directly...`);
+      try {
+        const redisUrl = process.env.UPSTASH_REDIS__KV_REST_API_URL || 
+                         process.env.UPSTASH_REDIS_REST_URL || 
+                         process.env.REDIS_REST_URL || 
+                         process.env.KV_REST_API_URL;
+        const redisToken = process.env.UPSTASH_REDIS__KV_REST_API_TOKEN || 
+                           process.env.UPSTASH_REDIS_REST_TOKEN || 
+                           process.env.REDIS_REST_TOKEN || 
+                           process.env.KV_REST_API_TOKEN;
+        
+        if (redisUrl && redisToken) {
+          // Normalize date format for cache key
+          let cacheKey = date || 'any';
+          if (date && date !== 'any') {
+            if (date.includes('-')) {
+              const parts = date.split(/[-\/]/);
+              if (parts.length === 3) {
+                if (parts[0].length === 4) {
+                  cacheKey = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                } else {
+                  cacheKey = `${parts[0]}/${parts[1]}/${parts[2]}`;
+                }
+              }
+            }
+          }
+          
+          const { Redis } = await import('@upstash/redis');
+          const redis = new Redis({ url: redisUrl, token: redisToken });
+          const redisKey = `campus_cache:${cacheKey}`;
+          const cachedData = await redis.get(redisKey);
+          
+          if (cachedData && cachedData.data) {
+            const redisDataMap = new Map();
+            if (cachedData.data && typeof cachedData.data === 'object') {
+              for (const [ra, matchArray] of Object.entries(cachedData.data)) {
+                redisDataMap.set(ra, matchArray);
+              }
+            }
+            
+            // Check if RA exists in Redis cache
+            const redisMatches = redisDataMap.get(normalizedRA);
+            if (redisMatches && redisMatches.length > 0) {
+              console.log(`[getSeatingInfo] ✅ Found RA ${normalizedRA} in Redis cache (${redisDataMap.size} RAs), updating in-memory cache`);
+              
+              // Update in-memory cache with Redis data
+              allCampusDataCache = {
+                timestamp: cachedData.timestamp || Date.now(),
+                date: cacheKey,
+                data: redisDataMap,
+              };
+              
+              // Restore allCampusData from updated cache
+              allCampusData = redisDataMap;
+              cacheExists = true;
+              cacheSize = redisDataMap.size;
+              matches = redisMatches;
+            } else {
+              console.log(`[getSeatingInfo] RA ${normalizedRA} also not found in Redis cache`);
+            }
+          }
+        }
+      } catch (redisError) {
+        console.warn(`[getSeatingInfo] Error checking Redis directly:`, redisError.message);
+      }
+    }
     
     if (matches && matches.length > 0) {
       console.log(`[getSeatingInfo] ✅ Found RA ${normalizedRA} in global cache (${matches.length} matches)`);
