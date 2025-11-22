@@ -427,6 +427,10 @@ export default function SeatFinder() {
             } else if (formattedRoom.startsWith('TPVPT-')) {
               formattedRoom = formattedRoom.replace('TPVPT-', 'VPT-');
               buildingName = VPT_BUILDING_NAME;
+            } else if (formattedRoom.startsWith('TP-2VPT-') || formattedRoom.startsWith('TP2VPT-')) {
+              // TP-2VPT-217 -> VPT-217 (VPT rooms in Tech Park 2)
+              formattedRoom = formattedRoom.replace(/^TP-?2VPT-/i, 'VPT-');
+              buildingName = VPT_BUILDING_NAME;
             } else if (formattedRoom.startsWith('VPT-')) {
               buildingName = VPT_BUILDING_NAME;
             }
