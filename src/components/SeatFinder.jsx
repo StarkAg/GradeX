@@ -772,6 +772,7 @@ export default function SeatFinder() {
       minHeight: isMobile ? 'auto' : 'calc(100vh - 60px)',
       fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       overflowX: 'hidden',
+      overflowY: 'visible',
       boxSizing: 'border-box'
     }}>
       <div style={{
@@ -783,7 +784,8 @@ export default function SeatFinder() {
         margin: '0 auto',
         transition: 'all 0.5s ease-in-out',
         boxSizing: 'border-box',
-        overflowX: 'hidden'
+        overflowX: 'hidden',
+        overflowY: 'visible'
       }}>
         {/* Form Card */}
         <div style={{
@@ -1865,7 +1867,7 @@ export default function SeatFinder() {
             animation: hasSeatInfo ? 'fadeIn 0.5s ease-in-out' : 'none',
             minWidth: 0,
             boxSizing: 'border-box',
-            overflowX: 'hidden'
+            overflow: 'visible'
           }}>
             <div style={{
               position: 'sticky',
@@ -1876,10 +1878,9 @@ export default function SeatFinder() {
               padding: '28px',
               boxShadow: '0 12px 32px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
               boxSizing: 'border-box',
-              overflowX: 'hidden',
+              overflow: 'visible',
               width: '100%',
-              maxWidth: '100%',
-              position: 'relative'
+              maxWidth: '100%'
             }}>
               <div style={{
                 display: 'flex',
