@@ -139,8 +139,8 @@ export default async function handler(req, res) {
         use_live_api: use_live_api === true,
         error_message: error_message || null,
         student_name: student_name || null,
-        rooms: Array.isArray(rooms) ? rooms : [],
-        venues: Array.isArray(venues) ? venues : [],
+        rooms: Array.isArray(rooms) ? rooms : (rooms ? [rooms] : []),
+        venues: Array.isArray(venues) ? venues : (venues ? [venues] : []),
         ip_address: ip_address || null,
         user_agent: user_agent || null,
         created_at: searchedAtUTC, // Store in UTC

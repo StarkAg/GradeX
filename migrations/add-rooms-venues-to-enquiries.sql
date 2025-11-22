@@ -10,8 +10,8 @@ ALTER TABLE enquiries
 ADD COLUMN IF NOT EXISTS venues TEXT[] DEFAULT '{}';
 
 -- Add comments for documentation
-COMMENT ON COLUMN enquiries.rooms IS 'Array of room numbers where student has exams (e.g., ["TP-401", "TP-1206"])';
-COMMENT ON COLUMN enquiries.venues IS 'Array of venue/building names (e.g., ["Tech Park", "Main Campus"])';
+COMMENT ON COLUMN enquiries.rooms IS 'Array with single room number where student has exam (e.g., ["TP-401"]) - one room per person';
+COMMENT ON COLUMN enquiries.venues IS 'Array with single venue/building name (e.g., ["Tech Park"]) - one venue per person';
 
 -- Verify the columns were added
 SELECT column_name, data_type, column_default

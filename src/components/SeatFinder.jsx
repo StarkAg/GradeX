@@ -571,9 +571,9 @@ export default function SeatFinder() {
   const logSuccess = (ra, selectedDate, seats) => {
     const campuses = Array.from(new Set(seats.map(seat => seat.campus || seat.building).filter(Boolean)));
     const studentName = seats[0]?.name || null;
-    // Extract unique rooms and venues
-    const rooms = Array.from(new Set(seats.map(seat => seat.room).filter(room => room && room !== '-')));
-    const venues = Array.from(new Set(seats.map(seat => seat.building).filter(venue => venue && venue !== '-')));
+    // Extract first room and venue only (one room per person)
+    const firstRoom = seats[0]?.room && seats[0].room !== '-' ? seats[0].room : null;
+    const firstVenue = seats[0]?.building && seats[0].building !== '-' ? seats[0].building : null;
     logEnquiry(
       ra,
       selectedDate,
@@ -582,8 +582,8 @@ export default function SeatFinder() {
       campuses,
       null,
       studentName,
-      rooms,
-      venues
+      firstRoom ? [firstRoom] : [],
+      firstVenue ? [firstVenue] : []
     );
   };
 
