@@ -26,6 +26,7 @@ export default function SeatFinder() {
   const [apiResults, setApiResults] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [easterEggMessage, setEasterEggMessage] = useState(null);
+  const [performanceTime, setPerformanceTime] = useState(null);
   const useLiveAPI = true;
   const autoRefreshIntervalRef = useRef(null);
   const digitsInputRef = useRef(null);
@@ -264,8 +265,12 @@ export default function SeatFinder() {
     }
   };
 
-  const updateSeatInfoWithSubjects = (seats) => {
+  const updateSeatInfoWithSubjects = (seats, startTime = null) => {
     setSeatInfo(seats);
+    if (startTime) {
+      const elapsed = Date.now() - startTime;
+      setPerformanceTime(elapsed);
+    }
     if (Array.isArray(seats) && seats.length > 0) {
       fetchSubjectNamesForSeats(seats);
     }
@@ -583,7 +588,7 @@ export default function SeatFinder() {
             console.error('❌ CRITICAL: Name is still "-" in final array!', seat);
           }
         });
-        updateSeatInfoWithSubjects(transformedSeats);
+        // Note: updateSeatInfoWithSubjects will be called in fetchSeatsForRequest
         setError(null);
         return { found: true, seats: transformedSeats }; // Return seats array
       } else {
@@ -628,12 +633,17 @@ export default function SeatFinder() {
     logEnquiry(ra, selectedDate, false, 0, [], message, null);
   };
 
-  const fetchSeatsForRequest = async (cacheKey, ra, selectedDate) => {
+  const fetchSeatsForRequest = async (cacheKey, ra, selectedDate, startTime = null) => {
     try {
       const liveResult = await fetchFromLiveAPI(ra, selectedDate);
       if (liveResult.found && liveResult.seats.length > 0) {
         sessionCacheRef.current.set(cacheKey, liveResult.seats);
         logSuccess(ra, selectedDate, liveResult.seats);
+        if (startTime) {
+          updateSeatInfoWithSubjects(liveResult.seats, startTime);
+        } else {
+          updateSeatInfoWithSubjects(liveResult.seats);
+        }
         return liveResult.seats;
       }
 
@@ -677,7 +687,8 @@ export default function SeatFinder() {
 
     if (sessionCacheRef.current.has(cacheKey)) {
       const cachedSeats = sessionCacheRef.current.get(cacheKey);
-      updateSeatInfoWithSubjects(cachedSeats);
+      const startTime = Date.now();
+      updateSeatInfoWithSubjects(cachedSeats, startTime);
       setError(null);
       return;
     }
@@ -696,8 +707,10 @@ export default function SeatFinder() {
     setError(null);
     setSeatInfo(null);
     setApiResults(null);
+    setPerformanceTime(null);
+    const searchStartTime = Date.now();
 
-    const fetchPromise = fetchSeatsForRequest(cacheKey, trimmedRA, selectedDate)
+    const fetchPromise = fetchSeatsForRequest(cacheKey, trimmedRA, selectedDate, searchStartTime)
       .catch(err => {
         console.error('Error fetching seat data:', err);
         const message = err?.message || 'Failed to fetch seat information. Please try again.';
@@ -1820,6 +1833,21 @@ export default function SeatFinder() {
                 </div>
               );
               })}
+              {performanceTime !== null && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: isMobile ? '12px' : 'clamp(10px, 2vw, 12px)',
+                  right: isMobile ? '12px' : 'clamp(10px, 2vw, 12px)',
+                  fontSize: isMobile ? '10px' : 'clamp(9px, 1.8vw, 11px)',
+                  color: 'var(--text-secondary)',
+                  opacity: 0.7,
+                  fontWeight: 500,
+                  fontFamily: 'monospace',
+                  pointerEvents: 'none'
+                }}>
+                  {performanceTime}ms
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1849,7 +1877,8 @@ export default function SeatFinder() {
               boxSizing: 'border-box',
               overflowX: 'hidden',
               width: '100%',
-              maxWidth: '100%'
+              maxWidth: '100%',
+              position: 'relative'
             }}>
               <div style={{
                 display: 'flex',
@@ -2279,6 +2308,21 @@ export default function SeatFinder() {
                 </div>
               );
               })}
+              {performanceTime !== null && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: '12px',
+                  right: '12px',
+                  fontSize: '11px',
+                  color: 'var(--text-secondary)',
+                  opacity: 0.7,
+                  fontWeight: 500,
+                  fontFamily: 'monospace',
+                  pointerEvents: 'none'
+                }}>
+                  {performanceTime}ms
+                </div>
+              )}
             </div>
           </div>
         )}
