@@ -1286,7 +1286,7 @@ body {
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  text-align: left;
+  text-align: center;
   padding: 12px 10px;
   border-bottom: 1px solid var(--border-color);
 }
@@ -1294,6 +1294,7 @@ body {
 .admin-table td {
   padding: 12px 10px;
   font-size: 13px;
+  text-align: center;
 }
 
 .admin-table tbody tr {
