@@ -272,7 +272,7 @@ export default function SeatFinder() {
   };
 
   // Log user enquiry to Supabase for analytics
-  const logEnquiry = async (registerNumber, searchDate, resultsFound, resultCount, campuses, errorMessage = null, studentName = null) => {
+  const logEnquiry = async (registerNumber, searchDate, resultsFound, resultCount, campuses, errorMessage = null, studentName = null, rooms = [], venues = []) => {
     try {
       // Don't block the UI - log in background
       const response = await fetch('/api/log-enquiry', {
@@ -289,6 +289,8 @@ export default function SeatFinder() {
           use_live_api: useLiveAPI,
           error_message: errorMessage,
           student_name: studentName,
+          rooms: rooms,
+          venues: venues,
         }),
       });
       
@@ -569,6 +571,9 @@ export default function SeatFinder() {
   const logSuccess = (ra, selectedDate, seats) => {
     const campuses = Array.from(new Set(seats.map(seat => seat.campus || seat.building).filter(Boolean)));
     const studentName = seats[0]?.name || null;
+    // Extract unique rooms and venues
+    const rooms = Array.from(new Set(seats.map(seat => seat.room).filter(room => room && room !== '-')));
+    const venues = Array.from(new Set(seats.map(seat => seat.building).filter(venue => venue && venue !== '-')));
     logEnquiry(
       ra,
       selectedDate,
@@ -576,7 +581,9 @@ export default function SeatFinder() {
       seats.length,
       campuses,
       null,
-      studentName
+      studentName,
+      rooms,
+      venues
     );
   };
 

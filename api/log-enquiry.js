@@ -49,6 +49,8 @@ export default async function handler(req, res) {
       use_live_api = true,
       error_message = null,
       student_name = null,
+      rooms = [],
+      venues = [],
     } = req.body;
     
     // Bot protection check (with RA for pattern detection)
@@ -84,6 +86,8 @@ export default async function handler(req, res) {
       campuses,
       use_live_api,
       student_name,
+      rooms,
+      venues,
     });
     
     // Validate required fields
@@ -135,6 +139,8 @@ export default async function handler(req, res) {
         use_live_api: use_live_api === true,
         error_message: error_message || null,
         student_name: student_name || null,
+        rooms: Array.isArray(rooms) ? rooms : [],
+        venues: Array.isArray(venues) ? venues : [],
         ip_address: ip_address || null,
         user_agent: user_agent || null,
         created_at: searchedAtUTC, // Store in UTC

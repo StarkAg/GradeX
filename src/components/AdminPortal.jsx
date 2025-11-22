@@ -194,6 +194,8 @@ export default function AdminPortal() {
                       <th>Time (IST)</th>
                       <th>Status</th>
                       <th>Results</th>
+                      <th>Rooms</th>
+                      <th>Venues</th>
                       <th>Campuses</th>
                     </tr>
                   </thead>
@@ -211,6 +213,24 @@ export default function AdminPortal() {
                           </span>
                         </td>
                         <td>{enquiry.result_count || 0}</td>
+                        <td className="campus-cell">
+                          {(enquiry.rooms || []).length === 0
+                            ? '-'
+                            : enquiry.rooms.map((room) => (
+                                <span key={room} className="admin-badge campus" style={{ marginRight: '4px', marginBottom: '4px', display: 'inline-block' }}>
+                                  {room}
+                                </span>
+                              ))}
+                        </td>
+                        <td className="campus-cell">
+                          {(enquiry.venues || []).length === 0
+                            ? '-'
+                            : enquiry.venues.map((venue) => (
+                                <span key={venue} className="admin-badge campus" style={{ marginRight: '4px', marginBottom: '4px', display: 'inline-block' }}>
+                                  {venue}
+                                </span>
+                              ))}
+                        </td>
                         <td className="campus-cell">
                           {(enquiry.campuses || []).length === 0
                             ? '-'
