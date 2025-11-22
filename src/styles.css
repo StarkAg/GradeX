@@ -1433,14 +1433,56 @@ body {
   }
 
   .admin-table table {
-    min-width: 800px;
+    min-width: 900px;
+    table-layout: auto;
   }
 
   .admin-table th,
   .admin-table td {
-    font-size: 11px;
-    padding: 10px 8px;
+    font-size: 10px;
+    padding: 8px 4px;
     white-space: nowrap;
+  }
+  
+  .admin-table th:nth-child(1),
+  .admin-table td:nth-child(1) {
+    min-width: 50px;
+    max-width: 60px;
+  }
+  
+  .admin-table th:nth-child(2),
+  .admin-table td:nth-child(2) {
+    min-width: 120px;
+  }
+  
+  .admin-table th:nth-child(3),
+  .admin-table td:nth-child(3) {
+    min-width: 100px;
+    max-width: 120px;
+  }
+  
+  .admin-table th:nth-child(4),
+  .admin-table td:nth-child(4) {
+    min-width: 90px;
+  }
+  
+  .admin-table th:nth-child(5),
+  .admin-table td:nth-child(5) {
+    min-width: 110px;
+  }
+  
+  .admin-table th:nth-child(6),
+  .admin-table td:nth-child(6) {
+    min-width: 70px;
+  }
+  
+  .admin-table th:nth-child(7),
+  .admin-table td:nth-child(7),
+  .admin-table th:nth-child(8),
+  .admin-table td:nth-child(8),
+  .admin-table th:nth-child(9),
+  .admin-table td:nth-child(9) {
+    min-width: 80px;
   }
 
   .admin-table th:nth-child(1),
@@ -1475,16 +1517,17 @@ body {
   }
 
   .admin-table .mono {
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .admin-table .timestamp {
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .admin-badge {
-    font-size: 10px;
-    padding: 3px 6px;
+    font-size: 9px;
+    padding: 2px 5px;
+    white-space: nowrap;
   }
 
   .campus-cell {
@@ -1503,8 +1546,53 @@ body {
 
   .admin-table th,
   .admin-table td {
-    font-size: 10px;
-    padding: 8px 6px;
+    font-size: 9px;
+    padding: 6px 3px;
+  }
+  
+  .admin-table table {
+    min-width: 850px;
+  }
+  
+  .admin-table th:nth-child(1),
+  .admin-table td:nth-child(1) {
+    min-width: 45px;
+    max-width: 55px;
+  }
+  
+  .admin-table th:nth-child(2),
+  .admin-table td:nth-child(2) {
+    min-width: 110px;
+  }
+  
+  .admin-table th:nth-child(3),
+  .admin-table td:nth-child(3) {
+    min-width: 90px;
+    max-width: 110px;
+  }
+  
+  .admin-table th:nth-child(4),
+  .admin-table td:nth-child(4) {
+    min-width: 80px;
+  }
+  
+  .admin-table th:nth-child(5),
+  .admin-table td:nth-child(5) {
+    min-width: 100px;
+  }
+  
+  .admin-table th:nth-child(6),
+  .admin-table td:nth-child(6) {
+    min-width: 65px;
+  }
+  
+  .admin-table th:nth-child(7),
+  .admin-table td:nth-child(7),
+  .admin-table th:nth-child(8),
+  .admin-table td:nth-child(8),
+  .admin-table th:nth-child(9),
+  .admin-table td:nth-child(9) {
+    min-width: 70px;
   }
 
 }
