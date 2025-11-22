@@ -26,10 +26,14 @@ This creates the `enquiries` table with:
 - `results_found`: Whether results were found
 - `result_count`: Number of seats found
 - `campuses`: Array of campus names with results
+- `rooms`: Array of room numbers (e.g., ["TP-401", "TP-1206"])
+- `venues`: Array of venue/building names (e.g., ["Tech Park", "Main Campus"])
 - `use_live_api`: Whether live API or static data was used
 - `error_message`: Any error that occurred
 - `ip_address`: User's IP (optional, for analytics)
 - `user_agent`: Browser info (optional, for analytics)
+
+**Note:** If you already have the `enquiries` table, run the migration script `migrations/add-rooms-venues-to-enquiries.sql` to add the `rooms` and `venues` columns.
 
 ## Step 2: Verify Setup
 
