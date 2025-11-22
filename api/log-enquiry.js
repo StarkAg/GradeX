@@ -146,7 +146,7 @@ export default async function handler(req, res) {
         rooms: Array.isArray(rooms) ? rooms : (rooms ? [rooms] : []),
         venues: Array.isArray(venues) ? venues : (venues ? [venues] : []),
         floors: Array.isArray(floors) ? floors : (floors ? [floors] : []),
-        performance_time: performance_time !== null && performance_time !== undefined ? parseInt(performance_time) : null,
+        performance_time: performance_time !== null && performance_time !== undefined ? parseInt(performance_time, 10) : null,
         ip_address: ip_address || null,
         user_agent: user_agent || null,
         created_at: searchedAtUTC, // Store in UTC

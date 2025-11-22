@@ -279,6 +279,12 @@ export default function SeatFinder() {
   // Log user enquiry to Supabase for analytics
   const logEnquiry = async (registerNumber, searchDate, resultsFound, resultCount, campuses, errorMessage = null, studentName = null, rooms = [], venues = [], floors = [], performanceTime = null) => {
     try {
+      console.log('📊 Logging enquiry with performance time:', {
+        registerNumber,
+        searchDate,
+        performanceTime,
+        performanceTimeType: typeof performanceTime
+      });
       // Don't block the UI - log in background
       const response = await fetch('/api/log-enquiry', {
         method: 'POST',
@@ -639,6 +645,7 @@ export default function SeatFinder() {
     try {
       const liveResult = await fetchFromLiveAPI(ra, selectedDate);
       const performanceTime = startTime ? Date.now() - startTime : null;
+      console.log('📊 Live API result performance time:', performanceTime, 'ms');
       
       if (liveResult.found && liveResult.seats.length > 0) {
         sessionCacheRef.current.set(cacheKey, liveResult.seats);
@@ -654,6 +661,7 @@ export default function SeatFinder() {
       const message = 'No seating information found for this register number and date.';
       setSeatInfo(null);
       setError(message);
+      console.log('📊 No results performance time:', performanceTime, 'ms');
       logFailure(ra, selectedDate, message, performanceTime);
       return [];
     } catch (err) {
@@ -661,6 +669,7 @@ export default function SeatFinder() {
       const performanceTime = startTime ? Date.now() - startTime : null;
       setSeatInfo(null);
       setError(message);
+      console.log('📊 Error performance time:', performanceTime, 'ms');
       logFailure(ra, selectedDate, message, performanceTime);
       return [];
     }
@@ -687,15 +696,17 @@ export default function SeatFinder() {
       setEasterEggMessage('Mogger!!');
     }
     
+    // Set search start time BEFORE cache check to measure actual performance
+    const searchStartTime = Date.now();
     const selectedDate = getSelectedDate();
     const cacheKey = buildCacheKey(trimmedRA, selectedDate);
 
     if (sessionCacheRef.current.has(cacheKey)) {
       const cachedSeats = sessionCacheRef.current.get(cacheKey);
-      const startTime = Date.now();
-      const performanceTime = Date.now() - startTime; // Very fast for cached results
+      const performanceTime = Date.now() - searchStartTime; // Measure from search start
+      console.log('📊 Cached result performance time:', performanceTime, 'ms');
       logSuccess(trimmedRA, selectedDate, cachedSeats, performanceTime);
-      updateSeatInfoWithSubjects(cachedSeats, startTime);
+      updateSeatInfoWithSubjects(cachedSeats, searchStartTime);
       setError(null);
       return;
     }
@@ -715,7 +726,6 @@ export default function SeatFinder() {
     setSeatInfo(null);
     setApiResults(null);
     setPerformanceTime(null);
-    const searchStartTime = Date.now();
 
     const fetchPromise = fetchSeatsForRequest(cacheKey, trimmedRA, selectedDate, searchStartTime)
       .catch(err => {

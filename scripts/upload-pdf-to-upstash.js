@@ -214,7 +214,7 @@ function convertToCacheFormat(students) {
       campus: student.building || PDF_CAMPUS,
       url: url
     });
-  }
+      }
   
   return raMatchesMap;
 }
@@ -321,7 +321,7 @@ async function main() {
       if (!seen.has(student.registerNumber)) {
         seen.add(student.registerNumber);
         uniqueStudents.push(student);
-      }
+    }
     }
     console.log(`✓ ${uniqueStudents.length} unique students after deduplication`);
     
