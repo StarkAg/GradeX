@@ -10,7 +10,7 @@ const toProperCase = (name) => {
     .join(' ');
 };
 
-const REFRESH_INTERVAL_MS = 15000;
+const REFRESH_INTERVAL_MS = 5000; // 5 seconds - minimum safe interval
 const PAGE_SIZE = 50;
 const MAX_ENTRIES = 500;
 
@@ -35,6 +35,13 @@ export default function AdminPortal() {
 
   const fetchEnquiries = useCallback(async (showSpinner = false, nextPage) => {
     const targetPage = Math.max(nextPage ?? pageRef.current ?? 1, 1);
+    
+    // Skip if already fetching (prevent overlapping requests)
+    if (isFetchingRef.current && !showSpinner) {
+      return;
+    }
+    
+    isFetchingRef.current = true;
     if (showSpinner) {
       setLoading(true);
     } else {
@@ -76,6 +83,7 @@ export default function AdminPortal() {
     } catch (err) {
       setError(err.message || 'Unable to load enquiries');
     } finally {
+      isFetchingRef.current = false;
       if (showSpinner) {
         setLoading(false);
       } else {
