@@ -218,12 +218,12 @@ export default function AdminPortal() {
                             ? '-'
                             : enquiry.rooms[0]}
                         </td>
-                        <td>
+                        <td className="mono">
                           {(enquiry.venues || []).length === 0
                             ? '-'
                             : enquiry.venues[0]}
                         </td>
-                        <td>
+                        <td className="mono">
                           {(enquiry.floors || []).length === 0
                             ? '-'
                             : enquiry.floors[0]}
