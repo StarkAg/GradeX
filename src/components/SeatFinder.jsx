@@ -1390,7 +1390,8 @@ export default function SeatFinder() {
               background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(34, 197, 94, 0.08) 100%)',
               border: '1.5px solid rgba(34, 197, 94, 0.4)',
               borderRadius: '16px',
-              boxShadow: '0 8px 24px rgba(34, 197, 94, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+              boxShadow: '0 8px 24px rgba(34, 197, 94, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+              position: 'relative'
             }}>
               <div style={{
                 display: 'flex',
