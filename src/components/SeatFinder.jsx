@@ -700,7 +700,9 @@ export default function SeatFinder() {
       margin: '0 auto',
       padding: '0',
       minHeight: isMobile ? 'auto' : 'calc(100vh - 60px)',
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      overflowX: 'hidden',
+      boxSizing: 'border-box'
     }}>
       <div style={{
         display: isDesktop && hasSeatInfo ? 'flex' : 'block',
@@ -709,14 +711,18 @@ export default function SeatFinder() {
         padding: isMobile ? '20px 16px' : 'clamp(20px, 5vw, 40px) clamp(16px, 4vw, 20px)',
         maxWidth: isDesktop && hasSeatInfo ? '1200px' : '600px',
         margin: '0 auto',
-        transition: 'all 0.5s ease-in-out'
+        transition: 'all 0.5s ease-in-out',
+        boxSizing: 'border-box',
+        overflowX: 'hidden'
       }}>
         {/* Form Card */}
         <div style={{
           width: isDesktop && hasSeatInfo ? '48%' : '100%',
           flexShrink: 0,
           transition: 'all 0.5s ease-in-out',
-          transform: isDesktop && hasSeatInfo ? 'translateX(-10%)' : 'translateX(0)'
+          transform: isDesktop && hasSeatInfo ? 'translateX(0)' : 'translateX(0)',
+          minWidth: 0,
+          boxSizing: 'border-box'
         }}>
           {/* Header */}
           {(!isDesktop || !hasSeatInfo) && (
@@ -1751,7 +1757,10 @@ export default function SeatFinder() {
             opacity: hasSeatInfo ? 1 : 0,
             transform: hasSeatInfo ? 'translateX(0)' : 'translateX(20px)',
             transition: 'all 0.5s ease-in-out',
-            animation: hasSeatInfo ? 'fadeIn 0.5s ease-in-out' : 'none'
+            animation: hasSeatInfo ? 'fadeIn 0.5s ease-in-out' : 'none',
+            minWidth: 0,
+            boxSizing: 'border-box',
+            overflowX: 'hidden'
           }}>
             <div style={{
               position: 'sticky',
@@ -1760,7 +1769,11 @@ export default function SeatFinder() {
               border: '1.5px solid rgba(34, 197, 94, 0.4)',
               borderRadius: '16px',
               padding: '28px',
-              boxShadow: '0 12px 32px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+              boxShadow: '0 12px 32px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+              boxSizing: 'border-box',
+              overflowX: 'hidden',
+              width: '100%',
+              maxWidth: '100%'
             }}>
               <div style={{
                 display: 'flex',
@@ -1818,16 +1831,23 @@ export default function SeatFinder() {
                   gap: '20px',
                   flexDirection: hasImage ? 'row' : 'column',
                   alignItems: 'center',
-                  textAlign: 'center'
+                  textAlign: 'center',
+                  boxSizing: 'border-box',
+                  width: '100%',
+                  maxWidth: '100%',
+                  overflow: 'hidden'
                 }}>
                   {hasImage ? (() => {
                     if (hasMainCampus) {
                       return (
                         <div style={{
                           flexShrink: 0,
-                          width: '180px',
+                          width: 'clamp(120px, 100%, 180px)',
+                          maxWidth: '180px',
+                          minWidth: '120px',
                           textAlign: 'center',
-                          position: 'relative'
+                          position: 'relative',
+                          boxSizing: 'border-box'
                         }}>
                           <img 
                             src="/MC.jpg" 
@@ -1860,9 +1880,12 @@ export default function SeatFinder() {
                       return (
                         <div style={{
                           flexShrink: 0,
-                          width: '180px',
+                          width: 'clamp(120px, 100%, 180px)',
+                          maxWidth: '180px',
+                          minWidth: '120px',
                           textAlign: 'center',
-                          position: 'relative'
+                          position: 'relative',
+                          boxSizing: 'border-box'
                         }}>
                           <img 
                             src="/VPT.JPG" 
@@ -1895,9 +1918,12 @@ export default function SeatFinder() {
                       return (
                         <div style={{
                           flexShrink: 0,
-                          width: '180px',
+                          width: 'clamp(120px, 100%, 180px)',
+                          maxWidth: '180px',
+                          minWidth: '120px',
                           textAlign: 'center',
-                          position: 'relative'
+                          position: 'relative',
+                          boxSizing: 'border-box'
                         }}>
                           <img 
                             src="/TP2.JPG" 
@@ -1930,9 +1956,12 @@ export default function SeatFinder() {
                       return (
                         <div style={{
                           flexShrink: 0,
-                          width: '180px',
+                          width: 'clamp(120px, 100%, 180px)',
+                          maxWidth: '180px',
+                          minWidth: '120px',
                           textAlign: 'center',
-                          position: 'relative'
+                          position: 'relative',
+                          boxSizing: 'border-box'
                         }}>
                           <img 
                             src="/TP.jpg" 
@@ -1965,9 +1994,12 @@ export default function SeatFinder() {
                       return (
                         <div style={{
                           flexShrink: 0,
-                          width: '180px',
+                          width: 'clamp(120px, 100%, 180px)',
+                          maxWidth: '180px',
+                          minWidth: '120px',
                           textAlign: 'center',
-                          position: 'relative'
+                          position: 'relative',
+                          boxSizing: 'border-box'
                         }}>
                           <img 
                             src="/UB.png" 
