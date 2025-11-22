@@ -457,9 +457,22 @@ export default function SeatFinder() {
                   const firstDigit = parseInt(numStr.charAt(0));
                   floorNumber = formatFloorNumber(firstDigit);
                 } else if (formattedRoom.startsWith('TP-')) {
-                  // For TP-401, the first digit is the floor (4)
-                  const firstDigit = parseInt(numStr.charAt(0));
-                  floorNumber = formatFloorNumber(firstDigit);
+                  // For TP rooms: TP-401 -> 4th floor, TP-1206 -> 12th floor
+                  // Check if it's a 4-digit number (like 1206) - first 2 digits are floor
+                  // Or 3-digit number (like 401) - first digit is floor
+                  if (numStr.length >= 4) {
+                    // 4-digit: TP-1206 -> floor 12
+                    const firstTwo = parseInt(numStr.substring(0, 2));
+                    floorNumber = formatFloorNumber(firstTwo);
+                  } else if (numStr.length === 3) {
+                    // 3-digit: TP-401 -> floor 4
+                    const firstDigit = parseInt(numStr.charAt(0));
+                    floorNumber = formatFloorNumber(firstDigit);
+                  } else {
+                    // 1-2 digit: use first digit
+                    const firstDigit = parseInt(numStr.charAt(0));
+                    floorNumber = formatFloorNumber(firstDigit);
+                  }
                 } else {
                   // For 1504 (pure number), first two digits might be floor (15)
                   if (numStr.length >= 2) {
