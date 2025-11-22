@@ -431,13 +431,19 @@ export default function SeatFinder() {
               buildingName = VPT_BUILDING_NAME;
             }
             
-            // Remove TP-2 or TP2 prefix from LH/LS/CLS rooms (e.g., TP-2LH1005 -> LH1005)
-            if (formattedRoom.match(/^TP-?2?(LH|LS|CLS)/i)) {
-              formattedRoom = formattedRoom.replace(/^TP-?2?/i, '');
+            // Handle TP-2 rooms (Tech Park 2)
+            // TP-2L1401-2 -> keep as TP-2L1401-2 (don't strip), TP-2LH1005 -> LH1005, TP-2CLS1019 -> CLS1019
+            if (formattedRoom.match(/^TP-?2(LH|LS|CLS)/i)) {
+              // Strip TP-2 prefix for LH/LS/CLS rooms
+              formattedRoom = formattedRoom.replace(/^TP-?2/i, '');
+              buildingName = 'Tech Park 2';
+            } else if (formattedRoom.startsWith('TP2') || formattedRoom.startsWith('TP-2')) {
+              // Any TP2 or TP-2 room is Tech Park 2 (keep room name as-is for display)
+              buildingName = 'Tech Park 2';
             }
             
-            // CLS, LS, and LH rooms are in Tech Park 2
-            if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS') || formattedRoom.startsWith('LH')) {
+            // CLS, LS, LH, and L rooms are in Tech Park 2
+            if (formattedRoom.startsWith('CLS') || formattedRoom.startsWith('LS') || formattedRoom.startsWith('LH') || formattedRoom.startsWith('L')) {
               buildingName = 'Tech Park 2';
             }
             
@@ -1386,8 +1392,9 @@ export default function SeatFinder() {
                 const originalHallUpper = seat.context && typeof seat.context === 'string' ? seat.context.toUpperCase() : '';
                 const hasTPVPT = originalHallUpper.includes('TPVPT') || roomUpper.includes('VPT') || roomUpper.includes('TPVPT');
                 const hasCLSorLSorLH = roomUpper.startsWith('CLS') || roomUpper.startsWith('LS') || roomUpper.startsWith('LH');
+                const hasTP2 = roomUpper.startsWith('TP-2') || roomUpper.startsWith('TP2') || roomUpper.startsWith('L') || hasCLSorLSorLH;
                 const hasMainCampus = roomUpper.startsWith('H');
-                const hasImage = roomUpper && roomUpper.length > 0 && (roomUpper.startsWith('TP2') || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT || hasCLSorLSorLH || hasMainCampus);
+                const hasImage = roomUpper && roomUpper.length > 0 && (hasTP2 || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT || hasMainCampus);
                 
                 return (
                 <div key={index} style={{
@@ -1444,7 +1451,7 @@ export default function SeatFinder() {
                           />
                         </div>
                       );
-                    } else if (roomUpper.startsWith('TP2') || hasCLSorLSorLH) {
+                    } else if (hasTP2) {
                       return (
                         <div style={{
                           flexShrink: 0,
@@ -1840,8 +1847,9 @@ export default function SeatFinder() {
                 const originalHallUpper = seat.context && typeof seat.context === 'string' ? seat.context.toUpperCase() : '';
                 const hasTPVPT = originalHallUpper.includes('TPVPT') || roomUpper.includes('VPT') || roomUpper.includes('TPVPT');
                 const hasCLSorLSorLH = roomUpper.startsWith('CLS') || roomUpper.startsWith('LS') || roomUpper.startsWith('LH');
+                const hasTP2 = roomUpper.startsWith('TP-2') || roomUpper.startsWith('TP2') || roomUpper.startsWith('L') || hasCLSorLSorLH;
                 const hasMainCampus = roomUpper.startsWith('H');
-                const hasImage = roomUpper && roomUpper.length > 0 && (roomUpper.startsWith('TP2') || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT || hasCLSorLSorLH || hasMainCampus);
+                const hasImage = roomUpper && roomUpper.length > 0 && (hasTP2 || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT || hasMainCampus);
                 
                 return (
                 <div key={index} style={{
@@ -1938,7 +1946,7 @@ export default function SeatFinder() {
                           />
                         </div>
                       );
-                    } else if (roomUpper.startsWith('TP2') || hasCLSorLSorLH) {
+                    } else if (hasTP2) {
                       return (
                         <div style={{
                           flexShrink: 0,
