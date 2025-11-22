@@ -18,10 +18,16 @@ const __dirname = path.dirname(__filename);
 // Try to load environment variables from .env.local if it exists (for local testing)
 try {
   const dotenv = await import('dotenv');
-  const envPath = path.join(__dirname, '..', '.env.local');
-  if (fs.existsSync(envPath)) {
-    dotenv.config({ path: envPath });
+  const envLocalPath = path.join(__dirname, '..', '.env.local');
+  const envDevPath = path.join(__dirname, '..', '.env.development.local');
+  
+  if (fs.existsSync(envLocalPath)) {
+    dotenv.config({ path: envLocalPath });
     console.log('✓ Loaded environment variables from .env.local');
+  }
+  if (fs.existsSync(envDevPath)) {
+    dotenv.config({ path: envDevPath, override: false }); // Don't override existing vars
+    console.log('✓ Loaded environment variables from .env.development.local');
   }
 } catch (error) {
   // dotenv not installed or file doesn't exist - use process.env directly (Vercel runtime)
