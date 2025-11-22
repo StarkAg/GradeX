@@ -214,22 +214,32 @@ export default function AdminPortal() {
                         </td>
                         <td>{enquiry.result_count || 0}</td>
                         <td className="campus-cell">
-                          {(enquiry.rooms || []).length === 0
-                            ? '-'
-                            : enquiry.rooms.map((room) => (
-                                <span key={room} className="admin-badge campus" style={{ marginRight: '4px', marginBottom: '4px', display: 'inline-block' }}>
-                                  {room}
-                                </span>
-                              ))}
+                          {(() => {
+                            const rooms = (enquiry.rooms || []).filter(room => {
+                              // Filter out venue names (common venue names that shouldn't be in rooms)
+                              const venueNames = ['Tech Park', 'Tech Park 2', 'Main Campus', 'University Building', 'Valliammai Block Behind TP', 'Biotech & Architecture'];
+                              return room && !venueNames.includes(room);
+                            });
+                            // Show only first room (one room per person)
+                            const firstRoom = rooms[0];
+                            return firstRoom ? (
+                              <span className="admin-badge campus">
+                                {firstRoom}
+                              </span>
+                            ) : '-';
+                          })()}
                         </td>
                         <td className="campus-cell">
-                          {(enquiry.venues || []).length === 0
-                            ? '-'
-                            : enquiry.venues.map((venue) => (
-                                <span key={venue} className="admin-badge campus" style={{ marginRight: '4px', marginBottom: '4px', display: 'inline-block' }}>
-                                  {venue}
-                                </span>
-                              ))}
+                          {(() => {
+                            const venues = (enquiry.venues || []).filter(venue => venue && venue !== '-');
+                            // Show only first venue (one venue per person)
+                            const firstVenue = venues[0];
+                            return firstVenue ? (
+                              <span className="admin-badge campus">
+                                {firstVenue}
+                              </span>
+                            ) : '-';
+                          })()}
                         </td>
                         <td className="campus-cell">
                           {(enquiry.campuses || []).length === 0
