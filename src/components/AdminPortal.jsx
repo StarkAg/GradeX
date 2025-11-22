@@ -27,6 +27,7 @@ export default function AdminPortal() {
   const [totalFailed, setTotalFailed] = useState(0);
   const [totalFoundRate, setTotalFoundRate] = useState('0.0');
   const pageRef = useRef(1);
+  const isFetchingRef = useRef(false);
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(Math.max(1, boundedCount) / PAGE_SIZE)),
@@ -50,15 +51,19 @@ export default function AdminPortal() {
     setError(null);
 
     try {
-        const response = await fetch(`/api/admin-enquiries?page=${targetPage}&pageSize=${PAGE_SIZE}`, {
+      console.log('[AdminPortal] Fetching enquiries, page:', targetPage);
+      const response = await fetch(`/api/admin-enquiries?page=${targetPage}&pageSize=${PAGE_SIZE}`, {
         cache: 'no-store',
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[AdminPortal] API error:', response.status, errorText);
         throw new Error(`Failed to fetch enquiries (${response.status})`);
       }
 
       const payload = await response.json();
+      console.log('[AdminPortal] Received payload:', { status: payload.status, count: payload.count });
       if (payload.status !== 'success') {
         throw new Error(payload.error || 'Unexpected response from admin API');
       }
@@ -81,14 +86,17 @@ export default function AdminPortal() {
       pageRef.current = safePage;
       setLastUpdated(new Date());
     } catch (err) {
+      console.error('[AdminPortal] Fetch error:', err);
       setError(err.message || 'Unable to load enquiries');
-    } finally {
-      isFetchingRef.current = false;
+      // Make sure loading state is cleared even on error
       if (showSpinner) {
         setLoading(false);
       } else {
         setRefreshing(false);
       }
+    } finally {
+      isFetchingRef.current = false;
+      console.log('[AdminPortal] Fetch complete, isFetchingRef set to false');
     }
   }, []);
 
