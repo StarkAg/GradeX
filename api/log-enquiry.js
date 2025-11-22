@@ -51,6 +51,7 @@ export default async function handler(req, res) {
       student_name = null,
       rooms = [],
       venues = [],
+      floors = [],
     } = req.body;
     
     // Bot protection check (with RA for pattern detection)
@@ -88,6 +89,7 @@ export default async function handler(req, res) {
       student_name,
       rooms,
       venues,
+      floors,
     });
     
     // Validate required fields
@@ -141,6 +143,7 @@ export default async function handler(req, res) {
         student_name: student_name || null,
         rooms: Array.isArray(rooms) ? rooms : (rooms ? [rooms] : []),
         venues: Array.isArray(venues) ? venues : (venues ? [venues] : []),
+        floors: Array.isArray(floors) ? floors : (floors ? [floors] : []),
         ip_address: ip_address || null,
         user_agent: user_agent || null,
         created_at: searchedAtUTC, // Store in UTC

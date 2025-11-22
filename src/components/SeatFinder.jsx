@@ -272,7 +272,7 @@ export default function SeatFinder() {
   };
 
   // Log user enquiry to Supabase for analytics
-  const logEnquiry = async (registerNumber, searchDate, resultsFound, resultCount, campuses, errorMessage = null, studentName = null, rooms = [], venues = []) => {
+  const logEnquiry = async (registerNumber, searchDate, resultsFound, resultCount, campuses, errorMessage = null, studentName = null, rooms = [], venues = [], floors = []) => {
     try {
       // Don't block the UI - log in background
       const response = await fetch('/api/log-enquiry', {
@@ -291,6 +291,7 @@ export default function SeatFinder() {
           student_name: studentName,
           rooms: rooms,
           venues: venues,
+          floors: floors,
         }),
       });
       
@@ -571,9 +572,11 @@ export default function SeatFinder() {
   const logSuccess = (ra, selectedDate, seats) => {
     const campuses = Array.from(new Set(seats.map(seat => seat.campus || seat.building).filter(Boolean)));
     const studentName = seats[0]?.name || null;
-    // Extract first room and venue only (one room per person)
-    const firstRoom = seats[0]?.room && seats[0].room !== '-' ? seats[0].room : null;
-    const firstVenue = seats[0]?.building && seats[0].building !== '-' ? seats[0].building : null;
+    // Extract first room, venue, and floor only (one room per person)
+    const firstSeat = seats[0];
+    const firstRoom = firstSeat?.room && firstSeat.room !== '-' ? firstSeat.room : null;
+    const firstVenue = firstSeat?.building && firstSeat.building !== '-' ? firstSeat.building : null;
+    const firstFloor = firstSeat?.floor && firstSeat.floor !== '-' ? firstSeat.floor : null;
     logEnquiry(
       ra,
       selectedDate,
@@ -583,7 +586,8 @@ export default function SeatFinder() {
       null,
       studentName,
       firstRoom ? [firstRoom] : [],
-      firstVenue ? [firstVenue] : []
+      firstVenue ? [firstVenue] : [],
+      firstFloor ? [firstFloor] : []
     );
   };
 

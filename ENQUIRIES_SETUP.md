@@ -26,8 +26,9 @@ This creates the `enquiries` table with:
 - `results_found`: Whether results were found
 - `result_count`: Number of seats found
 - `campuses`: Array of campus names with results
-- `rooms`: Array of room numbers (e.g., ["TP-401", "TP-1206"])
-- `venues`: Array of venue/building names (e.g., ["Tech Park", "Main Campus"])
+- `rooms`: Array with single room number (e.g., ["TP-401"]) - one room per person
+- `venues`: Array with single venue/building name (e.g., ["Tech Park"]) - one venue per person
+- `floors`: Array with single floor number (e.g., ["4th"]) - one floor per person
 - `use_live_api`: Whether live API or static data was used
 - `error_message`: Any error that occurred
 - `ip_address`: User's IP (optional, for analytics)
