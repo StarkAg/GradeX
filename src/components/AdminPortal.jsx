@@ -52,9 +52,25 @@ export default function AdminPortal() {
 
     try {
       console.log('[AdminPortal] Fetching enquiries, page:', targetPage);
-      const response = await fetch(`/api/admin-enquiries?page=${targetPage}&pageSize=${PAGE_SIZE}`, {
-        cache: 'no-store',
-      });
+      
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
+      let response;
+      try {
+        response = await fetch(`/api/admin-enquiries?page=${targetPage}&pageSize=${PAGE_SIZE}`, {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Request timed out. Please try again.');
+        }
+        throw fetchError;
+      }
 
       if (!response.ok) {
         const errorText = await response.text();
