@@ -104,15 +104,15 @@ export default function AdminPortal() {
     } catch (err) {
       console.error('[AdminPortal] Fetch error:', err);
       setError(err.message || 'Unable to load enquiries');
-      // Make sure loading state is cleared even on error
+    } finally {
+      // Always clear loading state and fetching flag
+      isFetchingRef.current = false;
       if (showSpinner) {
         setLoading(false);
       } else {
         setRefreshing(false);
       }
-    } finally {
-      isFetchingRef.current = false;
-      console.log('[AdminPortal] Fetch complete, isFetchingRef set to false');
+      console.log('[AdminPortal] Fetch complete, loading states cleared');
     }
   }, []);
 
