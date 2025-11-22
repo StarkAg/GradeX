@@ -142,14 +142,6 @@ export default function AdminPortal() {
           </p>
         </div>
         <div className="admin-actions">
-          <button
-            className="feedfill-button"
-            type="button"
-            onClick={() => fetchEnquiries(true, page)}
-            disabled={refreshing}
-          >
-            {refreshing ? 'Refreshing…' : 'Manual Refresh'}
-          </button>
           {lastUpdated && (
             <span className="admin-last-updated">
               Last updated {formatIST(lastUpdated)}
