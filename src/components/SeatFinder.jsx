@@ -1841,14 +1841,23 @@ export default function SeatFinder() {
                   position: 'absolute',
                   bottom: isMobile ? '12px' : 'clamp(10px, 2vw, 12px)',
                   right: isMobile ? '12px' : 'clamp(10px, 2vw, 12px)',
+                  background: 'rgba(0, 0, 0, 0.4)',
+                  backdropFilter: 'blur(8px)',
+                  borderRadius: '8px',
+                  padding: isMobile ? '6px 10px' : 'clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 12px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   fontSize: isMobile ? '10px' : 'clamp(9px, 1.8vw, 11px)',
                   color: 'var(--text-secondary)',
-                  opacity: 0.7,
-                  fontWeight: 500,
+                  fontWeight: 600,
                   fontFamily: 'monospace',
-                  pointerEvents: 'none'
+                  pointerEvents: 'none',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
                 }}>
-                  {performanceTime}ms
+                  <span style={{ opacity: 0.8 }}>⚡</span>
+                  <span>{performanceTime}ms</span>
                 </div>
               )}
             </div>
@@ -2315,14 +2324,23 @@ export default function SeatFinder() {
                   position: 'absolute',
                   bottom: '12px',
                   right: '12px',
+                  background: 'rgba(0, 0, 0, 0.4)',
+                  backdropFilter: 'blur(8px)',
+                  borderRadius: '8px',
+                  padding: '8px 12px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   fontSize: '11px',
                   color: 'var(--text-secondary)',
-                  opacity: 0.7,
-                  fontWeight: 500,
+                  fontWeight: 600,
                   fontFamily: 'monospace',
-                  pointerEvents: 'none'
+                  pointerEvents: 'none',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
                 }}>
-                  {performanceTime}ms
+                  <span style={{ opacity: 0.8 }}>⚡</span>
+                  <span>{performanceTime}ms</span>
                 </div>
               )}
             </div>
