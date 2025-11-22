@@ -196,6 +196,7 @@ export default function AdminPortal() {
                       <th>Room</th>
                       <th>Venue</th>
                       <th>Floor</th>
+                      <th>Time (ms)</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -225,6 +226,11 @@ export default function AdminPortal() {
                           {(enquiry.floors || []).length === 0
                             ? '-'
                             : enquiry.floors[0]}
+                        </td>
+                        <td className="mono">
+                          {enquiry.performance_time !== null && enquiry.performance_time !== undefined
+                            ? `${enquiry.performance_time}ms`
+                            : '-'}
                         </td>
                       </tr>
                     ))}

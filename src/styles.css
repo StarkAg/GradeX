@@ -1481,7 +1481,9 @@ body {
   .admin-table th:nth-child(8),
   .admin-table td:nth-child(8),
   .admin-table th:nth-child(9),
-  .admin-table td:nth-child(9) {
+  .admin-table td:nth-child(9),
+  .admin-table th:nth-child(10),
+  .admin-table td:nth-child(10) {
     min-width: 80px;
   }
 
@@ -1551,7 +1553,7 @@ body {
   }
   
   .admin-table table {
-    min-width: 850px;
+    min-width: 950px;
   }
   
   .admin-table th:nth-child(1),
@@ -1591,7 +1593,9 @@ body {
   .admin-table th:nth-child(8),
   .admin-table td:nth-child(8),
   .admin-table th:nth-child(9),
-  .admin-table td:nth-child(9) {
+  .admin-table td:nth-child(9),
+  .admin-table th:nth-child(10),
+  .admin-table td:nth-child(10) {
     min-width: 70px;
   }
 

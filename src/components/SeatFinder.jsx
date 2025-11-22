@@ -277,7 +277,7 @@ export default function SeatFinder() {
   };
 
   // Log user enquiry to Supabase for analytics
-  const logEnquiry = async (registerNumber, searchDate, resultsFound, resultCount, campuses, errorMessage = null, studentName = null, rooms = [], venues = [], floors = []) => {
+  const logEnquiry = async (registerNumber, searchDate, resultsFound, resultCount, campuses, errorMessage = null, studentName = null, rooms = [], venues = [], floors = [], performanceTime = null) => {
     try {
       // Don't block the UI - log in background
       const response = await fetch('/api/log-enquiry', {
@@ -297,6 +297,7 @@ export default function SeatFinder() {
           rooms: rooms,
           venues: venues,
           floors: floors,
+          performance_time: performanceTime,
         }),
       });
       
@@ -607,7 +608,7 @@ export default function SeatFinder() {
 
   const buildCacheKey = (ra, date) => `${ra}|${date}`;
 
-  const logSuccess = (ra, selectedDate, seats) => {
+  const logSuccess = (ra, selectedDate, seats, performanceTime = null) => {
     const campuses = Array.from(new Set(seats.map(seat => seat.campus || seat.building).filter(Boolean)));
     const studentName = seats[0]?.name || null;
     // Extract first room, venue, and floor only (one room per person)
@@ -625,20 +626,23 @@ export default function SeatFinder() {
       studentName,
       firstRoom ? [firstRoom] : [],
       firstVenue ? [firstVenue] : [],
-      firstFloor ? [firstFloor] : []
+      firstFloor ? [firstFloor] : [],
+      performanceTime
     );
   };
 
-  const logFailure = (ra, selectedDate, message) => {
-    logEnquiry(ra, selectedDate, false, 0, [], message, null);
+  const logFailure = (ra, selectedDate, message, performanceTime = null) => {
+    logEnquiry(ra, selectedDate, false, 0, [], message, null, [], [], [], performanceTime);
   };
 
   const fetchSeatsForRequest = async (cacheKey, ra, selectedDate, startTime = null) => {
     try {
       const liveResult = await fetchFromLiveAPI(ra, selectedDate);
+      const performanceTime = startTime ? Date.now() - startTime : null;
+      
       if (liveResult.found && liveResult.seats.length > 0) {
         sessionCacheRef.current.set(cacheKey, liveResult.seats);
-        logSuccess(ra, selectedDate, liveResult.seats);
+        logSuccess(ra, selectedDate, liveResult.seats, performanceTime);
         if (startTime) {
           updateSeatInfoWithSubjects(liveResult.seats, startTime);
         } else {
@@ -650,13 +654,14 @@ export default function SeatFinder() {
       const message = 'No seating information found for this register number and date.';
       setSeatInfo(null);
       setError(message);
-      logFailure(ra, selectedDate, message);
+      logFailure(ra, selectedDate, message, performanceTime);
       return [];
     } catch (err) {
       const message = err?.message || 'Failed to fetch seat information. Please try again.';
+      const performanceTime = startTime ? Date.now() - startTime : null;
       setSeatInfo(null);
       setError(message);
-      logFailure(ra, selectedDate, message);
+      logFailure(ra, selectedDate, message, performanceTime);
       return [];
     }
   };
@@ -688,6 +693,8 @@ export default function SeatFinder() {
     if (sessionCacheRef.current.has(cacheKey)) {
       const cachedSeats = sessionCacheRef.current.get(cacheKey);
       const startTime = Date.now();
+      const performanceTime = Date.now() - startTime; // Very fast for cached results
+      logSuccess(trimmedRA, selectedDate, cachedSeats, performanceTime);
       updateSeatInfoWithSubjects(cachedSeats, startTime);
       setError(null);
       return;
@@ -714,9 +721,10 @@ export default function SeatFinder() {
       .catch(err => {
         console.error('Error fetching seat data:', err);
         const message = err?.message || 'Failed to fetch seat information. Please try again.';
+        const performanceTime = searchStartTime ? Date.now() - searchStartTime : null;
         setSeatInfo(null);
         setError(message);
-        logFailure(trimmedRA, selectedDate, message);
+        logFailure(trimmedRA, selectedDate, message, performanceTime);
       });
 
     inflightRequestsRef.current.set(cacheKey, fetchPromise);
