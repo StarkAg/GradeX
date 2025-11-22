@@ -342,11 +342,15 @@ async function main() {
       }
     }
     
-    // Upload to Upstash
+    // Upload to Upstash with multiple date formats (to match API cache key variants)
     console.log('\n' + '='.repeat(50));
-    // Use date as cache key in format: 22/11/2025 (matches existing cache system)
-    const cacheKey = PDF_DATE; // Already in DD/MM/YYYY format
-    await uploadToUpstash(dataMap, cacheKey);
+    // Upload with DD/MM/YYYY format (e.g., 22/11/2025)
+    const cacheKey1 = PDF_DATE; // DD/MM/YYYY format
+    await uploadToUpstash(dataMap, cacheKey1);
+    console.log('\n--- Uploading with alternative date format ---');
+    // Also upload with DD-MM-YYYY format (e.g., 22-11-2025) for API compatibility
+    const cacheKey2 = PDF_DATE.replace(/\//g, '-'); // DD-MM-YYYY format
+    await uploadToUpstash(dataMap, cacheKey2);
     console.log('='.repeat(50));
     
     console.log('\n✅ Upload complete!');

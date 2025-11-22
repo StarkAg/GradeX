@@ -207,7 +207,25 @@ async function fetchAllCampusData(date) {
  * @returns {Promise<Map>} - Map of RA -> Array of matches
  */
 async function getAllCampusDataCache(date) {
-  const cacheKey = date || 'any';
+  // Normalize date format to ensure consistent cache keys
+  // Accept DD/MM/YYYY, DD-MM-YYYY, or YYYY-MM-DD and convert to DD/MM/YYYY
+  let cacheKey = date || 'any';
+  if (date && date !== 'any') {
+    // If date contains dashes, try to convert to DD/MM/YYYY format
+    if (date.includes('-')) {
+      const parts = date.split(/[-\/]/);
+      if (parts.length === 3) {
+        // Check if it's YYYY-MM-DD or DD-MM-YYYY
+        if (parts[0].length === 4) {
+          // YYYY-MM-DD -> DD/MM/YYYY
+          cacheKey = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        } else {
+          // DD-MM-YYYY -> DD/MM/YYYY
+          cacheKey = `${parts[0]}/${parts[1]}/${parts[2]}`;
+        }
+      }
+    }
+  }
   
   // STEP 1: Check in-memory cache first (fastest)
   if (allCampusDataCache && allCampusDataCache.date === cacheKey) {
