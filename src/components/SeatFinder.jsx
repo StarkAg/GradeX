@@ -430,8 +430,12 @@ export default function SeatFinder() {
             } else if (formattedRoom.startsWith('TP-2VPT-') || formattedRoom.startsWith('TP2VPT-')) {
               // TP-2VPT-217 -> VPT-217 (VPT rooms in Tech Park 2)
               // Show TP2 building image and use "TP2/VPT" as venue
+              // Store original raw value for warning message
+              const originalRawRoom = formattedRoom;
               formattedRoom = formattedRoom.replace(/^TP-?2VPT-/i, 'VPT-');
               buildingName = 'TP2/VPT';
+              // Store original raw room in result for warning display
+              result.originalRawRoom = originalRawRoom;
             } else if (formattedRoom.startsWith('VPT-')) {
               buildingName = VPT_BUILDING_NAME;
             }
@@ -542,7 +546,8 @@ export default function SeatFinder() {
               date: date,
               context: result.context,
               url: result.url,
-              campus: campusName
+              campus: campusName,
+              originalRawRoom: result.originalRawRoom || null // Store original raw room for TP-2VPT warning
             };
             
             // Debug logging
@@ -1709,6 +1714,21 @@ export default function SeatFinder() {
                           fontWeight: 500
                         }}>{seat.building}</div>
                       )}
+                      {seat.originalRawRoom && (
+                        <div style={{ 
+                          color: '#f59e0b', 
+                          fontSize: isMobile ? '10px' : 'clamp(9px, 2vw, 11px)', 
+                          marginTop: 'clamp(4px, 1.5vw, 6px)',
+                          fontWeight: 600,
+                          padding: 'clamp(4px, 1vw, 6px)',
+                          background: 'rgba(245, 158, 11, 0.1)',
+                          borderRadius: '6px',
+                          border: '1px solid rgba(245, 158, 11, 0.3)',
+                          lineHeight: '1.4'
+                        }}>
+                          ⚠️ PLS CHECK THE VENUE, WE ARE NOT CONFIRM AS THE RAW VALUE WE GETTING IS - ({seat.originalRawRoom})
+                        </div>
+                      )}
                     </div>
                     <div style={{
                       background: 'rgba(251, 191, 36, 0.1)',
@@ -2157,6 +2177,21 @@ export default function SeatFinder() {
                           marginTop: '6px',
                           fontWeight: 500
                         }}>{seat.building}</div>
+                      )}
+                      {seat.originalRawRoom && (
+                        <div style={{ 
+                          color: '#f59e0b', 
+                          fontSize: '11px', 
+                          marginTop: '8px',
+                          fontWeight: 600,
+                          padding: '8px',
+                          background: 'rgba(245, 158, 11, 0.1)',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(245, 158, 11, 0.3)',
+                          lineHeight: '1.4'
+                        }}>
+                          ⚠️ PLS CHECK THE VENUE, WE ARE NOT CONFIRM AS THE RAW VALUE WE GETTING IS - ({seat.originalRawRoom})
+                        </div>
                       )}
                     </div>
                     <div style={{
