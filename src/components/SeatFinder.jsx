@@ -432,13 +432,13 @@ export default function SeatFinder() {
             }
             
             // Handle TP-2 rooms (Tech Park 2)
-            // TP-2L1401-2 -> keep as TP-2L1401-2 (don't strip), TP-2LH1005 -> LH1005, TP-2CLS1019 -> CLS1019
-            if (formattedRoom.match(/^TP-?2(LH|LS|CLS)/i)) {
-              // Strip TP-2 prefix for LH/LS/CLS rooms
+            // TP-2L1401-2 -> L1401-2, TP-2LH1005 -> LH1005, TP-2CLS1019 -> CLS1019
+            if (formattedRoom.match(/^TP-?2(L|LH|LS|CLS)/i)) {
+              // Strip TP-2 prefix for L/LH/LS/CLS rooms
               formattedRoom = formattedRoom.replace(/^TP-?2/i, '');
               buildingName = 'Tech Park 2';
             } else if (formattedRoom.startsWith('TP2') || formattedRoom.startsWith('TP-2')) {
-              // Any TP2 or TP-2 room is Tech Park 2 (keep room name as-is for display)
+              // Any other TP2 or TP-2 room is Tech Park 2 (keep room name as-is for display)
               buildingName = 'Tech Park 2';
             }
             
@@ -461,6 +461,15 @@ export default function SeatFinder() {
                   // For CLS1019, LS2019, LH506 - first digit after letters is floor
                   const firstDigit = parseInt(numStr.charAt(0));
                   floorNumber = formatFloorNumber(firstDigit);
+                } else if (formattedRoom.startsWith('L')) {
+                  // For L1401-2, L2019 - first two digits are floor (14, 20)
+                  if (numStr.length >= 2) {
+                    const firstTwo = parseInt(numStr.substring(0, 2));
+                    floorNumber = formatFloorNumber(firstTwo);
+                  } else {
+                    const firstDigit = parseInt(numStr.charAt(0));
+                    floorNumber = formatFloorNumber(firstDigit);
+                  }
                 } else if (letterMatch || formattedRoom.startsWith('VPT-')) {
                   // For H301F, S45, UB604, VPT-301 - first digit after letter is floor
                   const firstDigit = parseInt(numStr.charAt(0));
