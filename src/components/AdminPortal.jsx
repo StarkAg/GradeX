@@ -193,7 +193,6 @@ export default function AdminPortal() {
                       <th>Search Date</th>
                       <th>Time (IST)</th>
                       <th>Status</th>
-                      <th>Results</th>
                       <th>Room</th>
                       <th>Venue</th>
                       <th>Floor</th>
@@ -212,7 +211,6 @@ export default function AdminPortal() {
                             {enquiry.results_found ? '✓ Found' : '✗ Not Found'}
                           </span>
                         </td>
-                        <td>{enquiry.result_count || 0}</td>
                         <td className="mono">
                           {(enquiry.rooms || []).length === 0
                             ? '-'
