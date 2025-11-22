@@ -429,8 +429,9 @@ export default function SeatFinder() {
               buildingName = VPT_BUILDING_NAME;
             } else if (formattedRoom.startsWith('TP-2VPT-') || formattedRoom.startsWith('TP2VPT-')) {
               // TP-2VPT-217 -> VPT-217 (VPT rooms in Tech Park 2)
+              // Show TP2 building image and use "TP2/VPT" as venue
               formattedRoom = formattedRoom.replace(/^TP-?2VPT-/i, 'VPT-');
-              buildingName = VPT_BUILDING_NAME;
+              buildingName = 'TP2/VPT';
             } else if (formattedRoom.startsWith('VPT-')) {
               buildingName = VPT_BUILDING_NAME;
             }
@@ -1409,11 +1410,14 @@ export default function SeatFinder() {
               
               {seatInfo.map((seat, index) => {
                 const roomUpper = seat.room && seat.room !== '-' ? seat.room.toUpperCase() : '';
+                const buildingUpper = seat.building && seat.building !== '-' ? seat.building.toUpperCase() : '';
                 // Also check the original hall name for TPVPT before it was formatted
                 const originalHallUpper = seat.context && typeof seat.context === 'string' ? seat.context.toUpperCase() : '';
                 const hasTPVPT = originalHallUpper.includes('TPVPT') || roomUpper.includes('VPT') || roomUpper.includes('TPVPT');
                 const hasCLSorLSorLH = roomUpper.startsWith('CLS') || roomUpper.startsWith('LS') || roomUpper.startsWith('LH');
-                const hasTP2 = roomUpper.startsWith('TP-2') || roomUpper.startsWith('TP2') || roomUpper.startsWith('L') || hasCLSorLSorLH;
+                // Check if building is TP2/VPT or if room matches TP2 patterns
+                const isTP2VPT = buildingUpper === 'TP2/VPT';
+                const hasTP2 = isTP2VPT || roomUpper.startsWith('TP-2') || roomUpper.startsWith('TP2') || roomUpper.startsWith('L') || hasCLSorLSorLH;
                 const hasMainCampus = roomUpper.startsWith('H');
                 const hasImage = roomUpper && roomUpper.length > 0 && (hasTP2 || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT || hasMainCampus);
                 
@@ -1864,11 +1868,14 @@ export default function SeatFinder() {
               
               {seatInfo.map((seat, index) => {
                 const roomUpper = seat.room && seat.room !== '-' ? seat.room.toUpperCase() : '';
+                const buildingUpper = seat.building && seat.building !== '-' ? seat.building.toUpperCase() : '';
                 // Also check the original hall name for TPVPT before it was formatted
                 const originalHallUpper = seat.context && typeof seat.context === 'string' ? seat.context.toUpperCase() : '';
                 const hasTPVPT = originalHallUpper.includes('TPVPT') || roomUpper.includes('VPT') || roomUpper.includes('TPVPT');
                 const hasCLSorLSorLH = roomUpper.startsWith('CLS') || roomUpper.startsWith('LS') || roomUpper.startsWith('LH');
-                const hasTP2 = roomUpper.startsWith('TP-2') || roomUpper.startsWith('TP2') || roomUpper.startsWith('L') || hasCLSorLSorLH;
+                // Check if building is TP2/VPT or if room matches TP2 patterns
+                const isTP2VPT = buildingUpper === 'TP2/VPT';
+                const hasTP2 = isTP2VPT || roomUpper.startsWith('TP-2') || roomUpper.startsWith('TP2') || roomUpper.startsWith('L') || hasCLSorLSorLH;
                 const hasMainCampus = roomUpper.startsWith('H');
                 const hasImage = roomUpper && roomUpper.length > 0 && (hasTP2 || roomUpper.startsWith('TP') || roomUpper.includes('UB') || hasTPVPT || hasMainCampus);
                 
