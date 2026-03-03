@@ -46,9 +46,23 @@ The app is designed for reliability and a clean experience on both web and mobil
 
 ---
 
+## Sample code
+
+This repo includes **sample code** that reflects the patterns and style used in GradeX (simplified, no secrets or core logic):
+
+| Path | Description |
+|------|-------------|
+| [sample-code/components/](sample-code/components/) | React: reusable `Card`, `useWindowSize` hook |
+| [sample-code/api/](sample-code/api/) | Node: health handler, Vercel-style route handler |
+| [sample-code/lib/](sample-code/lib/) | Utils: `formatDisplayName`, `formatPercent`, `toDateString` |
+
+See [sample-code/README.md](sample-code/README.md) for a short overview.
+
+---
+
 ## Repo note
 
-This repository is a **showcase** for portfolio and hiring. It contains only high-level documentation and links; the live application and codebase are maintained separately.
+This repository is a **showcase** for portfolio and hiring. It contains documentation, sample code snippets, and links; the full application and main codebase are maintained separately.
 
 ---
 
