@@ -6,7 +6,7 @@
 
 ---
 
-## Screenshots
+## Desktop screenshots
 
 | Home | Schedule | Attendance |
 |------|----------|------------|
