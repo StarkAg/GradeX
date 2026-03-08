@@ -6,17 +6,20 @@
 
 ---
 
-## Desktop screenshots
+## Desktop screenshots (1440×900, demo mode)
 
-| Home | Schedule | Attendance |
-|------|----------|------------|
-| ![Home](docs/screenshots/01-home.png) | ![Schedule](docs/screenshots/02-schedule.png) | ![Attendance](docs/screenshots/03-attendance.png) |
+All six at desktop viewport 1440×900.
 
-| Marks | Profile | AI |
-|-------|---------|-----|
-| ![Marks](docs/screenshots/04-marks.png) | ![Profile](docs/screenshots/05-profile.png) | ![AI](docs/screenshots/06-ai.png) |
+| Desktop | Desktop |
+|:---:|:---:|
+| ![Home](docs/screenshots/01-home.png) | ![Schedule](docs/screenshots/02-schedule.png) |
+| *Home* | *Schedule* |
+| ![Attendance](docs/screenshots/03-attendance.png) | ![Marks](docs/screenshots/04-marks.png) |
+| *Attendance* | *Marks* |
+| ![Profile](docs/screenshots/05-profile.png) | ![AI](docs/screenshots/06-ai.png) |
+| *Profile* | *AI* |
 
-*Desktop 1440×900, demo mode. Dark theme. Try [gradex.bond/demo](https://gradex.bond/demo) to use without login.*
+*Dark theme. Try [gradex.bond/demo](https://gradex.bond/demo) to use without login.*
 
 ---
 
