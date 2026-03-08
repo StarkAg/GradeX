@@ -1,6 +1,6 @@
 # GradeX app screenshots
 
-Screenshots captured from the local app at `http://localhost:5173/` (dark theme, mobile viewport).
+Screenshots captured at **desktop viewport 1440×900** in **demo mode** (`/demo` then navigate). Dark theme. To regenerate: start the app (`npm run dev:all`), then run `npm run screenshots`.
 
 | File | Page |
 |------|------|
