@@ -16,7 +16,7 @@
 |-------|---------|-----|
 | ![Marks](docs/screenshots/04-marks.png) | ![Profile](docs/screenshots/05-profile.png) | ![AI](docs/screenshots/06-ai.png) |
 
-*Captured from the app (dark theme).*
+*Desktop 1440×900, demo mode. Dark theme. Try [gradex.bond/demo](https://gradex.bond/demo) to use without login.*
 
 ---
 
