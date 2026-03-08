@@ -6,6 +6,20 @@
 
 ---
 
+## Screenshots
+
+| Home | Schedule | Attendance |
+|------|----------|------------|
+| ![Home](docs/screenshots/01-home.png) | ![Schedule](docs/screenshots/02-schedule.png) | ![Attendance](docs/screenshots/03-attendance.png) |
+
+| Marks | Profile | AI |
+|-------|---------|-----|
+| ![Marks](docs/screenshots/04-marks.png) | ![Profile](docs/screenshots/05-profile.png) | ![AI](docs/screenshots/06-ai.png) |
+
+*Captured from the app (dark theme).*
+
+---
+
 ## About
 
 GradeX is a full-stack web application built for SRM University students. It brings timetable, attendance, marks, calendar, and other academic resources into a single, fast dashboard — so students spend less time jumping between portals and more time on what matters.
