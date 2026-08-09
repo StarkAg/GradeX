@@ -1,12 +1,4 @@
-# GradeX
 
-**Student portal for SRM University — timetable, attendance, marks, and academic tools in one place.**
-
-🔗 **Live site:** [gradex.bond](https://gradex.bond)
-
----
-
-## Desktop screenshots (1440×900, demo mode)
 
 All six at desktop viewport 1440×900.
 
